@@ -46,3 +46,9 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# SQLite runtime (moi may tu tao DB rieng, khong commit)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

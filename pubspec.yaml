@@ -1,5 +1,5 @@
 name: smashly
-description: "A new Flutter project."
+description: "SMASHLY - badminton ecommerce app (PRM393), Flutter + SQLite local."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -62,6 +62,23 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Khai bao theo THU MUC (khong theo tung file) de them anh khong phai sua file nay.
+  # Chi TV1 sua pubspec.yaml.
+  assets:
+    - assets/images/brand/
+    - assets/images/banners/
+    - assets/images/categories/
+    - assets/images/brands/
+    - assets/images/states/
+    - assets/images/products/rackets/
+    - assets/images/products/shoes/
+    - assets/images/products/apparel/
+    - assets/images/products/bags/
+    - assets/images/products/grips/
+    - assets/images/products/strings/
+    - assets/images/products/nets/
+    - assets/images/products/accessories/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
