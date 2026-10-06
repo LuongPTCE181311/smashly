@@ -28,31 +28,39 @@ class DatabaseHelper {
     return openDatabase(
       await _path,
       version: DbSchema.version,
-      // SQLite mặc định TẮT khóa ngoại -> phải bật mỗi lần mở.
-      onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
-      // Chỉ chạy khi máy chưa có DB. sqflite đã bọc sẵn trong transaction.
-      onCreate: (db, version) async {
-        await _createTables(db);
-        await seedDemoData(db);
-      },
-      // Giai đoạn phát triển: version tăng -> xóa sạch và tạo lại.
-      // (Bản thật sẽ dùng ALTER TABLE theo từng version.)
-      onUpgrade: (db, oldVersion, newVersion) async {
-        await _dropTables(db);
-        await _createTables(db);
-        await seedDemoData(db);
-      },
+      onConfigure: onConfigure,
+      onCreate: onCreate,
+      onUpgrade: onUpgrade,
       onDowngrade: onDatabaseDowngradeDelete,
     );
   }
 
-  Future<void> _createTables(DatabaseExecutor db) async {
+  static Future<void> onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  static Future<void> onCreate(Database db, int version) async {
+    await _createTables(db);
+    await seedDemoData(db);
+  }
+
+  static Future<void> onUpgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    await _dropTables(db);
+    await _createTables(db);
+    await seedDemoData(db);
+  }
+
+  static Future<void> _createTables(DatabaseExecutor db) async {
     for (final sql in DbSchema.createStatements) {
       await db.execute(sql);
     }
   }
 
-  Future<void> _dropTables(DatabaseExecutor db) async {
+  static Future<void> _dropTables(DatabaseExecutor db) async {
     for (final table in DbSchema.tablesInDropOrder) {
       await db.execute('DROP TABLE IF EXISTS $table');
     }

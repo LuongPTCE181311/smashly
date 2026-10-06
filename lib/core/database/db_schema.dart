@@ -9,7 +9,7 @@ class DbSchema {
 
   /// Tăng số này mỗi khi đổi bảng/cột. Máy nào có version cũ sẽ tự
   /// xóa DB và tạo lại (xem DatabaseHelper.onUpgrade).
-  static const int version = 1;
+  static const int version = 2;
 
   // ---- Tên bảng: DAO dùng các hằng số này, không gõ chuỗi tay ----
   static const String users = 'users';
@@ -110,7 +110,7 @@ class DbSchema {
       cart_id     INTEGER NOT NULL REFERENCES $carts(id) ON DELETE CASCADE,
       product_id  INTEGER NOT NULL REFERENCES $products(id) ON DELETE CASCADE,
       quantity    INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
-      size        TEXT,
+      size        TEXT    NOT NULL DEFAULT '',
       is_selected INTEGER NOT NULL DEFAULT 1,
       added_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
       UNIQUE (cart_id, product_id, size)
