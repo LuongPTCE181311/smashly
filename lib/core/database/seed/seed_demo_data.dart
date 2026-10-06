@@ -19,5 +19,3 @@ Future<void> seedDemoData(DatabaseExecutor db) async {
   await seedOrders(db, now); // cần users + products có trước
 }
 
-/// Định dạng thời gian dùng chung khi ghi vào DB.
-String dbTime(DateTime time) => time.toIso8601String();

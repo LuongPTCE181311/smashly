@@ -9,7 +9,7 @@ class DbSchema {
 
   /// Tăng số này mỗi khi đổi bảng/cột. Máy nào có version cũ sẽ tự
   /// xóa DB và tạo lại (xem DatabaseHelper.onUpgrade).
-  static const int version = 2;
+  static const int version = 3;
 
   // ---- Tên bảng: DAO dùng các hằng số này, không gõ chuỗi tay ----
   static const String users = 'users';
