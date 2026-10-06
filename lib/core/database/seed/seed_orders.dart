@@ -113,10 +113,18 @@ Future<void> seedOrders(DatabaseExecutor db, DateTime now) async {
   }
 
   // Giỏ hàng của customer có sẵn 1 món (để demo chọn/bỏ chọn).
+  final carts = await db.query(
+    DbSchema.carts,
+    columns: ['id'],
+    where: 'user_id = ?',
+    whereArgs: [SeedUserIds.customer],
+  );
+  final cartId = carts.first['id'] as int;
   await db.insert(DbSchema.cartItems, {
-    'cart_id': SeedUserIds.customer,
+    'cart_id': cartId,
     'product_id': 19, // Yonex Super Grap
     'quantity': 1,
+    'size': '',
     'is_selected': 1,
     'added_at': dbTime(now),
   });
