@@ -53,6 +53,11 @@ login => LoginScreen(initialEmail: arguments is String ? arguments : null),
 
 - Lý do: `arguments as String?` ném `TypeError` khi ai đó truyền sai kiểu, màn hình đỏ thay vì mở bình thường.
 
+**Kết quả trả về khi pop**
+
+- Đọc bằng `final result = await Navigator.of(context).pushNamed(AppRoutes.x);` rồi kiểm `result is bool` / `result is String`.
+- **Không** dùng `pushNamed<bool>(...)` / `pushNamed<String>(...)`: `AppRoutes` tạo `AppPageRoute<dynamic>`, Flutter ép sang `Route<bool?>` sẽ ném `TypeError` ngay khi mở màn.
+
 **Lỗi môi trường thường gặp khi build Android**
 
 - `Android sdkmanager did not install NDK <phiên bản>`: cài tay qua Android Studio → SDK Manager → SDK Tools → tick "Show Package Details" → NDK (Side by side) → cài đúng phiên bản ghi trong thông báo lỗi (máy Hào với Flutter 3.47.6 cần `28.2.13676358`).
