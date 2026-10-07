@@ -14,14 +14,23 @@ class AppShell extends StatefulWidget {
 
   final AppTab initialTab;
 
-  static _AppShellState? _active;
+  /// Mọi AppShell đang sống, cũ → mới. Thường chỉ có 1; danh sách để
+  /// `goToTab` vẫn đúng nếu lỡ có 2 shell chồng nhau.
+  static final List<_AppShellState> _instances = [];
 
-  /// Đóng các màn đang đè lên AppShell rồi chuyển sang [tab].
+  /// Đóng các màn đang đè lên AppShell trên cùng rồi chuyển sang [tab].
+  ///
+  /// Không có AppShell nào trong stack (vd. đang ở màn admin, login) → không
+  /// làm gì, không đóng màn nào.
   static void goToTab(BuildContext context, AppTab tab) {
-    Navigator.of(context).popUntil(
-      (route) => AppTab.fromRoute(route.settings.name) != null || route.isFirst,
-    );
-    _active?._select(tab);
+    for (final shell in _instances.reversed) {
+      final route = shell._route;
+      if (!shell.mounted || route == null || !route.isActive) continue;
+      Navigator.of(shell.context).popUntil((r) => r == route);
+      shell._select(tab);
+      return;
+    }
+    debugPrint('AppShell.goToTab($tab): không có AppShell nào đang mở.');
   }
 
   @override
@@ -32,15 +41,23 @@ class _AppShellState extends State<AppShell> {
   late AppTab _tab = widget.initialTab;
   late final Set<AppTab> _opened = {_tab};
 
+  ModalRoute<dynamic>? _route;
+
   @override
   void initState() {
     super.initState();
-    AppShell._active = this;
+    AppShell._instances.add(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _route = ModalRoute.of(context);
   }
 
   @override
   void dispose() {
-    if (AppShell._active == this) AppShell._active = null;
+    AppShell._instances.remove(this);
     super.dispose();
   }
 
