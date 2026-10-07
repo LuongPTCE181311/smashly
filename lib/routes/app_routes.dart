@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/database/db_check_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/splash_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/app_tab.dart';
 import 'app_page_route.dart';
@@ -69,8 +70,7 @@ abstract final class AppRoutes {
   /// `productDetail => ProductDetailScreen(productId: arguments! as int),`
   static Widget screen(String name, [Object? arguments]) {
     return switch (name) {
-      // TODO(Hào): thay DevMenuScreen bằng SplashScreen(); menu dev vẫn mở được qua AppRoutes.devMenu.
-      splash => const DevMenuScreen(),
+      splash => const SplashScreen(),
       login => LoginScreen(initialEmail: arguments is String ? arguments : null),
       register => const PlaceholderScreen(
         code: 'S03',

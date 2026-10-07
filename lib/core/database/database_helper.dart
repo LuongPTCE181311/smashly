@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -20,7 +21,23 @@ class DatabaseHelper {
   // vẫn chỉ mở DB đúng một lần.
   Future<Database>? _dbFuture;
 
-  Future<Database> get database => _dbFuture ??= _open();
+  /// Mở lỗi thì bỏ Future đã lỗi, để lần gọi sau (nút Thử lại ở Splash) mở lại
+  /// thật sự thay vì nhận lại đúng lỗi cũ.
+  Future<Database> get database {
+    final existing = _dbFuture;
+    if (existing != null) return existing;
+
+    final opening = _open();
+    _dbFuture = opening;
+    opening.then<void>(
+      (_) {},
+      onError: (Object _) {
+        // Chỉ xóa nếu vẫn là chính lần mở này (không xóa nhầm lần mở mới hơn).
+        if (identical(_dbFuture, opening)) _dbFuture = null;
+      },
+    );
+    return opening;
+  }
 
   Future<String> get _path async => join(await getDatabasesPath(), DbSchema.dbName);
 
@@ -63,6 +80,19 @@ class DatabaseHelper {
   static Future<void> _dropTables(DatabaseExecutor db) async {
     for (final table in DbSchema.tablesInDropOrder) {
       await db.execute('DROP TABLE IF EXISTS $table');
+    }
+  }
+
+  /// Đóng DB (nếu đã mở) và quên Future đang giữ, để test sau bắt đầu sạch.
+  @visibleForTesting
+  Future<void> closeForTest() async {
+    final current = _dbFuture;
+    _dbFuture = null;
+    if (current == null) return;
+    try {
+      await (await current).close();
+    } on DatabaseException {
+      // Lần mở trước đã lỗi: không có gì để đóng.
     }
   }
 

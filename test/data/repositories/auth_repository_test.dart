@@ -243,6 +243,26 @@ void main() {
       expect(await sessionService.getLoggedInUserId(), isNull);
     },
   );
+
+  test('getCurrentUser opens the database even without a session', () async {
+    // Splash dựa vào getCurrentUser để mở DB: người dùng mới (chưa có session)
+    // cũng phải gặp lỗi DB ở Splash (có nút Thử lại), không phải muộn ở Login.
+    var openCalls = 0;
+    final countingRepository = AuthRepository(
+      database: () async {
+        openCalls++;
+        return db;
+      },
+      userDao: const UserDao(),
+      cartDao: const CartDao(),
+      sessionService: sessionService,
+    );
+
+    final user = await countingRepository.getCurrentUser();
+
+    expect(user, isNull);
+    expect(openCalls, 1);
+  });
 }
 
 Future<AppException> _captureAppException(
