@@ -114,12 +114,14 @@ class AuthRepository {
     }
   }
 
+  /// Splash gọi hàm này để khởi động: luôn mở DB trước (kể cả khi chưa có
+  /// session), để lỗi khởi tạo hiện ở Splash có nút Thử lại, không nổ muộn ở Login.
   Future<User?> getCurrentUser() async {
-    final userId = await _sessionService.getLoggedInUserId();
-    if (userId == null) return null;
-
     try {
       final db = await _database();
+      final userId = await _sessionService.getLoggedInUserId();
+      if (userId == null) return null;
+
       final user = await _userDao.findById(db, userId);
       if (user == null) await _sessionService.clear();
       return user;
