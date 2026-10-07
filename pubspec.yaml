@@ -81,6 +81,24 @@ flutter:
     - assets/images/products/nets/
     - assets/images/products/accessories/
 
+  # Font đóng gói sẵn (không phụ thuộc mạng khi demo). Giấy phép OFL trong assets/fonts/.
+  # Tên family khớp AppFonts trong lib/core/theme/app_text_styles.dart.
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
+          weight: 800
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
