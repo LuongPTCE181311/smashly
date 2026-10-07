@@ -25,8 +25,9 @@ class EmptyState extends StatelessWidget {
     this.imagePath,
     this.actionLabel,
     this.onAction,
-    this.iconColor = AppColors.primary,
-    this.iconBackground = AppColors.primarySoft,
+    this.iconColor,
+    this.iconBackground,
+    this.onDark = false,
   });
 
   final String title;
@@ -37,16 +38,30 @@ class EmptyState extends StatelessWidget {
   final String? imagePath;
   final String? actionLabel;
   final VoidCallback? onAction;
-  final Color iconColor;
-  final Color iconBackground;
+
+  /// Mặc định: primary trên primarySoft (nền sáng), trắng trên onDarkSubtle (nền tối).
+  final Color? iconColor;
+  final Color? iconBackground;
+
+  /// true khi đặt trên nền tối (Splash, header tối): chữ trắng.
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) {
     final iconBadge = Container(
       width: 96,
       height: 96,
-      decoration: BoxDecoration(color: iconBackground, shape: BoxShape.circle),
-      child: Icon(icon, size: 44, color: iconColor),
+      decoration: BoxDecoration(
+        color:
+            iconBackground ??
+            (onDark ? AppColors.onDarkSubtle : AppColors.primarySoft),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        size: 44,
+        color: iconColor ?? (onDark ? AppColors.onDark : AppColors.primary),
+      ),
     );
 
     return Center(
@@ -64,12 +79,20 @@ class EmptyState extends StatelessWidget {
                 errorBuilder: (_, _, _) => iconBadge,
               ),
             const SizedBox(height: AppSpacing.lg),
-            Text(title, style: AppTextStyles.h2, textAlign: TextAlign.center),
+            Text(
+              title,
+              style: AppTextStyles.h2.copyWith(
+                color: onDark ? AppColors.onDark : AppColors.ink,
+              ),
+              textAlign: TextAlign.center,
+            ),
             if (message != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
                 message!,
-                style: AppTextStyles.body.copyWith(color: AppColors.inkMuted),
+                style: AppTextStyles.body.copyWith(
+                  color: onDark ? AppColors.onDarkMuted : AppColors.inkMuted,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

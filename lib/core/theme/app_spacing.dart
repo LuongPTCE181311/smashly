@@ -49,6 +49,7 @@ abstract final class AppShadows {
 abstract final class AppSizes {
   static const double minTouchTarget = 48;
   static const double buttonHeight = 52;
+
   /// Thanh CTA cố định đáy (Detail, Cart, Checkout).
   static const double ctaHeight = 56;
 }

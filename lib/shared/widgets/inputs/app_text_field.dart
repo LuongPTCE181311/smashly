@@ -18,6 +18,8 @@ import '../../../core/theme/app_motion.dart';
 ///   gõ**: màn hình phải tự xóa (vd. gọi `clearErrors()` trong provider) rồi
 ///   truyền `null`.
 /// - `showValidCheck: true` → hiện check xanh khi ô hợp lệ (form Register).
+///   Ô mật khẩu hiện check cạnh nút hiện/ẩn.
+/// - `textCapitalization` → vd. `TextCapitalization.words` cho ô Họ tên.
 ///
 /// Đặt trong `Form` để nút submit gọi `formKey.currentState!.validate()`.
 class AppTextField extends StatefulWidget {
@@ -40,6 +42,7 @@ class AppTextField extends StatefulWidget {
     this.showValidCheck = false,
     this.maxLines = 1,
     this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   final String label;
@@ -59,6 +62,7 @@ class AppTextField extends StatefulWidget {
   final bool showValidCheck;
   final int maxLines;
   final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization textCapitalization;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -109,16 +113,21 @@ class _AppTextFieldState extends State<AppTextField> {
   }
 
   Widget? _buildSuffix() {
-    if (widget.isPassword) {
-      return IconButton(
-        tooltip: _obscured ? 'Hiện mật khẩu' : 'Ẩn mật khẩu',
-        icon: Icon(
-          _obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-        ),
-        onPressed: () => setState(() => _obscured = !_obscured),
-      );
-    }
-    if (!widget.showValidCheck) return null;
+    final check = widget.showValidCheck ? _buildValidCheck() : null;
+    if (!widget.isPassword) return check;
+
+    final toggle = IconButton(
+      tooltip: _obscured ? 'Hiện mật khẩu' : 'Ẩn mật khẩu',
+      icon: Icon(
+        _obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+      ),
+      onPressed: () => setState(() => _obscured = !_obscured),
+    );
+    if (check == null) return toggle;
+    return Row(mainAxisSize: MainAxisSize.min, children: [check, toggle]);
+  }
+
+  Widget _buildValidCheck() {
     return AnimatedSwitcher(
       duration: AppMotion.of(context, AppMotion.fast),
       transitionBuilder: (child, animation) =>
@@ -141,6 +150,7 @@ class _AppTextFieldState extends State<AppTextField> {
       focusNode: _focusNode,
       enabled: widget.enabled,
       obscureText: widget.isPassword && _obscured,
+      textCapitalization: widget.textCapitalization,
       enableSuggestions: !widget.isPassword,
       autocorrect: !widget.isPassword,
       keyboardType: widget.keyboardType,

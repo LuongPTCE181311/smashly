@@ -69,7 +69,9 @@ abstract final class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: AppTextStyles.h2,
+        // Không đặt titleTextStyle: AppBar lấy textTheme.titleLarge (= h2) và
+        // tô theo foregroundColor, nên AppBar nền tối chỉ cần
+        // `foregroundColor: AppColors.onDark` là tiêu đề + icon đều trắng.
       ),
 
       // Nút chính = FilledButton (Smash Blue); phụ = OutlinedButton; link = TextButton.

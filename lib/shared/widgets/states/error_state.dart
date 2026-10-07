@@ -18,6 +18,7 @@ class ErrorState extends StatelessWidget {
     this.message,
     this.onRetry,
     this.retryLabel = 'Thử lại',
+    this.onDark = false,
   });
 
   final String title;
@@ -27,12 +28,16 @@ class ErrorState extends StatelessWidget {
   final VoidCallback? onRetry;
   final String retryLabel;
 
+  /// true khi đặt trên nền tối (Splash, header tối): chữ trắng, icon trắng.
+  final bool onDark;
+
   @override
   Widget build(BuildContext context) {
     return EmptyState(
+      onDark: onDark,
       icon: Icons.error_outline_rounded,
-      iconColor: AppColors.error,
-      iconBackground: AppColors.error.withValues(alpha: 0.08),
+      iconColor: onDark ? AppColors.onDark : AppColors.error,
+      iconBackground: onDark ? AppColors.onDarkSubtle : AppColors.errorSoft,
       title: title,
       message: message ?? 'Vui lòng thử lại sau ít phút.',
       actionLabel: onRetry == null ? null : retryLabel,
