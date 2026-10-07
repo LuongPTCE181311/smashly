@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nền adaptive icon: AppColors.primary → primaryDark, chéo từ trên-trái xuống dưới-phải. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:endColor="#1636C7"
+        android:startColor="#1F4BFF"
+        android:type="linear" />
+</shape>

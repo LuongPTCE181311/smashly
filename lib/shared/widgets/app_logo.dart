@@ -8,6 +8,9 @@ import '../../core/theme/app_text_styles.dart';
 /// - Nền tối (Splash, header Login, header Admin): `AppLogo(onDark: true)`.
 /// - Chỉ biểu tượng: `AppLogo(showWordmark: false)`.
 ///
+/// Logo là hình nhận diện nên **không co theo cỡ chữ hệ thống**: kích thước
+/// chỉ do [size] quyết định, không tràn khi người dùng phóng to chữ.
+///
 /// Bản PNG cùng thiết kế nằm ở `assets/images/brand/` cho slide, README.
 class AppLogo extends StatelessWidget {
   const AppLogo({
@@ -40,6 +43,7 @@ class AppLogo extends StatelessWidget {
         children: [
           Text(
             'S',
+            textScaler: TextScaler.noScaling,
             style: AppTextStyles.display.copyWith(
               fontSize: size * 0.62,
               height: 1,
@@ -75,6 +79,7 @@ class AppLogo extends StatelessWidget {
             SizedBox(width: size * 0.3),
             Text(
               'SMASHLY',
+              textScaler: TextScaler.noScaling,
               style: AppTextStyles.display.copyWith(
                 fontSize: size * 0.62,
                 height: 1,

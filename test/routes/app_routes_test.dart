@@ -72,4 +72,42 @@ void main() {
     final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
     expect(bar.selectedIndex, AppTab.cart.index);
   });
+
+  testWidgets('goToTab vẫn đổi tab sau khi đóng AppShell thứ hai', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(AppRoutes.devMenu));
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
+    await tester.pumpAndSettle();
+    // Lỡ mở tab bằng pushNamed → shell thứ hai đè lên, rồi Back đóng nó.
+    navigator.pushNamed(AppRoutes.cart);
+    await tester.pumpAndSettle();
+    navigator.pop();
+    await tester.pumpAndSettle();
+
+    AppShell.goToTab(tester.element(find.byType(NavigationBar)), AppTab.shop);
+    await tester.pumpAndSettle();
+
+    final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+    expect(bar.selectedIndex, AppTab.shop.index);
+  });
+
+  testWidgets('goToTab không đóng màn nào khi không có AppShell', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(AppRoutes.devMenu));
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.pushNamed(AppRoutes.adminDashboard);
+    await tester.pumpAndSettle();
+
+    AppShell.goToTab(
+      tester.element(find.text('S13 · Admin Dashboard')),
+      AppTab.cart,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('S13 · Admin Dashboard'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+  });
 }

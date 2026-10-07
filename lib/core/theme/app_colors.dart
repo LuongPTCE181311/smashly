@@ -22,6 +22,12 @@ abstract final class AppColors {
   static const inkMuted = Color(0xFF64748B);
   static const onDark = Colors.white;
 
+  /// Chữ phụ trên nền tối (tagline, mô tả): trắng 72%.
+  static const onDarkMuted = Color(0xB8FFFFFF);
+
+  /// Nền nhạt trên nền tối (rãnh thanh tiến trình, nền icon): trắng 12%.
+  static const onDarkSubtle = Color(0x1FFFFFFF);
+
   // Bề mặt.
   static const background = Color(0xFFF5F7FB);
   static const surface = Color(0xFFFFFFFF);
@@ -33,6 +39,9 @@ abstract final class AppColors {
   static const warning = Color(0xFFF59E0B);
   static const error = Color(0xFFDC2626);
   static const info = Color(0xFF0EA5E9);
+
+  /// Nền nhạt của khối lỗi (banner, nền icon lỗi): error 8%.
+  static const errorSoft = Color(0x14DC2626);
 
   /// Gradient duy nhất của app: midnight → navy, góc 135°.
   static const darkGradient = LinearGradient(
