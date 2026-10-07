@@ -6,9 +6,13 @@ import 'package:smashly/features/shell/app_tab.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:smashly/routes/placeholder_screen.dart';
 
+// Dựng đúng 1 route: `initialRoute: '/dev'` sẽ dựng cả `/` (SplashScreen, cần
+// AuthProvider) bên dưới, giống lý do trong lib/app.dart.
 Widget _app(String initialRoute) => MaterialApp(
   theme: AppTheme.light,
-  initialRoute: initialRoute,
+  onGenerateInitialRoutes: (_) => [
+    AppRoutes.onGenerateRoute(RouteSettings(name: initialRoute)),
+  ],
   onGenerateRoute: AppRoutes.onGenerateRoute,
 );
 

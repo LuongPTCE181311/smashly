@@ -68,7 +68,7 @@ flutter run --dart-define=START_ROUTE=/dev
 
 **Lượng**
 
-- `test/routes/app_routes_test.dart`: `_app()` dùng `initialRoute: AppRoutes.devMenu` → dựng cả Splash (cần `AuthProvider`) → 12 ca đỏ. Đề xuất đổi `_app()` sang `onGenerateInitialRoutes: (_) => [AppRoutes.onGenerateRoute(RouteSettings(name: initialRoute))]`, và bỏ `login` (sau này `register`) khỏi `pushedRoutes`.
+- PR này sửa file của Lượng `test/routes/app_routes_test.dart`: `_app()` dùng `initialRoute: AppRoutes.devMenu` → dựng cả Splash (cần `AuthProvider`) → 12 ca đỏ. Đã đổi `_app()` sang `onGenerateInitialRoutes: (_) => [AppRoutes.onGenerateRoute(RouteSettings(name: initialRoute))]` (chỉ dựng 1 route, giống `lib/app.dart`). Khi có Register sẽ bỏ thêm `register` khỏi `pushedRoutes`.
 - Góp ý widget chung: `ErrorState`/`EmptyState` cần biến thể nền tối (chữ `ink` không đọc được trên `midnight`); `AppLogo` co chữ theo `textScaler` nên tràn ngang ở màn 320 px + chữ 1,5 lần (Splash đang bọc `FittedBox`); token `onDarkMuted` và nền thanh tiến trình trên nền tối.
 
 **Icon app trên màn chờ Android 12+ (cần người nhận)**
