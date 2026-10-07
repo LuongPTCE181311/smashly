@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/database/db_check_screen.dart';
+import '../features/auth/login_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/app_tab.dart';
 import 'app_page_route.dart';
@@ -70,11 +71,7 @@ abstract final class AppRoutes {
     return switch (name) {
       // TODO(Hào): thay DevMenuScreen bằng SplashScreen(); menu dev vẫn mở được qua AppRoutes.devMenu.
       splash => const DevMenuScreen(),
-      login => const PlaceholderScreen(
-        code: 'S02',
-        title: 'Login',
-        owner: 'Hào',
-      ),
+      login => LoginScreen(initialEmail: arguments is String ? arguments : null),
       register => const PlaceholderScreen(
         code: 'S03',
         title: 'Register',
