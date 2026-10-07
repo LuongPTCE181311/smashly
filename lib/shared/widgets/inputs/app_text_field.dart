@@ -6,10 +6,17 @@ import '../../../core/theme/app_motion.dart';
 
 /// Ô nhập dùng chung cho mọi form.
 ///
-/// - Validate inline **khi rời ô** lần đầu, sau đó validate theo từng ký tự.
+/// Quy tắc validate (`validator`):
+/// - Rời ô → validate, hiện lỗi nếu sai.
+/// - Đang gõ: chỉ validate lại khi ô **đang có lỗi** (để lỗi mất ngay khi sửa
+///   đúng); ô đang đúng thì không báo lỗi giữa chừng, chờ tới lúc rời ô.
+/// - `Form.validate()` (bấm submit) hiện lỗi cả ô chưa chạm; gõ đúng → lỗi mất.
+///
 /// - `isPassword: true` → có nút hiện/ẩn mật khẩu.
 /// - `errorText` → lỗi từ server/Repository (vd. "Email này đã được đăng ký"),
-///   lấy từ `authProvider.fieldErrors['email']`.
+///   lấy từ `authProvider.fieldErrors['email']`. Lỗi này **không tự mất khi
+///   gõ**: màn hình phải tự xóa (vd. gọi `clearErrors()` trong provider) rồi
+///   truyền `null`.
 /// - `showValidCheck: true` → hiện check xanh khi ô hợp lệ (form Register).
 ///
 /// Đặt trong `Form` để nút submit gọi `formKey.currentState!.validate()`.
@@ -147,9 +154,7 @@ class _AppTextFieldState extends State<AppTextField> {
       maxLines: widget.isPassword ? 1 : widget.maxLines,
       inputFormatters: widget.inputFormatters,
       validator: widget.validator,
-      autovalidateMode: _touched
-          ? AutovalidateMode.onUserInteraction
-          : AutovalidateMode.disabled,
+      autovalidateMode: AutovalidateMode.onUserInteractionIfError,
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,

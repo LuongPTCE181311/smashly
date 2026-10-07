@@ -13,24 +13,25 @@ Widget _app(String initialRoute) => MaterialApp(
 );
 
 void main() {
-  const pushedRoutes = [
-    AppRoutes.login,
-    AppRoutes.register,
-    AppRoutes.productDetail,
-    AppRoutes.checkout,
-    AppRoutes.orderSuccess,
-    AppRoutes.orderDetail,
-    AppRoutes.adminDashboard,
-    AppRoutes.adminProducts,
-    AppRoutes.adminProductForm,
-    AppRoutes.adminProfile,
-  ];
+  // Argument đúng kiểu đã ghi ở hằng số trong AppRoutes.
+  const pushedRoutes = <String, Object?>{
+    AppRoutes.login: 'customer@smashly.com',
+    AppRoutes.register: 'customer@smashly.com',
+    AppRoutes.productDetail: 1,
+    AppRoutes.checkout: null,
+    AppRoutes.orderSuccess: 1,
+    AppRoutes.orderDetail: 1,
+    AppRoutes.adminDashboard: null,
+    AppRoutes.adminProducts: null,
+    AppRoutes.adminProductForm: 1,
+    AppRoutes.adminProfile: null,
+  };
 
-  for (final route in pushedRoutes) {
+  for (final MapEntry(key: route, value: arguments) in pushedRoutes.entries) {
     testWidgets('route $route dựng được màn', (tester) async {
       await tester.pumpWidget(_app(AppRoutes.devMenu));
       final navigator = tester.state<NavigatorState>(find.byType(Navigator));
-      navigator.pushNamed(route, arguments: 1);
+      navigator.pushNamed(route, arguments: arguments);
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
