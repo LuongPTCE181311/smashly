@@ -10,9 +10,21 @@ git pull origin develop
 flutter pub get
 ```
 
-- Stop app rồi `flutter run` lại.
-- Muốn thấy **icon app mới**: gỡ app khỏi máy ảo/điện thoại rồi chạy lại, vì launcher hay giữ icon cũ.
+- Stop app rồi chạy lại (không hot reload).
+- Muốn thấy **icon app mới**: gỡ app rồi chạy lại, vì launcher hay giữ icon cũ.
 - Không cần xóa DB.
+
+Chạy bằng terminal / điện thoại thật:
+
+- Chạy: `flutter run`. Mở menu dev: `flutter run --dart-define=START_ROUTE=/dev`.
+- Gỡ app: nhấn giữ icon SMASHLY trên điện thoại → Gỡ cài đặt, hoặc `adb uninstall com.smashly.smashly`.
+
+Chạy bằng Android Studio (máy ảo):
+
+- Chạy: chọn máy ảo ở thanh trên → nút ▶ Run (đã chạy thì bấm ■ Stop rồi ▶ lại).
+- Mở menu dev: **Run → Edit Configurations… → main.dart → Additional run args**, điền `--dart-define=START_ROUTE=/dev` → OK. Xóa dòng này đi là về Splash.
+- Gỡ app: trên máy ảo nhấn giữ icon SMASHLY → kéo vào Uninstall, hoặc mở tab **Terminal** của Android Studio gõ `adb uninstall com.smashly.smashly`.
+- Font hay icon chưa đổi sau khi pull: **Tools → Flutter → Flutter Clean**, rồi ▶ Run lại.
 
 ## 2. Đã làm
 
