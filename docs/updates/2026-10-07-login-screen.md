@@ -11,6 +11,7 @@ Có hiệu lực khi PR `feature/tv1-auth-screens` đã merge vào `develop`. M�
 | Banner lỗi Auth   | `lib/features/auth/widgets/auth_error_banner.dart`  | Icon + chữ, có `liveRegion` cho trình đọc màn hình                                        |
 | Route             | `lib/routes/app_routes.dart`                        | Chỉ thay dòng `login`; nhận argument `String` (email điền sẵn)                            |
 | Test              | `test/features/auth/`                               | `FakeAuthRepository` + 19 widget test                                                     |
+| Test route (file của Lượng) | `test/routes/app_routes_test.dart`        | Bỏ `AppRoutes.login` khỏi `pushedRoutes`: màn thật cần `AuthProvider`, route login thật đã có test 7 trong `login_screen_test.dart` |
 
 ## 2. Pull về cần làm gì
 
@@ -44,7 +45,7 @@ Navigator.pushNamed(context, AppRoutes.login, arguments: 'a@b.com'); // String
 
 **Lượng**
 
-- `test/routes/app_routes_test.dart`: ca `/login` đỏ vì màn thật cần `AuthProvider`. Hào xin bỏ `AppRoutes.login` khỏi `pushedRoutes` (route login thật đã có test riêng dựng qua `AppRoutes.onGenerateRoute`).
+- PR này sửa file của Lượng `test/routes/app_routes_test.dart`: bỏ đúng 1 dòng `AppRoutes.login` khỏi `pushedRoutes` (màn thật cần `AuthProvider`; route login thật đã có test riêng dựng qua `AppRoutes.onGenerateRoute`). Khi có Register sẽ bỏ thêm dòng `register`.
 - Góp ý widget chung (PR sau): `AppTextField` thêm `textCapitalization`; ô `isPassword` hiện được cả check xanh lẫn nút con mắt.
 
 **Trọng**

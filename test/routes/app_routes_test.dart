@@ -15,7 +15,6 @@ Widget _app(String initialRoute) => MaterialApp(
 void main() {
   // Argument đúng kiểu đã ghi ở hằng số trong AppRoutes.
   const pushedRoutes = <String, Object?>{
-    AppRoutes.login: 'customer@smashly.com',
     AppRoutes.register: 'customer@smashly.com',
     AppRoutes.productDetail: 1,
     AppRoutes.checkout: null,
