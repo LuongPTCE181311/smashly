@@ -1,6 +1,6 @@
 # Splash (S01) và cách app khởi động — Hào (07/10)
 
-Có hiệu lực khi PR `feature/tv1-splash` đã merge vào `develop`. Thay đổi cách mở app của **mọi người**: đọc mục 2 trước khi chạy.
+Đã merge vào develop (PR #7). Thay đổi cách mở app của **mọi người**: đọc mục 2 trước khi chạy.
 
 ## 1. Đã làm
 

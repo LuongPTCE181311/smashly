@@ -1,6 +1,6 @@
 # Màn Login (S02) — Hào (07/10)
 
-Có hiệu lực khi PR `feature/tv1-auth-screens` đã merge vào `develop`. Mọi người pull về và đọc phần liên quan đến mình (mục 4).
+Đã merge vào develop (PR #6). Mọi người pull về và đọc phần liên quan đến mình (mục 4).
 
 ## 1. Đã làm
 
@@ -22,7 +22,7 @@ flutter pub get
 ```
 
 - Không cần xóa DB, không có package mới.
-- Mở Login từ menu dev ("S02 · Login"). Tài khoản seed: `admin@smashly.com` / `Admin@123`, `customer@smashly.com` / `Customer@123`, `newbie@smashly.com` / `Newbie@123`.
+- `flutter run` vào Splash → Login; menu dev: `flutter run --dart-define=START_ROUTE=/dev` (xem `2026-10-07-splash-startup.md`). Tài khoản seed: `admin@smashly.com` / `Admin@123`, `customer@smashly.com` / `Customer@123`, `newbie@smashly.com` / `Newbie@123`.
 
 ## 3. Quy ước mới
 
@@ -62,5 +62,5 @@ Navigator.pushNamed(context, AppRoutes.login, arguments: 'a@b.com'); // String
 
 ## 5. Hào làm tiếp
 
-- Splash (S01): mở DB, đọc session, vào thẳng màn đúng role.
-- Register (S03): chờ Lượng đồng ý thêm `fieldKey` vào `AppTextField`.
+- Splash (S01): đã xong (PR #7).
+- Làm tiếp Profile (S12), rồi Register (S03) (Register chờ Lượng đồng ý thêm `fieldKey` vào `AppTextField`).
