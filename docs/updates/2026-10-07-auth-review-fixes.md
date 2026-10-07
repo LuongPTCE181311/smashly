@@ -1,6 +1,6 @@
 # Cập nhật sau review theme — Hào (07/10)
 
-Có hiệu lực khi PR `fix/tv1-shared-widget-review` đã merge vào `develop`. Mọi người pull về, làm theo mục 2 và đọc phần liên quan đến mình.
+Đã merge vào develop (PR #5). Mọi người pull về, làm theo mục 2 và đọc phần liên quan đến mình.
 
 ## 1. Đã làm
 
