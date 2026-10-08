@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/database/db_check_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/splash_screen.dart';
+import '../features/cart/cart_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/app_tab.dart';
 import 'app_page_route.dart';
@@ -71,7 +72,9 @@ abstract final class AppRoutes {
   static Widget screen(String name, [Object? arguments]) {
     return switch (name) {
       splash => const SplashScreen(),
-      login => LoginScreen(initialEmail: arguments is String ? arguments : null),
+      login => LoginScreen(
+        initialEmail: arguments is String ? arguments : null,
+      ),
       register => const PlaceholderScreen(
         code: 'S03',
         title: 'Register',
@@ -80,11 +83,7 @@ abstract final class AppRoutes {
 
       home => const PlaceholderScreen(code: 'S04', title: 'Home', owner: 'Kha'),
       shop => const PlaceholderScreen(code: 'S05', title: 'Shop', owner: 'Kha'),
-      cart => const PlaceholderScreen(
-        code: 'S07',
-        title: 'Giỏ hàng',
-        owner: 'Danh',
-      ),
+      cart => const CartScreen(),
       myOrders => const PlaceholderScreen(
         code: 'S10',
         title: 'Đơn hàng của tôi',

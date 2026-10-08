@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+
+import '../../providers/cart_provider.dart';
 import '../../routes/app_routes.dart';
+import '../cart/widgets/cart_badge_icon.dart';
 import 'app_tab.dart';
 
 /// Khung customer: bottom nav 5 tab, giữ trạng thái + vị trí cuộn từng tab
@@ -71,8 +75,9 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO(Danh): thay bằng context.watch<CartProvider>().totalQuantity khi có CartProvider.
-    const cartCount = 0;
+    final cartCount = context.select<CartProvider, int>(
+      (cart) => cart.itemCount,
+    );
 
     return PopScope(
       // Back ở tab khác → về Home; Back ở Home → thoát app.
@@ -108,10 +113,6 @@ class _AppShellState extends State<AppShell> {
 
   Widget _icon(AppTab tab, IconData icon, int cartCount) {
     if (tab != AppTab.cart) return Icon(icon);
-    return Badge.count(
-      count: cartCount,
-      isLabelVisible: cartCount > 0,
-      child: Icon(icon),
-    );
+    return CartBadgeIcon(icon: icon, count: cartCount);
   }
 }

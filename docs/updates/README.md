@@ -4,6 +4,7 @@ Mỗi PR vào `develop` thay đổi thứ người khác dùng (`main.dart`, `ap
 
 | Ngày  | Tác giả | Tiêu đề                                                                     | Ai cần đọc                                      |
 | ----- | ------- | --------------------------------------------------------------------------- | ----------------------------------------------- |
+| 08/10 | Danh    | [Cart: model, DAO, Repository, Provider, màn Giỏ hàng](2026-10-08-cart.md) | **Hào** (`ProxyProvider` trong `main.dart`); **Lượng** (badge `AppShell`, `addToCart`, `QuantityStepper`) |
 | 07/10 | Lượng   | [Sửa theme theo góp ý, AppDialog, icon app](2026-10-07-theme-review-fixes.md)        | **Hào** (token cho `TODO(theme)`, AppDialog); Trọng (AppBar nền tối, dialog xóa); cả nhóm (gỡ app để thấy icon mới) |
 | 07/10 | Hào     | [Splash (S01) và cách app khởi động](2026-10-07-splash-startup.md) · #7         | **Cả nhóm** (cách chạy app, menu dev); Lượng (test routes, widget chung) |
 | 07/10 | Hào     | [Màn Login (S02)](2026-10-07-login-screen.md) · #6                               | Cả nhóm (điều hướng sau đăng nhập); Lượng, Trọng |
