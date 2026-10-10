@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smashly/core/database/database_helper.dart';
+import 'package:smashly/data/daos/product_dao.dart';
+import 'package:smashly/data/repositories/product_repository.dart';
+import 'package:smashly/features/home/home_screen.dart';
+import 'package:smashly/providers/home_provider.dart';
 
 import '../core/database/db_check_screen.dart';
 import '../features/auth/login_screen.dart';
@@ -71,14 +77,24 @@ abstract final class AppRoutes {
   static Widget screen(String name, [Object? arguments]) {
     return switch (name) {
       splash => const SplashScreen(),
-      login => LoginScreen(initialEmail: arguments is String ? arguments : null),
+      login => LoginScreen(
+        initialEmail: arguments is String ? arguments : null,
+      ),
       register => const PlaceholderScreen(
         code: 'S03',
         title: 'Register',
         owner: 'Hào',
       ),
 
-      home => const PlaceholderScreen(code: 'S04', title: 'Home', owner: 'Kha'),
+      home => ChangeNotifierProvider(
+        create: (_) => HomeProvider(
+          ProductRepository(
+            database: () => DatabaseHelper.instance.database,
+            productDao: const ProductDao(),
+          ),
+        )..loadHome(),
+        child: const HomeScreen(),
+      ),
       shop => const PlaceholderScreen(code: 'S05', title: 'Shop', owner: 'Kha'),
       cart => const PlaceholderScreen(
         code: 'S07',
