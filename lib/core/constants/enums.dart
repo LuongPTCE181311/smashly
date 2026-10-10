@@ -15,3 +15,6 @@ enum UserRole {
 }
 
 enum ViewStatus { initial, loading, success, empty, error }
+
+/// Kết quả `ProductRepository.deleteProduct`: xóa thật hay chỉ ngừng bán.
+enum ProductDeleteOutcome { deleted, deactivated }
