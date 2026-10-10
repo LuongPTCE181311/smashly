@@ -1,19 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:smashly/core/theme/app_theme.dart';
+import 'package:smashly/data/daos/cart_dao.dart';
+import 'package:smashly/data/repositories/cart_repository.dart';
+import 'package:smashly/features/cart/cart_screen.dart';
 import 'package:smashly/features/shell/app_shell.dart';
 import 'package:smashly/features/shell/app_tab.dart';
+import 'package:smashly/providers/cart_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:smashly/routes/placeholder_screen.dart';
 
 // Dựng đúng 1 route: `initialRoute: '/dev'` sẽ dựng cả `/` (SplashScreen, cần
 // AuthProvider) bên dưới, giống lý do trong lib/app.dart.
-Widget _app(String initialRoute) => MaterialApp(
-  theme: AppTheme.light,
-  onGenerateInitialRoutes: (_) => [
-    AppRoutes.onGenerateRoute(RouteSettings(name: initialRoute)),
-  ],
-  onGenerateRoute: AppRoutes.onGenerateRoute,
+// AppShell đọc CartProvider cho badge; chưa có user nên repository không bị gọi.
+Widget _app(String initialRoute) => ChangeNotifierProvider(
+  create: (_) => CartProvider(
+    CartRepository(
+      database: () => throw UnimplementedError(),
+      cartDao: const CartDao(),
+    ),
+  ),
+  child: MaterialApp(
+    theme: AppTheme.light,
+    onGenerateInitialRoutes: (_) => [
+      AppRoutes.onGenerateRoute(RouteSettings(name: initialRoute)),
+    ],
+    onGenerateRoute: AppRoutes.onGenerateRoute,
+  ),
 );
 
 void main() {
@@ -51,7 +65,7 @@ void main() {
 
     final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
     expect(bar.selectedIndex, AppTab.cart.index);
-    expect(find.text('S07 · Giỏ hàng'), findsOneWidget);
+    expect(find.byType(CartScreen), findsOneWidget);
   });
 
   testWidgets('goToTab đóng màn đè lên trên rồi đổi tab', (tester) async {

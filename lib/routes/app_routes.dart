@@ -9,6 +9,7 @@ import 'package:smashly/providers/home_provider.dart';
 import '../core/database/db_check_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/splash_screen.dart';
+import '../features/cart/cart_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/app_tab.dart';
 import 'app_page_route.dart';
@@ -96,11 +97,7 @@ abstract final class AppRoutes {
         child: const HomeScreen(),
       ),
       shop => const PlaceholderScreen(code: 'S05', title: 'Shop', owner: 'Kha'),
-      cart => const PlaceholderScreen(
-        code: 'S07',
-        title: 'Giỏ hàng',
-        owner: 'Danh',
-      ),
+      cart => const CartScreen(),
       myOrders => const PlaceholderScreen(
         code: 'S10',
         title: 'Đơn hàng của tôi',
