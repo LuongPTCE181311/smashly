@@ -10,10 +10,10 @@ import '../../providers/cart_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../shared/widgets/states/empty_state.dart';
 import '../../shared/widgets/states/error_state.dart';
-import '../../shared/widgets/states/loading_state.dart';
 import '../shell/app_shell.dart';
 import '../shell/app_tab.dart';
 import 'widgets/cart_item_tile.dart';
+import 'widgets/cart_skeleton.dart';
 import 'widgets/cart_summary_bar.dart';
 
 /// S07 · Giỏ hàng. OWNER: Danh.
@@ -27,7 +27,7 @@ class CartScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Giỏ hàng')),
       body: switch (cart.status) {
-        ViewStatus.initial || ViewStatus.loading => const LoadingState(),
+        ViewStatus.initial || ViewStatus.loading => const CartSkeleton(),
         ViewStatus.error => ErrorState(
           message: cart.errorMessage,
           onRetry: cart.load,

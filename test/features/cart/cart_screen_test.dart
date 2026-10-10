@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,7 @@ import 'package:smashly/core/theme/app_theme.dart';
 import 'package:smashly/data/models/cart_item.dart';
 import 'package:smashly/data/repositories/cart_repository.dart';
 import 'package:smashly/features/cart/cart_screen.dart';
+import 'package:smashly/features/cart/widgets/cart_skeleton.dart';
 import 'package:smashly/providers/cart_provider.dart';
 
 /// Giỏ trong bộ nhớ; `implements` để thêm method public vào CartRepository
@@ -15,8 +18,13 @@ class FakeCartRepository implements CartRepository {
   List<CartItem> items;
   Object? loadError;
 
+  /// Có giá trị: loadItems treo tới khi test gọi complete.
+  Completer<void>? hold;
+
   @override
   Future<List<CartItem>> loadItems(int userId) async {
+    await hold?.future;
+    await hold?.future;
     if (loadError != null) throw loadError!;
     return [...items];
   }
@@ -74,6 +82,26 @@ Future<CartProvider> pumpCart(
 }
 
 void main() {
+  testWidgets('loading shows skeleton, then the items', (tester) async {
+    final repo = FakeCartRepository([item(1)])..hold = Completer<void>();
+    final cart = CartProvider(repo)..updateUser(2);
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: cart,
+        child: MaterialApp(theme: AppTheme.light, home: const CartScreen()),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(CartSkeleton), findsOneWidget);
+    expect(find.text('Vợt 1'), findsNothing);
+
+    repo.hold!.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(CartSkeleton), findsNothing);
+    expect(find.text('Vợt 1'), findsOneWidget);
+  });
+
   testWidgets('empty cart shows empty state', (tester) async {
     await pumpCart(tester, FakeCartRepository([]));
     expect(find.text('Giỏ hàng đang trống'), findsOneWidget);
