@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:smashly/data/models/product_query.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/constants/enums.dart';
@@ -179,5 +180,24 @@ class ProductRepository {
       playerLevel: spec.playerLevel,
       playStyle: spec.playStyle,
     );
+  }
+
+  Future<List<Product>> searchProducts(ProductQuery query) async {
+    try {
+      // Lấy connection SQLite đang dùng chung.
+      final db = await _database();
+
+      // Gọi DAO thực hiện SQL.
+      return await _productDao.search(db, query);
+    } on AppException {
+      rethrow;
+    } catch (error) {
+      debugPrint('ProductRepository.searchProducts: $error');
+
+      throw const AppException(
+        'Không thể tải danh sách sản phẩm. '
+        'Vui lòng thử lại.',
+      );
+    }
   }
 }

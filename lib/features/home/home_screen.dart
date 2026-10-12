@@ -4,22 +4,17 @@ import 'package:smashly/features/home/widgets/home_brands_section.dart';
 import 'package:smashly/features/home/widgets/home_categories_section.dart';
 import 'package:smashly/features/home/widgets/home_featured_section.dart';
 import 'package:smashly/features/home/widgets/home_header.dart';
-import 'package:smashly/features/home/widgets/home_search_bar.dart';
 import 'package:smashly/features/home/widgets/home_trending_section.dart';
 
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../providers/home_provider.dart';
 import '../../routes/app_routes.dart';
-import '../../shared/widgets/category_card.dart';
-import '../../shared/widgets/product_card.dart';
 import '../../shared/widgets/states/empty_state.dart';
 import '../../shared/widgets/states/error_state.dart';
 import '../shell/app_shell.dart';
 import '../shell/app_tab.dart';
-import 'widgets/brand_tile.dart';
 import 'widgets/hero_banner.dart';
 import 'widgets/home_skeleton.dart';
 import 'widgets/play_style_section.dart';
@@ -90,10 +85,6 @@ class _HomeContent extends StatelessWidget {
                 const HomeHeader(),
 
                 const SizedBox(height: AppSpacing.lg),
-
-                HomeSearchBar(
-                  onTap: () => AppShell.goToTab(context, AppTab.shop),
-                ),
 
                 if (home.heroProduct != null) ...[
                   const SizedBox(height: AppSpacing.lg),
