@@ -4,7 +4,9 @@ import 'package:smashly/core/database/database_helper.dart';
 import 'package:smashly/data/daos/product_dao.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
 import 'package:smashly/features/home/home_screen.dart';
+import 'package:smashly/features/shop/shop_screen.dart';
 import 'package:smashly/providers/home_provider.dart';
+import 'package:smashly/providers/shop_provider.dart';
 
 import '../core/database/db_check_screen.dart';
 import '../features/auth/login_screen.dart';
@@ -107,7 +109,28 @@ abstract final class AppRoutes {
         child: const HomeScreen(),
       ),
 
-      shop => const PlaceholderScreen(code: 'S05', title: 'Shop', owner: 'Kha'),
+      shop => ChangeNotifierProvider<ShopProvider>(
+        create: (_) {
+          // DAO làm việc trực tiếp với SQLite.
+          const productDao = ProductDao();
+
+          // Repository kết nối DAO và DatabaseHelper.
+          final repository = ProductRepository(
+            database: () => DatabaseHelper.instance.database,
+            productDao: productDao,
+          );
+
+          // Provider giữ state của Shop.
+          final provider = ShopProvider(repository);
+
+          // Tải dữ liệu ban đầu.
+          provider.loadInitial();
+
+          return provider;
+        },
+        child: const ShopScreen(),
+      ),
+
       cart => const CartScreen(),
       myOrders => const PlaceholderScreen(
         code: 'S10',

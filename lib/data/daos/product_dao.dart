@@ -1,3 +1,4 @@
+import 'package:smashly/data/models/product_query.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/database/db_schema.dart';
@@ -184,5 +185,61 @@ class ProductDao {
       where: 'id = ?',
       whereArgs: [productId],
     );
+  }
+
+  Future<List<Product>> search(DatabaseExecutor db, ProductQuery query) async {
+    // Danh sách điều kiện WHERE.
+    final conditions = <String>['p.is_active = 1'];
+
+    // Các giá trị truyền an toàn vào câu SQL.
+    final arguments = <Object?>[];
+
+    // 1. Tìm kiếm theo từ khóa
+    final keyword = query.keyword.trim();
+
+    if (keyword.isNotEmpty) {
+      conditions.add('''
+      (
+        p.name LIKE ? COLLATE NOCASE
+        OR p.brand LIKE ? COLLATE NOCASE
+        OR c.name LIKE ? COLLATE NOCASE
+      )
+    ''');
+
+      final pattern = '%$keyword%';
+
+      arguments.addAll([pattern, pattern, pattern]);
+    }
+
+    // 2. Lọc theo danh mục
+    if (query.categoryId != null) {
+      conditions.add('p.category_id = ?');
+      arguments.add(query.categoryId);
+    }
+
+    // 3. Sắp xếp
+    final orderBy = switch (query.sort) {
+      ProductSort.popular => 'p.rating_count DESC, p.rating DESC, p.id DESC',
+
+      ProductSort.priceAscending => 'p.price ASC, p.id ASC',
+
+      ProductSort.priceDescending => 'p.price DESC, p.id DESC',
+
+      ProductSort.ratingDescending =>
+        'p.rating DESC, p.rating_count DESC, p.id DESC',
+    };
+
+    // 4. Thực hiện SQL
+    final rows = await db.rawQuery('''
+    SELECT p.*
+    FROM ${DbSchema.products} AS p
+    INNER JOIN ${DbSchema.categories} AS c
+      ON c.id = p.category_id
+    WHERE ${conditions.join(' AND ')}
+    ORDER BY $orderBy
+  ''', arguments);
+
+    // 5. Chuyển Map thành Product
+    return rows.map(Product.fromMap).toList();
   }
 }
