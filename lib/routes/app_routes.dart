@@ -87,15 +87,26 @@ abstract final class AppRoutes {
         owner: 'Hào',
       ),
 
-      home => ChangeNotifierProvider(
-        create: (_) => HomeProvider(
-          ProductRepository(
+      home => ChangeNotifierProvider<HomeProvider>(
+        create: (context) {
+          // Bước 1: Tạo DAO
+          const productDao = ProductDao();
+          // Bước 2: Tạo Repository
+          final repository = ProductRepository(
             database: () => DatabaseHelper.instance.database,
-            productDao: const ProductDao(),
-          ),
-        )..loadHome(),
+            productDao: productDao,
+          );
+          // Bước 3: Tạo Provider
+          final provider = HomeProvider(repository);
+          // Bước 4: Bắt đầu tải dữ liệu
+          provider.loadHome();
+          // Bước 5: Trả Provider cho ChangeNotifierProvider
+          return provider;
+        },
+        // Bước 6: Hiển thị HomeScreen
         child: const HomeScreen(),
       ),
+
       shop => const PlaceholderScreen(code: 'S05', title: 'Shop', owner: 'Kha'),
       cart => const CartScreen(),
       myOrders => const PlaceholderScreen(
