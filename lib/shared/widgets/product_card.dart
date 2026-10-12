@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smashly/core/utils/currency_formatter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -130,9 +131,9 @@ class ProductCard extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
 
                   Text(
-                    _money(product.price),
+                    CurrencyFormatter.format(product.price),
                     style: AppTextStyles.priceSmall.copyWith(
-                      color: AppColors.primary,
+                      color: const Color(0xFF96E403),
                     ),
                   ),
                 ],
@@ -142,9 +143,5 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _money(int value) {
-    return '${value.toString().replaceAllMapped(RegExp(r'(?=(\d{3})+(?!\d))'), (_) => '.')}₫';
   }
 }

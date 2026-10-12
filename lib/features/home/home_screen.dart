@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smashly/features/home/widgets/home_brands_section.dart';
+import 'package:smashly/features/home/widgets/home_categories_section.dart';
+import 'package:smashly/features/home/widgets/home_featured_section.dart';
+import 'package:smashly/features/home/widgets/home_header.dart';
+import 'package:smashly/features/home/widgets/home_search_bar.dart';
+import 'package:smashly/features/home/widgets/home_trending_section.dart';
 
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
@@ -81,11 +87,13 @@ class _HomeContent extends StatelessWidget {
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _header(context),
+                const HomeHeader(),
 
                 const SizedBox(height: AppSpacing.lg),
 
-                _search(context),
+                HomeSearchBar(
+                  onTap: () => AppShell.goToTab(context, AppTab.shop),
+                ),
 
                 if (home.heroProduct != null) ...[
                   const SizedBox(height: AppSpacing.lg),
@@ -105,7 +113,12 @@ class _HomeContent extends StatelessWidget {
 
                 const SizedBox(height: AppSpacing.md),
 
-                _categories(context),
+                HomeCategoriesSection(
+                  categories: home.categories,
+                  onCategoryTap: (category) {
+                    AppShell.goToTab(context, AppTab.shop);
+                  },
+                ),
 
                 const SizedBox(height: AppSpacing.section),
 
@@ -132,7 +145,12 @@ class _HomeContent extends StatelessWidget {
 
                   const SizedBox(height: AppSpacing.md),
 
-                  _featured(context),
+                  HomeFeaturedSection(
+                    products: home.featuredProducts,
+                    onProductTap: (product) {
+                      _openProduct(context, product.id);
+                    },
+                  ),
                 ],
 
                 if (home.brands.isNotEmpty) ...[
@@ -142,7 +160,12 @@ class _HomeContent extends StatelessWidget {
 
                   const SizedBox(height: AppSpacing.md),
 
-                  _brands(context),
+                  HomeBrandsSection(
+                    brands: home.brands,
+                    onBrandTap: (brand) {
+                      AppShell.goToTab(context, AppTab.shop);
+                    },
+                  ),
                 ],
 
                 if (home.trendingProducts.isNotEmpty) ...[
@@ -152,150 +175,18 @@ class _HomeContent extends StatelessWidget {
 
                   const SizedBox(height: AppSpacing.md),
 
-                  _trending(context),
+                  HomeTrendingSection(
+                    products: home.trendingProducts,
+                    onProductTap: (product) {
+                      _openProduct(context, product.id);
+                    },
+                  ),
                 ],
               ]),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _header(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Chào bạn 👋', style: AppTextStyles.caption),
-              Text('Elevate Your Game.', style: AppTextStyles.h1),
-            ],
-          ),
-        ),
-        IconButton(
-          onPressed: () => AppShell.goToTab(context, AppTab.cart),
-          icon: const Icon(Icons.shopping_bag_outlined),
-        ),
-      ],
-    );
-  }
-
-  Widget _search(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: AppRadius.mdAll,
-      child: InkWell(
-        borderRadius: AppRadius.mdAll,
-        onTap: () {
-          AppShell.goToTab(context, AppTab.shop);
-        },
-        child: Container(
-          height: 52,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          decoration: BoxDecoration(
-            borderRadius: AppRadius.mdAll,
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.search_rounded, color: AppColors.inkMuted),
-              const SizedBox(width: AppSpacing.md),
-              Text(
-                'Tìm vợt, giày, phụ kiện...',
-                style: AppTextStyles.body.copyWith(color: AppColors.inkMuted),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _categories(BuildContext context) {
-    return SizedBox(
-      height: 104,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: home.categories.length,
-        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
-        itemBuilder: (_, index) {
-          final category = home.categories[index];
-
-          return CategoryCard(
-            category: category,
-            onTap: () {
-              AppShell.goToTab(context, AppTab.shop);
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _featured(BuildContext context) {
-    return SizedBox(
-      height: 330,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: home.featuredProducts.length,
-        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
-        itemBuilder: (_, index) {
-          final product = home.featuredProducts[index];
-
-          return SizedBox(
-            width: 190,
-            child: ProductCard(
-              product: product,
-              onTap: () => _openProduct(context, product.id),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _brands(BuildContext context) {
-    return SizedBox(
-      height: 72,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: home.brands.length,
-        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
-        itemBuilder: (_, index) {
-          final brand = home.brands[index];
-
-          return BrandTile(
-            brand: brand,
-            onTap: () {
-              AppShell.goToTab(context, AppTab.shop);
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _trending(BuildContext context) {
-    return GridView.builder(
-      itemCount: home.trendingProducts.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 0.58,
-      ),
-      itemBuilder: (_, index) {
-        final product = home.trendingProducts[index];
-
-        return ProductCard(
-          product: product,
-          onTap: () => _openProduct(context, product.id),
-        );
-      },
     );
   }
 
