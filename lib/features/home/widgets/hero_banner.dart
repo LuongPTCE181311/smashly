@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:smashly/core/utils/currency_formatter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -22,26 +24,19 @@ class HeroBanner extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned(
-            right: -15,
-            bottom: -20,
-            width: 190,
-            height: 210,
+          Positioned.fill(
             child: Image.asset(
-              product.imagePath,
-              fit: BoxFit.contain,
+              'assets/images/banners/hero_astrox99.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
               errorBuilder: (_, _, _) {
-                return const Icon(
-                  Icons.sports_tennis_rounded,
-                  size: 120,
-                  color: AppColors.onDarkMuted,
-                );
+                return const ColoredBox(color: AppColors.midnight);
               },
             ),
           ),
 
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: SizedBox(
               width: 190,
               child: Column(
@@ -80,7 +75,7 @@ class HeroBanner extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
 
                   Text(
-                    _formatPrice(product.price),
+                    CurrencyFormatter.format(product.price),
                     style: AppTextStyles.price.copyWith(
                       color: AppColors.onDark,
                     ),
@@ -96,11 +91,5 @@ class HeroBanner extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatPrice(int price) {
-    final value = price.toString();
-
-    return '${value.replaceAllMapped(RegExp(r'(?=(\d{3})+(?!\d))'), (_) => '.')}₫';
   }
 }

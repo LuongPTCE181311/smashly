@@ -23,17 +23,21 @@ class CategoryCard extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              padding: const EdgeInsets.all(AppSpacing.md),
+              clipBehavior: Clip.antiAlias,
               decoration: const BoxDecoration(
                 color: AppColors.primarySoft,
                 borderRadius: AppRadius.lgAll,
               ),
               child: Image.asset(
                 category.iconPath,
-                fit: BoxFit.contain,
+                width: 72,
+                height: 72,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 errorBuilder: (_, _, _) {
                   return const Icon(
                     Icons.sports_tennis_rounded,
+                    size: 40,
                     color: AppColors.primary,
                   );
                 },
