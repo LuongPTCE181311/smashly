@@ -34,7 +34,6 @@ void main() {
   // Argument đúng kiểu đã ghi ở hằng số trong AppRoutes.
   const pushedRoutes = <String, Object?>{
     AppRoutes.register: 'customer@smashly.com',
-    AppRoutes.productDetail: 1,
     AppRoutes.checkout: null,
     AppRoutes.orderSuccess: 1,
     AppRoutes.orderDetail: 1,
@@ -73,16 +72,16 @@ void main() {
     final navigator = tester.state<NavigatorState>(find.byType(Navigator));
     navigator.pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
     await tester.pumpAndSettle();
-    navigator.pushNamed(AppRoutes.productDetail, arguments: 1);
+    navigator.pushNamed(AppRoutes.checkout);
     await tester.pumpAndSettle();
 
     AppShell.goToTab(
-      tester.element(find.text('S06 · Chi tiết sản phẩm')),
+      tester.element(find.text('S08 · Thanh toán')),
       AppTab.cart,
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('S06 · Chi tiết sản phẩm'), findsNothing);
+    expect(find.text('S08 · Thanh toán'), findsNothing);
     final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
     expect(bar.selectedIndex, AppTab.cart.index);
   });

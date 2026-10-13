@@ -5,7 +5,9 @@ import 'package:smashly/data/daos/product_dao.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
 import 'package:smashly/features/home/home_screen.dart';
 import 'package:smashly/features/shop/shop_screen.dart';
+import 'package:smashly/features/product/product_detail_screen.dart';
 import 'package:smashly/providers/home_provider.dart';
+import 'package:smashly/providers/product_detail_provider.dart';
 import 'package:smashly/providers/shop_provider.dart';
 
 import '../core/database/db_check_screen.dart';
@@ -143,10 +145,15 @@ abstract final class AppRoutes {
         owner: 'Hào',
       ),
 
-      productDetail => const PlaceholderScreen(
-        code: 'S06',
-        title: 'Chi tiết sản phẩm',
-        owner: 'Lượng',
+      productDetail => ChangeNotifierProvider<ProductDetailProvider>(
+        create: (_) => ProductDetailProvider(
+          ProductRepository(
+            database: () => DatabaseHelper.instance.database,
+            productDao: const ProductDao(),
+          ),
+          arguments is int ? arguments : null,
+        )..load(),
+        child: const ProductDetailScreen(),
       ),
       checkout => const PlaceholderScreen(
         code: 'S08',

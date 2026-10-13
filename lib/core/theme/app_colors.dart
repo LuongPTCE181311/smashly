@@ -43,6 +43,9 @@ abstract final class AppColors {
   /// Nền nhạt của khối lỗi (banner, nền icon lỗi): error 8%.
   static const errorSoft = Color(0x14DC2626);
 
+  static const successSoft = Color(0x1A16A34A);
+  static const warningSoft = Color(0x1FF59E0B);
+
   /// Gradient duy nhất của app: midnight → navy, góc 135°.
   static const darkGradient = LinearGradient(
     begin: Alignment.topLeft,

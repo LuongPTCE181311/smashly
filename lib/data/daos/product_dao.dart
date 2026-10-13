@@ -95,6 +95,19 @@ class ProductDao {
     return Product.fromMap(rows.first);
   }
 
+  Future<RacketSpec?> findRacketSpec(DatabaseExecutor db, int productId) async {
+    final rows = await db.query(
+      DbSchema.racketSpecs,
+      where: 'product_id = ?',
+      whereArgs: [productId],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) return null;
+
+    return RacketSpec.fromMap(rows.first);
+  }
+
   // ===== WRITE (Trọng) =====
 
   /// Các cột admin được ghi; không gồm `id`, `created_at`, `updated_at`.
