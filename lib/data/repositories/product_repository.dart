@@ -7,6 +7,7 @@ import '../../core/utils/app_exception.dart';
 import '../daos/product_dao.dart';
 import '../models/category.dart';
 import '../models/product.dart';
+import '../models/product_detail.dart';
 import '../models/racket_spec.dart';
 
 class ProductRepository {
@@ -64,6 +65,21 @@ class ProductRepository {
       return await _productDao.getTopBrands(db, limit: 6);
     } catch (_) {
       throw const AppException('Không thể tải thương hiệu.');
+    }
+  }
+
+  Future<ProductDetail?> getProductDetail(int productId) async {
+    try {
+      final db = await _database();
+      final product = await _productDao.findById(db, productId);
+      if (product == null) return null;
+      final spec = await _productDao.findRacketSpec(db, productId);
+      return ProductDetail(product: product, racketSpec: spec);
+    } catch (error) {
+      debugPrint('ProductRepository.getProductDetail: $error');
+      throw const AppException(
+        'Không thể tải thông tin sản phẩm. Vui lòng thử lại.',
+      );
     }
   }
 
