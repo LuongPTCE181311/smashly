@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../core/utils/app_exception.dart';
 import '../daos/order_dao.dart';
+import '../models/order.dart';
 import '../models/order_summary.dart';
 
 class OrderRepository {
@@ -18,6 +19,19 @@ class OrderRepository {
       () async {
         final db = await _database();
         return _orderDao.findSummariesByUser(db, userId);
+      },
+    );
+  }
+
+  Future<Order?> getOrderDetail(int orderId, {required int userId}) {
+    return _guard(
+      'getOrderDetail',
+      'Không thể tải chi tiết đơn hàng. Vui lòng thử lại.',
+      () async {
+        final db = await _database();
+        final order = await _orderDao.findById(db, orderId);
+        if (order == null || order.userId != userId) return null;
+        return order;
       },
     );
   }
