@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../core/constants/enums.dart';
 import '../../core/utils/app_exception.dart';
 import '../daos/product_dao.dart';
+import '../models/admin_product_query.dart';
 import '../models/category.dart';
 import '../models/product.dart';
 import '../models/product_detail.dart';
@@ -183,6 +184,19 @@ class ProductRepository {
     } on DatabaseException catch (error) {
       debugPrint('ProductRepository.restoreProduct: $error');
       throw const AppException('Không thể khôi phục sản phẩm lúc này.');
+    }
+  }
+
+  /// Danh sách cho Admin Products (gồm cả sản phẩm đang ẩn).
+  Future<List<Product>> getAdminProducts(AdminProductQuery query) async {
+    try {
+      final db = await _database();
+      return await _productDao.getAdminProducts(db, query);
+    } catch (error) {
+      debugPrint('ProductRepository.getAdminProducts: $error');
+      throw const AppException(
+        'Không thể tải danh sách sản phẩm. Vui lòng thử lại.',
+      );
     }
   }
 

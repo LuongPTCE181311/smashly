@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:smashly/core/database/database_helper.dart';
 import 'package:smashly/data/daos/product_dao.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
+import 'package:smashly/features/admin/admin_products_screen.dart';
 import 'package:smashly/features/home/home_screen.dart';
 import 'package:smashly/features/shop/shop_screen.dart';
 import 'package:smashly/features/product/product_detail_screen.dart';
+import 'package:smashly/providers/admin_product_provider.dart';
 import 'package:smashly/providers/home_provider.dart';
 import 'package:smashly/providers/product_detail_provider.dart';
 import 'package:smashly/providers/shop_provider.dart';
@@ -176,10 +178,14 @@ abstract final class AppRoutes {
         title: 'Admin Dashboard',
         owner: 'Trọng',
       ),
-      adminProducts => const PlaceholderScreen(
-        code: 'S14',
-        title: 'Quản lý sản phẩm',
-        owner: 'Trọng',
+      adminProducts => ChangeNotifierProvider<AdminProductProvider>(
+        create: (_) => AdminProductProvider(
+          ProductRepository(
+            database: () => DatabaseHelper.instance.database,
+            productDao: const ProductDao(),
+          ),
+        )..loadInitial(),
+        child: const AdminProductsScreen(),
       ),
       adminProductForm => const PlaceholderScreen(
         code: 'S15',
