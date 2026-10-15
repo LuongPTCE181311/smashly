@@ -45,6 +45,9 @@ abstract final class AppColors {
 
   static const successSoft = Color(0x1A16A34A);
   static const warningSoft = Color(0x1FF59E0B);
+  static const infoSoft = Color(0x1A0EA5E9);
+  static const violet = Color(0xFF7C3AED);
+  static const violetSoft = Color(0x1A7C3AED);
 
   /// Gradient duy nhất của app: midnight → navy, góc 135°.
   static const darkGradient = LinearGradient(

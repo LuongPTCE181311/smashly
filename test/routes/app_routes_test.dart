@@ -36,7 +36,6 @@ void main() {
     AppRoutes.register: 'customer@smashly.com',
     AppRoutes.checkout: null,
     AppRoutes.orderSuccess: 1,
-    AppRoutes.orderDetail: 1,
     AppRoutes.adminDashboard: null,
     AppRoutes.adminProductForm: 1,
     AppRoutes.adminProfile: null,

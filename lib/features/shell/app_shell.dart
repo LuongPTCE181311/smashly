@@ -37,6 +37,9 @@ class AppShell extends StatefulWidget {
     debugPrint('AppShell.goToTab($tab): không có AppShell nào đang mở.');
   }
 
+  static AppTab? currentTabOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_AppShellScope>()?.tab;
+
   @override
   State<AppShell> createState() => _AppShellState();
 }
@@ -86,14 +89,17 @@ class _AppShellState extends State<AppShell> {
         if (!didPop) _select(AppTab.home);
       },
       child: Scaffold(
-        body: IndexedStack(
-          index: _tab.index,
-          children: [
-            for (final tab in AppTab.values)
-              _opened.contains(tab)
-                  ? AppRoutes.screen(tab.routeName)
-                  : const SizedBox.shrink(),
-          ],
+        body: _AppShellScope(
+          tab: _tab,
+          child: IndexedStack(
+            index: _tab.index,
+            children: [
+              for (final tab in AppTab.values)
+                _opened.contains(tab)
+                    ? AppRoutes.screen(tab.routeName)
+                    : const SizedBox.shrink(),
+            ],
+          ),
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _tab.index,
@@ -115,4 +121,13 @@ class _AppShellState extends State<AppShell> {
     if (tab != AppTab.cart) return Icon(icon);
     return CartBadgeIcon(icon: icon, count: cartCount);
   }
+}
+
+class _AppShellScope extends InheritedWidget {
+  const _AppShellScope({required this.tab, required super.child});
+
+  final AppTab tab;
+
+  @override
+  bool updateShouldNotify(_AppShellScope oldWidget) => oldWidget.tab != tab;
 }
