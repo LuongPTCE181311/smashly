@@ -6,7 +6,12 @@ import 'package:smashly/data/repositories/product_repository.dart';
 import 'package:smashly/features/home/home_screen.dart';
 import 'package:smashly/features/shop/shop_screen.dart';
 import 'package:smashly/features/product/product_detail_screen.dart';
+import 'package:smashly/features/orders/my_orders_screen.dart';
+import 'package:smashly/data/daos/order_dao.dart';
+import 'package:smashly/data/repositories/order_repository.dart';
+import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/home_provider.dart';
+import 'package:smashly/providers/order_provider.dart';
 import 'package:smashly/providers/product_detail_provider.dart';
 import 'package:smashly/providers/shop_provider.dart';
 
@@ -134,10 +139,15 @@ abstract final class AppRoutes {
       ),
 
       cart => const CartScreen(),
-      myOrders => const PlaceholderScreen(
-        code: 'S10',
-        title: 'Đơn hàng của tôi',
-        owner: 'Lượng',
+      myOrders => ChangeNotifierProxyProvider<AuthProvider, OrderProvider>(
+        create: (_) => OrderProvider(
+          OrderRepository(
+            database: () => DatabaseHelper.instance.database,
+            orderDao: const OrderDao(),
+          ),
+        ),
+        update: (_, auth, orders) => orders!..updateUser(auth.currentUser?.id),
+        child: const MyOrdersScreen(),
       ),
       profile || adminProfile => const PlaceholderScreen(
         code: 'S12',
