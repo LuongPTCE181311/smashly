@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../data/models/order_summary.dart';
 import '../../../shared/widgets/buttons/pressable_scale.dart';
 import '../../../shared/widgets/order_status_badge.dart';
 
 class OrderCard extends StatelessWidget {
   const OrderCard({super.key, required this.summary, required this.onTap});
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy · HH:mm');
 
   final OrderSummary summary;
   final VoidCallback onTap;
@@ -56,7 +54,7 @@ class OrderCard extends StatelessWidget {
                           Text(order.orderCode, style: AppTextStyles.subtitle),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            _dateFormat.format(order.createdAt.toLocal()),
+                            DateFormatter.dateTime(order.createdAt),
                             style: AppTextStyles.caption,
                           ),
                         ],
