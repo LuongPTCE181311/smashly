@@ -37,7 +37,6 @@ void main() {
     AppRoutes.checkout: null,
     AppRoutes.orderSuccess: 1,
     AppRoutes.adminDashboard: null,
-    AppRoutes.adminProducts: null,
     AppRoutes.adminProductForm: 1,
     AppRoutes.adminProfile: null,
   };

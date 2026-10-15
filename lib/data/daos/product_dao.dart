@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../core/database/db_schema.dart';
 import '../../core/utils/db_time.dart';
+import '../models/admin_product_query.dart';
 import '../models/category.dart';
 import '../models/product.dart';
 import '../models/racket_spec.dart';
@@ -253,6 +254,45 @@ class ProductDao {
   ''', arguments);
 
     // 5. Chuyển Map thành Product
+    return rows.map(Product.fromMap).toList();
+  }
+
+  // ===== ADMIN READ (Trọng) =====
+
+  /// Danh sách cho Admin Products: lấy cả sản phẩm đang ẩn; các điều kiện
+  /// ghép bằng AND. Sản phẩm mới thêm đứng đầu.
+  Future<List<Product>> getAdminProducts(
+    DatabaseExecutor db,
+    AdminProductQuery query,
+  ) async {
+    final conditions = <String>[];
+    final arguments = <Object?>[];
+
+    final keyword = query.keyword.trim();
+    if (keyword.isNotEmpty) {
+      conditions.add(
+        '(name LIKE ? COLLATE NOCASE OR brand LIKE ? COLLATE NOCASE)',
+      );
+      final pattern = '%$keyword%';
+      arguments.addAll([pattern, pattern]);
+    }
+
+    if (query.categoryId != null) {
+      conditions.add('category_id = ?');
+      arguments.add(query.categoryId);
+    }
+
+    if (query.onlyHidden) {
+      conditions.add('is_active = 0');
+    }
+
+    final rows = await db.query(
+      DbSchema.products,
+      where: conditions.isEmpty ? null : conditions.join(' AND '),
+      whereArgs: arguments.isEmpty ? null : arguments,
+      orderBy: 'id DESC',
+    );
+
     return rows.map(Product.fromMap).toList();
   }
 }
