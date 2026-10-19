@@ -21,6 +21,11 @@ class OrderRepository {
   final OrderDao _orderDao;
   final CartDao _cartDao;
 
+  /// Phí ship: miễn phí từ 1.000.000₫. Màn Checkout dùng chung hàm này để số
+  /// hiển thị luôn khớp số lưu vào đơn.
+  static int shippingFeeFor(int subtotal) =>
+      subtotal >= seed.freeShippingFrom ? 0 : seed.shippingFee;
+
   /// Đặt hàng các món đang được chọn trong giỏ, trong MỘT transaction:
   /// kiểm tra + trừ kho -> tạo đơn -> chụp order_items -> xóa món đã mua khỏi
   /// giỏ. Bất kỳ bước nào lỗi (kể cả hết hàng) thì rollback toàn bộ: không có
@@ -81,7 +86,7 @@ class OrderRepository {
           }
 
           final subtotal = items.fold<int>(0, (sum, i) => sum + i.lineTotal);
-          final fee = subtotal >= seed.freeShippingFrom ? 0 : seed.shippingFee;
+          final fee = shippingFeeFor(subtotal);
           final orderId = await _orderDao.insertOrder(
             txn,
             tempCode: 'TMP-${now.microsecondsSinceEpoch}',
