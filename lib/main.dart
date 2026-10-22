@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:smashly/data/daos/product_dao.dart';
+import 'package:smashly/data/daos/wishlist_dao.dart';
+import 'package:smashly/data/repositories/wishlist_repository.dart';
+import 'package:smashly/providers/wishlist_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'app.dart';
@@ -33,6 +37,12 @@ void main() {
     cartDao: const CartDao(),
   );
 
+  final wishlistRepository = WishlistRepository(
+    database: () => DatabaseHelper.instance.database,
+    wishlistDao: const WishlistDao(),
+    productDao: const ProductDao(),
+  );
+
   runApp(
     MultiProvider(
       providers: [
@@ -40,6 +50,11 @@ void main() {
         ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
           create: (_) => CartProvider(cartRepository),
           update: (_, auth, cart) => cart!..updateUser(auth.currentUser?.id),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, WishlistProvider>(
+          create: (_) => WishlistProvider(wishlistRepository),
+          update: (_, auth, wishlist) =>
+              wishlist!..updateUser(auth.currentUser?.id),
         ),
       ],
       child: const SmashlyApp(),
