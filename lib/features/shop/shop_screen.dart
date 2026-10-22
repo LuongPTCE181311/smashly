@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smashly/providers/wishlist_provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
@@ -345,16 +346,14 @@ class _ShopScreenState extends State<ShopScreen> {
   // ==============================
 
   Widget _buildProductGrid(ShopProvider shop) {
+    final wishlist = context.watch<WishlistProvider>();
+
     return RefreshIndicator(
       onRefresh: context.read<ShopProvider>().refresh,
-
       child: GridView.builder(
         key: const PageStorageKey('shop-product-grid'),
-
         padding: const EdgeInsets.all(AppSpacing.screen),
-
         itemCount: shop.products.length,
-
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: AppSpacing.md,
@@ -364,16 +363,26 @@ class _ShopScreenState extends State<ShopScreen> {
 
         itemBuilder: (context, index) {
           final product = shop.products[index];
-
           return ProductCard(
             product: product,
-
+            isFavorite: wishlist.isFavorite(product.id),
+            isWishlistLoading: wishlist.isPending(product.id),
             onTap: () {
               Navigator.pushNamed(
                 context,
                 AppRoutes.productDetail,
                 arguments: product.id,
               );
+            },
+            onWishlistTap: () async {
+              final provider = context.read<WishlistProvider>();
+              final success = await provider.toggleFavorite(product.id);
+              if (!context.mounted) return;
+              if (!success && provider.errorMessage != null) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(provider.errorMessage!)));
+              }
             },
           );
         },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smashly/core/theme/app_motion.dart';
 import 'package:smashly/core/utils/currency_formatter.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -12,11 +13,15 @@ class ProductCard extends StatelessWidget {
     required this.product,
     required this.onTap,
     this.onWishlistTap,
+    this.isFavorite = false,
+    this.isWishlistLoading = false,
   });
 
   final Product product;
   final VoidCallback onTap;
   final VoidCallback? onWishlistTap;
+  final bool isFavorite;
+  final bool isWishlistLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -84,8 +89,28 @@ class ProductCard extends StatelessWidget {
                       top: AppSpacing.xs,
                       right: AppSpacing.xs,
                       child: IconButton(
-                        onPressed: onWishlistTap,
-                        icon: const Icon(Icons.favorite_border),
+                        tooltip: isFavorite
+                            ? 'Bỏ khỏi yêu thích'
+                            : 'Thêm vào yêu thích',
+                        onPressed: isWishlistLoading ? null : onWishlistTap,
+                        icon: AnimatedSwitcher(
+                          duration: AppMotion.normal,
+                          transitionBuilder: (child, animation) {
+                            return ScaleTransition(
+                              scale: animation,
+                              child: child,
+                            );
+                          },
+                          child: Icon(
+                            isFavorite
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            key: ValueKey(isFavorite),
+                            color: isFavorite
+                                ? AppColors.error
+                                : AppColors.inkMuted,
+                          ),
+                        ),
                       ),
                     ),
                 ],
