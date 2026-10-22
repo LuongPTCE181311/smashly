@@ -6,6 +6,7 @@ import 'package:smashly/data/daos/product_dao.dart';
 import 'package:smashly/data/repositories/order_repository.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
 import 'package:smashly/features/admin/admin_products_screen.dart';
+import 'package:smashly/features/checkout/checkout_screen.dart';
 import 'package:smashly/features/home/home_screen.dart';
 import 'package:smashly/features/orders/my_orders_screen.dart';
 import 'package:smashly/features/orders/order_detail_screen.dart';
@@ -13,6 +14,7 @@ import 'package:smashly/features/shop/shop_screen.dart';
 import 'package:smashly/features/product/product_detail_screen.dart';
 import 'package:smashly/providers/admin_product_provider.dart';
 import 'package:smashly/providers/auth_provider.dart';
+import 'package:smashly/providers/checkout_provider.dart';
 import 'package:smashly/providers/home_provider.dart';
 import 'package:smashly/providers/order_detail_provider.dart';
 import 'package:smashly/providers/order_provider.dart';
@@ -169,10 +171,14 @@ abstract final class AppRoutes {
         )..load(),
         child: const ProductDetailScreen(),
       ),
-      checkout => const PlaceholderScreen(
-        code: 'S08',
-        title: 'Thanh toán',
-        owner: 'Danh',
+      checkout => ChangeNotifierProvider<CheckoutProvider>(
+        create: (_) => CheckoutProvider(
+          OrderRepository(
+            database: () => DatabaseHelper.instance.database,
+            orderDao: const OrderDao(),
+          ),
+        ),
+        child: const CheckoutScreen(),
       ),
       orderSuccess => const PlaceholderScreen(
         code: 'S09',
