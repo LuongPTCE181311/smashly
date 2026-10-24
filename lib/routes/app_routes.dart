@@ -7,6 +7,7 @@ import 'package:smashly/data/repositories/order_repository.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
 import 'package:smashly/features/admin/admin_products_screen.dart';
 import 'package:smashly/features/checkout/checkout_screen.dart';
+import 'package:smashly/features/checkout/order_success_screen.dart';
 import 'package:smashly/features/home/home_screen.dart';
 import 'package:smashly/features/orders/my_orders_screen.dart';
 import 'package:smashly/features/orders/order_detail_screen.dart';
@@ -180,22 +181,8 @@ abstract final class AppRoutes {
         ),
         child: const CheckoutScreen(),
       ),
-      orderSuccess => const PlaceholderScreen(
-        code: 'S09',
-        title: 'Đặt hàng thành công',
-        owner: 'Danh',
-      ),
-      orderDetail => ChangeNotifierProvider<OrderDetailProvider>(
-        create: (context) => OrderDetailProvider(
-          OrderRepository(
-            database: () => DatabaseHelper.instance.database,
-            orderDao: const OrderDao(),
-          ),
-          orderId: arguments is int ? arguments : null,
-          userId: context.read<AuthProvider>().currentUser?.id,
-        )..load(),
-        child: const OrderDetailScreen(),
-      ),
+      orderSuccess => _withOrder(arguments, const OrderSuccessScreen()),
+      orderDetail => _withOrder(arguments, const OrderDetailScreen()),
 
       adminDashboard => const PlaceholderScreen(
         code: 'S13',
@@ -225,5 +212,20 @@ abstract final class AppRoutes {
         owner: '—',
       ),
     };
+  }
+
+  /// Nạp đơn `arguments` (int orderId) của user đang đăng nhập cho [child].
+  static Widget _withOrder(Object? arguments, Widget child) {
+    return ChangeNotifierProvider<OrderDetailProvider>(
+      create: (context) => OrderDetailProvider(
+        OrderRepository(
+          database: () => DatabaseHelper.instance.database,
+          orderDao: const OrderDao(),
+        ),
+        orderId: arguments is int ? arguments : null,
+        userId: context.read<AuthProvider>().currentUser?.id,
+      )..load(),
+      child: child,
+    );
   }
 }
