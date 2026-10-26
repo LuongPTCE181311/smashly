@@ -26,7 +26,6 @@ class CartItemTile extends StatelessWidget {
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
 
-  /// Nhập tay số lượng; null = không cho nhập.
   final ValueChanged<int>? onSetQuantity;
 
   @override

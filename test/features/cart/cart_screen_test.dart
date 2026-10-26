@@ -179,10 +179,8 @@ void main() {
     final after = samples.last;
 
     expect(after, lessThan(before));
-    // Thu gọn dần chứ không nhảy: có ít nhất một khung nằm giữa hai đầu.
     expect(samples.any((y) => y < before && y > after), isTrue);
 
-    // Đang animate vẫn bấm được món khác.
     await tester.tap(find.byType(Checkbox).last);
     await tester.pumpAndSettle();
     expect(find.text('Vợt 1'), findsNothing);
@@ -194,7 +192,6 @@ void main() {
     await pumpCart(tester, FakeCartRepository([item(1), item(2)]));
 
     await tester.drag(find.text('Vợt 1'), const Offset(-600, 0));
-    // Chờ dòng trượt + thu gọn xong thì SnackBar mới hiện.
     for (var i = 0; i < 30 && find.text('Hoàn tác').evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
@@ -204,13 +201,13 @@ void main() {
     final bar = tester.widget<LinearProgressIndicator>(
       find.byType(LinearProgressIndicator),
     );
-    expect(bar.value, lessThan(1)); // đang chạy
+    expect(bar.value, lessThan(1));
     expect(bar.value, greaterThan(0));
 
-    await tester.pump(const Duration(seconds: 3)); // ~3,5 s: còn
+    await tester.pump(const Duration(seconds: 3));
     expect(find.text('Hoàn tác'), findsOneWidget);
 
-    await tester.pump(const Duration(seconds: 2)); // quá 4 s: tắt
+    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
     expect(find.text('Hoàn tác'), findsNothing);
   });

@@ -7,10 +7,6 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 
 /// Nút − số lượng +. Truyền `null` cho [onDecrease]/[onIncrease] để khóa nút.
-///
-/// Truyền cả [max] (>= 1) và [onQuantityChanged] thì bấm vào con số để nhập
-/// trực tiếp: chỉ nhận chữ số, tự giữ trong khoảng 1..[max]; để trống hoặc 0
-/// thì giữ nguyên số cũ.
 class QuantityStepper extends StatefulWidget {
   const QuantityStepper({
     super.key,
@@ -32,7 +28,6 @@ class QuantityStepper extends StatefulWidget {
 }
 
 class _QuantityStepperState extends State<QuantityStepper> {
-  /// Tăng -> số mới trượt lên từ dưới; giảm -> trượt xuống từ trên.
   bool _increasing = true;
   bool _editing = false;
 
@@ -55,8 +50,6 @@ class _QuantityStepperState extends State<QuantityStepper> {
   }
 
   Widget _slide(Widget child, Animation<double> animation) {
-    // Con mới (key khớp số hiện tại) vào từ phía đi tới; con cũ chạy ngược
-    // animation nên đặt begin ngược dấu để nó thoát về phía đối diện.
     final entering = child.key == ValueKey(widget.quantity);
     final from = (_increasing ? 1.0 : -1.0) * (entering ? 1 : -1) * 0.6;
     return ClipRect(
@@ -135,7 +128,6 @@ class _QuantityStepperState extends State<QuantityStepper> {
   }
 }
 
-/// Chỉ giữ chữ số, bỏ số 0 đầu, và kẹp giá trị không vượt quá [max].
 class _QuantityFormatter extends TextInputFormatter {
   const _QuantityFormatter(this.max);
 
@@ -148,7 +140,6 @@ class _QuantityFormatter extends TextInputFormatter {
   ) {
     final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
     if (digits.isEmpty) return const TextEditingValue();
-    // Chuỗi quá dài không parse được thì coi như vượt giới hạn.
     final number = int.tryParse(digits) ?? max + 1;
     final text = '${number > max ? max : number}';
     return TextEditingValue(
@@ -168,7 +159,6 @@ class _QuantityField extends StatefulWidget {
   final int initial;
   final int max;
 
-  /// Số hợp lệ (>= 1), hoặc null khi để trống / 0 (giữ số cũ).
   final ValueChanged<int?> onDone;
 
   @override
@@ -186,7 +176,6 @@ class _QuantityFieldState extends State<_QuantityField> {
     _focus.addListener(() {
       if (!_focus.hasFocus) _commit();
     });
-    // Chọn sẵn cả số để gõ đè luôn.
     _controller.selection = TextSelection(
       baseOffset: 0,
       extentOffset: _controller.text.length,

@@ -74,8 +74,6 @@ class _CartList extends StatelessWidget {
         return Dismissible(
           key: ValueKey(item.id),
           direction: DismissDirection.endToStart,
-          // Vuốt xong dòng trượt đi rồi thu gọn chiều cao, các dòng dưới dồn
-          // lên mượt. Không chặn thao tác: các dòng khác vẫn bấm được.
           movementDuration: AppMotion.of(context, AppMotion.normal),
           resizeDuration: AppMotion.of(context, AppMotion.normal),
           background: const _DeleteBackground(),
@@ -105,7 +103,6 @@ class _CartList extends StatelessWidget {
       ..showSnackBar(
         SnackBar(
           content: _UndoContent(message: 'Đã xóa "${item.name}"'),
-          // Có action thì SnackBar mặc định KHÔNG tự tắt (persist = true).
           persist: false,
           duration: _undoDuration,
           action: SnackBarAction(
@@ -122,10 +119,8 @@ class _CartList extends StatelessWidget {
   }
 }
 
-/// Thời gian được phép Hoàn tác sau khi xóa món.
 const _undoDuration = Duration(seconds: 4);
 
-/// Nội dung SnackBar Hoàn tác kèm thanh đếm ngược cho thấy còn bao lâu.
 class _UndoContent extends StatelessWidget {
   const _UndoContent({required this.message});
 

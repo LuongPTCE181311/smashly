@@ -107,7 +107,6 @@ class _CheckBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Nảy vào một lần khi màn mở (emphasis); tắt khi bật "giảm chuyển động".
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: AppMotion.of(context, AppMotion.emphasis),

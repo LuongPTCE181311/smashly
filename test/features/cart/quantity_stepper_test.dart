@@ -47,12 +47,12 @@ void main() {
 
       await tester.pumpWidget(_app(3));
       await tester.pump(const Duration(milliseconds: 50));
-      expect(_top(tester, '3'), greaterThan(rest)); // đang ở dưới, đi lên
+      expect(_top(tester, '3'), greaterThan(rest));
       await tester.pumpAndSettle();
 
       await tester.pumpWidget(_app(2));
       await tester.pump(const Duration(milliseconds: 50));
-      expect(_top(tester, '2'), lessThan(rest)); // đang ở trên, đi xuống
+      expect(_top(tester, '2'), lessThan(rest));
       await tester.pumpAndSettle();
       expect(_top(tester, '2'), rest);
     },

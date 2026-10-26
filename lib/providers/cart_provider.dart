@@ -117,7 +117,6 @@ class CartProvider extends ChangeNotifier {
     return setQuantity(item, quantity);
   }
 
-  /// Đặt thẳng số lượng (nhập tay). Repository kiểm tồn kho và giới hạn dòng.
   Future<String?> setQuantity(CartItem item, int quantity) async {
     if (quantity < 1) return 'Số lượng phải từ 1 trở lên';
     if (quantity == item.quantity) return null;
