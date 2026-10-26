@@ -11,7 +11,7 @@ class CartDao {
   static const _selectItem =
       '''
       SELECT ci.id, ci.product_id, ci.quantity, ci.size, ci.is_selected,
-             p.name, p.image_path, p.price, p.stock
+             p.name, p.brand, p.image_path, p.price, p.stock
       FROM ${DbSchema.cartItems} ci
       JOIN ${DbSchema.products} p ON p.id = ci.product_id
   ''';
@@ -44,6 +44,24 @@ class CartDao {
       limit: 1,
     );
     return rows.isEmpty ? null : rows.first['stock'] as int;
+  }
+
+  /// Các size đang bán của sản phẩm (cột products.sizes, ngăn bằng dấu phẩy).
+  /// Rỗng nếu sản phẩm không có size (vợt, phụ kiện) hoặc không tồn tại.
+  Future<List<String>> findSizes(DatabaseExecutor db, int productId) async {
+    final rows = await db.query(
+      DbSchema.products,
+      columns: ['sizes'],
+      where: 'id = ?',
+      whereArgs: [productId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return [];
+    return ((rows.first['sizes'] as String?) ?? '')
+        .split(',')
+        .map((size) => size.trim())
+        .where((size) => size.isNotEmpty)
+        .toList();
   }
 
   Future<List<CartItem>> findItems(DatabaseExecutor db, int cartId) async {

@@ -197,4 +197,32 @@ void main() {
       expect(find.byTooltip('Nhập số lượng'), findsNothing);
     });
   });
+
+  testWidgets('keeps its own height when the parent allows a tall box', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              children: [
+                QuantityStepper(
+                  quantity: 1,
+                  onDecrease: () {},
+                  onIncrease: () {},
+                  max: 10,
+                  onQuantityChanged: (_) {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byType(QuantityStepper)).height, lessThan(60));
+  });
 }

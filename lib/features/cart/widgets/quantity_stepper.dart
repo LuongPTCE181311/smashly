@@ -80,6 +80,7 @@ class _QuantityStepperState extends State<QuantityStepper> {
       child: SizedBox(
         key: ValueKey(widget.quantity),
         width: 40,
+        height: 36,
         child: _editable
             ? InkWell(
                 onTap: () => setState(() => _editing = true),
