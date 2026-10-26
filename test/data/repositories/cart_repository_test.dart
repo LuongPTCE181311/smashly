@@ -111,6 +111,19 @@ void main() {
     expect(restored.isSelected, isFalse);
   });
 
+  test('a line never exceeds 99 even when stock is higher', () async {
+    await setStock(19, 500);
+    final item = (await repo.loadItems(customer)).single;
+
+    await repo.setQuantity(item, CartRepository.maxQuantityPerLine);
+    await expectLater(
+      repo.setQuantity(item, CartRepository.maxQuantityPerLine + 1),
+      throwsA(
+        isA<AppException>().having((e) => e.message, 'message', contains('99')),
+      ),
+    );
+  });
+
   test('setAllSelected only touches the given user cart', () async {
     await repo.addToCart(userId: newbie, productId: 2);
     await repo.setAllSelected(newbie, false);

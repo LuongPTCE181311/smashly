@@ -6,6 +6,8 @@ import '../daos/cart_dao.dart';
 import '../models/cart_item.dart';
 
 class CartRepository {
+  static const maxQuantityPerLine = 99;
+
   const CartRepository({required this._database, required this._cartDao});
 
   final Future<Database> Function() _database;
@@ -113,6 +115,9 @@ class CartRepository {
     if (stock <= 0) throw const AppException('Sản phẩm đã hết hàng');
     if (wanted > stock) {
       throw AppException('Chỉ còn $stock sản phẩm trong kho');
+    }
+    if (wanted > maxQuantityPerLine) {
+      throw const AppException('Tối đa $maxQuantityPerLine sản phẩm mỗi dòng');
     }
   }
 

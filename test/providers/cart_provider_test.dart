@@ -80,6 +80,30 @@ void main() {
     expect(cart.items.single.quantity, 2);
   });
 
+  test('setQuantity sets an exact number and reports bad input', () async {
+    cart.updateUser(newbie);
+    await settle();
+    await cart.addToCart(productId: 2);
+    await db.update(
+      DbSchema.products,
+      {'stock': 5},
+      where: 'id = ?',
+      whereArgs: [2],
+    );
+    final item = cart.items.single;
+
+    expect(await cart.setQuantity(item, 4), isNull);
+    expect(cart.items.single.quantity, 4);
+
+    expect(
+      await cart.setQuantity(cart.items.single, 6),
+      'Chỉ còn 5 sản phẩm trong kho',
+    );
+    expect(await cart.setQuantity(cart.items.single, 0), isNotNull);
+    expect(await cart.setQuantity(cart.items.single, -3), isNotNull);
+    expect(cart.items.single.quantity, 4, reason: 'lỗi thì giữ số cũ');
+  });
+
   test('toggle, select all and unavailable guard', () async {
     cart.updateUser(customer);
     await settle();

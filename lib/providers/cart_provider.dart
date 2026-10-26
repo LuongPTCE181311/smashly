@@ -111,9 +111,15 @@ class CartProvider extends ChangeNotifier {
   }
 
   /// [delta] = +1 / -1. Giảm khi đang là 1 thì không làm gì (xóa bằng vuốt).
-  Future<String?> changeQuantity(CartItem item, int delta) async {
+  Future<String?> changeQuantity(CartItem item, int delta) {
     final quantity = item.quantity + delta;
-    if (quantity < 1) return null;
+    if (quantity < 1) return Future.value();
+    return setQuantity(item, quantity);
+  }
+
+  Future<String?> setQuantity(CartItem item, int quantity) async {
+    if (quantity < 1) return 'Số lượng phải từ 1 trở lên';
+    if (quantity == item.quantity) return null;
     try {
       await _repository.setQuantity(item, quantity);
     } catch (error) {
