@@ -13,7 +13,9 @@ import '../../shared/widgets/states/empty_state.dart';
 import '../../shared/widgets/states/error_state.dart';
 import '../shell/app_shell.dart';
 import '../shell/app_tab.dart';
+import 'widgets/cart_brand_header.dart';
 import 'widgets/cart_item_tile.dart';
+import 'widgets/cart_product_group.dart';
 import 'widgets/cart_skeleton.dart';
 import 'widgets/cart_summary_bar.dart';
 
@@ -62,33 +64,84 @@ class _CartList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = cart.items;
+    final byBrand = <String, Map<int, List<CartItem>>>{};
+    for (final item in cart.items) {
+      ((byBrand[item.brand] ??= {})[item.productId] ??= []).add(item);
+    }
+
+    final entries = <Widget Function(BuildContext)>[];
+    for (final MapEntry(key: brand, value: products) in byBrand.entries) {
+      if (brand.isNotEmpty) {
+        final brandItems = [for (final group in products.values) ...group];
+        entries.add(
+          (context) => CartBrandHeader(
+            key: ValueKey('brand-$brand'),
+            brand: brand,
+            items: brandItems,
+            onToggle: (selected) =>
+                _show(context, _setMany(brandItems, selected)),
+          ),
+        );
+      }
+      for (final group in products.values) {
+        entries.add(
+          (context) => group.length > 1
+              ? _groupCard(context, group)
+              : _singleCard(context, group.single),
+        );
+      }
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(AppSpacing.screen),
-      itemCount: items.length + 1,
+      itemCount: entries.length + 1,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         if (index == 0) return _SelectAllRow(cart: cart);
-        final item = items[index - 1];
-        return Dismissible(
-          key: ValueKey(item.id),
-          direction: DismissDirection.endToStart,
-          movementDuration: AppMotion.of(context, AppMotion.normal),
-          resizeDuration: AppMotion.of(context, AppMotion.normal),
-          background: const _DeleteBackground(),
-          onDismissed: (_) => _remove(context, item),
-          child: CartItemTile(
-            item: item,
-            onToggle: () => _show(context, cart.toggleSelected(item)),
-            onDecrease: () => _show(context, cart.changeQuantity(item, -1)),
-            onIncrease: () => _show(context, cart.changeQuantity(item, 1)),
-            onSetQuantity: (value) =>
-                _show(context, cart.setQuantity(item, value)),
-          ),
-        );
+        return entries[index - 1](context);
       },
     );
+  }
+
+  Widget _singleCard(BuildContext context, CartItem item) {
+    return Dismissible(
+      key: ValueKey(item.id),
+      direction: DismissDirection.endToStart,
+      movementDuration: AppMotion.of(context, AppMotion.normal),
+      resizeDuration: AppMotion.of(context, AppMotion.normal),
+      background: const _DeleteBackground(),
+      onDismissed: (_) => _remove(context, item),
+      child: CartItemTile(
+        item: item,
+        onToggle: () => _show(context, cart.toggleSelected(item)),
+        onDecrease: () => _show(context, cart.changeQuantity(item, -1)),
+        onIncrease: () => _show(context, cart.changeQuantity(item, 1)),
+        onSetQuantity: (value) => _show(context, cart.setQuantity(item, value)),
+      ),
+    );
+  }
+
+  Widget _groupCard(BuildContext context, List<CartItem> group) {
+    return CartProductGroup(
+      key: ValueKey('group-${group.first.productId}'),
+      items: group,
+      onToggleGroup: (selected) => _show(context, _setMany(group, selected)),
+      onToggle: (item) => _show(context, cart.toggleSelected(item)),
+      onDecrease: (item) => _show(context, cart.changeQuantity(item, -1)),
+      onIncrease: (item) => _show(context, cart.changeQuantity(item, 1)),
+      onSetQuantity: (item, value) =>
+          _show(context, cart.setQuantity(item, value)),
+      onRemove: (item) => _remove(context, item),
+    );
+  }
+
+  Future<String?> _setMany(List<CartItem> items, bool selected) async {
+    String? firstError;
+    for (final item in items) {
+      if (item.isSelected == selected) continue;
+      firstError ??= await cart.toggleSelected(item);
+    }
+    return firstError;
   }
 
   Future<void> _remove(BuildContext context, CartItem item) async {
