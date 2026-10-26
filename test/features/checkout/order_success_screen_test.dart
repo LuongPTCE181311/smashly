@@ -87,6 +87,24 @@ void main() {
     expect(find.text('Tiếp tục mua sắm'), findsOneWidget);
   });
 
+  testWidgets('check badge animates in and ends fully visible', (tester) async {
+    await _pump(tester, _FakeOrderRepository());
+
+    final scaled = find.ancestor(
+      of: find.byIcon(Icons.check_circle_rounded),
+      matching: find.byType(Transform),
+    );
+    expect(
+      tester.widget<Transform>(scaled.first).transform.getMaxScaleOnAxis(),
+      closeTo(1, 0.001),
+    );
+    final opacity = find.ancestor(
+      of: find.byIcon(Icons.check_circle_rounded),
+      matching: find.byType(Opacity),
+    );
+    expect(tester.widget<Opacity>(opacity.first).opacity, 1);
+  });
+
   testWidgets('Back does not return to Checkout', (tester) async {
     await _pump(tester, _FakeOrderRepository());
     expect(find.text('checkout screen'), findsNothing);

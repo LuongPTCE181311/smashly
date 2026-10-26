@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -5,6 +7,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/cart_item.dart';
+import '../../../data/repositories/cart_repository.dart';
 import 'quantity_stepper.dart';
 
 /// Một dòng giỏ hàng: ô chọn, ảnh, tên, size, giá, stepper số lượng.
@@ -15,6 +18,7 @@ class CartItemTile extends StatelessWidget {
     required this.onToggle,
     required this.onDecrease,
     required this.onIncrease,
+    this.onSetQuantity,
   });
 
   final CartItem item;
@@ -22,9 +26,13 @@ class CartItemTile extends StatelessWidget {
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
 
+  /// Nhập tay số lượng; null = không cho nhập.
+  final ValueChanged<int>? onSetQuantity;
+
   @override
   Widget build(BuildContext context) {
     final soldOut = item.stock <= 0;
+    final maxQuantity = math.min(item.stock, CartRepository.maxQuantityPerLine);
     final overStock = !soldOut && item.quantity > item.stock;
     final warning = soldOut
         ? 'Đã hết hàng'
@@ -93,7 +101,9 @@ class CartItemTile extends StatelessWidget {
                   child: QuantityStepper(
                     quantity: item.quantity,
                     onDecrease: item.quantity > 1 ? onDecrease : null,
-                    onIncrease: item.quantity < item.stock ? onIncrease : null,
+                    onIncrease: item.quantity < maxQuantity ? onIncrease : null,
+                    max: maxQuantity,
+                    onQuantityChanged: onSetQuantity,
                   ),
                 ),
               ],

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../data/models/cart_item.dart';
@@ -73,6 +74,10 @@ class _CartList extends StatelessWidget {
         return Dismissible(
           key: ValueKey(item.id),
           direction: DismissDirection.endToStart,
+          // Vuốt xong dòng trượt đi rồi thu gọn chiều cao, các dòng dưới dồn
+          // lên mượt. Không chặn thao tác: các dòng khác vẫn bấm được.
+          movementDuration: AppMotion.of(context, AppMotion.normal),
+          resizeDuration: AppMotion.of(context, AppMotion.normal),
           background: const _DeleteBackground(),
           onDismissed: (_) => _remove(context, item),
           child: CartItemTile(
@@ -80,6 +85,8 @@ class _CartList extends StatelessWidget {
             onToggle: () => _show(context, cart.toggleSelected(item)),
             onDecrease: () => _show(context, cart.changeQuantity(item, -1)),
             onIncrease: () => _show(context, cart.changeQuantity(item, 1)),
+            onSetQuantity: (value) =>
+                _show(context, cart.setQuantity(item, value)),
           ),
         );
       },
@@ -97,7 +104,10 @@ class _CartList extends StatelessWidget {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: Text('Đã xóa "${item.name}"'),
+          content: _UndoContent(message: 'Đã xóa "${item.name}"'),
+          // Có action thì SnackBar mặc định KHÔNG tự tắt (persist = true).
+          persist: false,
+          duration: _undoDuration,
           action: SnackBarAction(
             label: 'Hoàn tác',
             onPressed: () async {
@@ -109,6 +119,44 @@ class _CartList extends StatelessWidget {
           ),
         ),
       );
+  }
+}
+
+/// Thời gian được phép Hoàn tác sau khi xóa món.
+const _undoDuration = Duration(seconds: 4);
+
+/// Nội dung SnackBar Hoàn tác kèm thanh đếm ngược cho thấy còn bao lâu.
+class _UndoContent extends StatelessWidget {
+  const _UndoContent({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(message),
+        if (!reduceMotion) ...[
+          const SizedBox(height: AppSpacing.sm),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 1, end: 0),
+            duration: _undoDuration,
+            builder: (context, value, _) => ClipRRect(
+              borderRadius: AppRadius.smAll,
+              child: LinearProgressIndicator(
+                value: value,
+                minHeight: 3,
+                color: AppColors.onDark,
+                backgroundColor: AppColors.onDark.withValues(alpha: 0.24),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
 

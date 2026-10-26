@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_motion.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -106,17 +107,27 @@ class _CheckBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 88,
-      height: 88,
-      decoration: const BoxDecoration(
-        color: AppColors.successSoft,
-        shape: BoxShape.circle,
+    // Nảy vào một lần khi màn mở (emphasis); tắt khi bật "giảm chuyển động".
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: AppMotion.of(context, AppMotion.emphasis),
+      curve: AppMotion.emphasisCurve,
+      builder: (context, t, child) => Opacity(
+        opacity: t.clamp(0.0, 1.0),
+        child: Transform.scale(scale: t, child: child),
       ),
-      child: const Icon(
-        Icons.check_circle_rounded,
-        size: 56,
-        color: AppColors.success,
+      child: Container(
+        width: 88,
+        height: 88,
+        decoration: const BoxDecoration(
+          color: AppColors.successSoft,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.check_circle_rounded,
+          size: 56,
+          color: AppColors.success,
+        ),
       ),
     );
   }
