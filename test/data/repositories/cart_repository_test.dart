@@ -39,6 +39,7 @@ void main() {
     final items = await repo.loadItems(customer);
     expect(items, hasLength(1));
     expect(items.single.productId, 19);
+    expect(items.single.brand, isNotEmpty);
     expect(items.single.price, greaterThan(0));
   });
 
@@ -69,6 +70,38 @@ void main() {
     await repo.addToCart(userId: newbie, productId: 10, size: '41');
     await repo.addToCart(userId: newbie, productId: 10, size: '42');
     expect(await repo.loadItems(newbie), hasLength(2));
+  });
+
+  test(
+    'same product and size merges, other size stays a separate line',
+    () async {
+      await repo.addToCart(userId: newbie, productId: 10, size: '41');
+      await repo.addToCart(userId: newbie, productId: 10, size: '42');
+      await repo.addToCart(userId: newbie, productId: 10, size: '41');
+
+      final items = await repo.loadItems(newbie);
+      expect(items, hasLength(2));
+      expect({for (final i in items) i.size: i.quantity}, {'41': 2, '42': 1});
+    },
+  );
+
+  test('size must match the product: required, valid, or absent', () async {
+    Matcher message(String text) =>
+        throwsA(isA<AppException>().having((e) => e.message, 'message', text));
+
+    await expectLater(
+      repo.addToCart(userId: newbie, productId: 10),
+      message('Vui lòng chọn size'),
+    );
+    await expectLater(
+      repo.addToCart(userId: newbie, productId: 10, size: '99'),
+      message('Size 99 không còn bán'),
+    );
+    await expectLater(
+      repo.addToCart(userId: newbie, productId: 2, size: '42'),
+      message('Sản phẩm này không có size'),
+    );
+    expect(await repo.loadItems(newbie), isEmpty);
   });
 
   test('sold out or inactive product is rejected', () async {

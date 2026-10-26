@@ -8,6 +8,18 @@ import '../models/cart_item.dart';
 class CartRepository {
   static const maxQuantityPerLine = 99;
 
+  /// Lỗi của [size] so với danh sách size đang bán [sizes]; null = hợp lệ.
+  /// Dùng chung cho thêm vào giỏ và đặt hàng (size có thể đã bị gỡ sau khi
+  /// món nằm trong giỏ).
+  static String? sizeProblem(List<String> sizes, String size) {
+    if (sizes.isEmpty) {
+      return size.isEmpty ? null : 'Sản phẩm này không có size';
+    }
+    if (size.isEmpty) return 'Vui lòng chọn size';
+    if (!sizes.contains(size)) return 'Size $size không còn bán';
+    return null;
+  }
+
   const CartRepository({required this._database, required this._cartDao});
 
   final Future<Database> Function() _database;
@@ -22,7 +34,8 @@ class CartRepository {
   }
 
   /// Thêm vào giỏ; cùng sản phẩm + size thì cộng dồn, không vượt tồn kho.
-  /// Món không có size truyền `size: ''`.
+  /// Sản phẩm có size bắt buộc chọn một size đang bán; món không có size
+  /// truyền `size: ''`. Cùng sản phẩm khác size là các dòng riêng.
   Future<void> addToCart({
     required int userId,
     required int productId,
@@ -34,6 +47,11 @@ class CartRepository {
       final db = await _database();
       await db.transaction((txn) async {
         final stock = await _requireStock(txn, productId);
+        final sizeError = sizeProblem(
+          await _cartDao.findSizes(txn, productId),
+          size,
+        );
+        if (sizeError != null) throw AppException(sizeError);
         final cartId = await _cartDao.getOrCreateCartId(txn, userId);
         final line = await _cartDao.findLine(txn, cartId, productId, size);
         final total = (line?.quantity ?? 0) + quantity;

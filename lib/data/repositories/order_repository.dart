@@ -6,6 +6,7 @@ import '../../core/database/seed/seed_orders.dart' as seed;
 import '../../core/utils/app_exception.dart';
 import '../../core/utils/db_time.dart';
 import '../daos/cart_dao.dart';
+import 'cart_repository.dart';
 import '../daos/order_dao.dart';
 import '../models/order.dart';
 import '../models/order_summary.dart';
@@ -64,6 +65,16 @@ class OrderRepository {
 
           final now = DateTime.now();
           final stamp = dbTime(now);
+
+          for (final item in items) {
+            final problem = CartRepository.sizeProblem(
+              await _cartDao.findSizes(txn, item.productId),
+              item.size,
+            );
+            if (problem != null) {
+              throw AppException('"${item.name}": $problem');
+            }
+          }
 
           // Trừ kho trước: hết hàng thì ném lỗi ngay, chưa tạo gì cả.
           for (final item in items) {

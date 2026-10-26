@@ -16,6 +16,7 @@ void main() {
   const newbie = 3; // giỏ trống
   const rackets = 2; // product 2: Astrox 77 Pro
   const string = 20; // product 20: BG66
+  const shoes = 10; // product 10: giày, size 39..44
 
   setUpAll(sqfliteFfiInit);
 
@@ -143,22 +144,76 @@ void main() {
     expect(await cartDao.findItems(db, cartId), hasLength(2));
   });
 
-  test('same product in two sizes cannot exceed stock together', () async {
-    await setStock(rackets, 3);
+  Future<void> addShoeLine(String size, int quantity) async {
     final cartId = await cartDao.getOrCreateCartId(db, newbie);
-    for (final size in ['3U', '4U']) {
-      await cartDao.insertLine(
-        db,
-        cartId: cartId,
-        productId: rackets,
-        quantity: 2,
-        size: size,
-      );
-    }
+    await cartDao.insertLine(
+      db,
+      cartId: cartId,
+      productId: shoes,
+      quantity: quantity,
+      size: size,
+    );
+  }
 
-    await expectLater(place(), throwsA(isA<AppException>()));
-    expect(await stockOf(rackets), 3);
+  test('same product in two sizes cannot exceed stock together', () async {
+    await setStock(shoes, 3);
+    await addShoeLine('41', 2);
+    await addShoeLine('42', 2);
+
+    await expectLater(
+      place(),
+      throwsA(
+        isA<AppException>().having(
+          (e) => e.message,
+          'message',
+          contains('chỉ còn 1'),
+        ),
+      ),
+    );
+    expect(await stockOf(shoes), 3);
   });
+
+  test('each size becomes its own order line with its size saved', () async {
+    await setStock(shoes, 10);
+    await setStock(rackets, 10);
+    await addShoeLine('41', 1);
+    await addShoeLine('42', 2);
+    await addToCart(rackets, 1);
+
+    final order = await place();
+
+    final shoeLines = order.items.where((i) => i.productId == shoes).toList();
+    expect({for (final i in shoeLines) i.size: i.quantity}, {'41': 1, '42': 2});
+    expect(order.items.singleWhere((i) => i.productId == rackets).size, '');
+    expect(await stockOf(shoes), 7);
+  });
+
+  test(
+    'a size removed from the product after adding blocks the order',
+    () async {
+      await setStock(shoes, 10);
+      await addShoeLine('42', 1);
+      await db.update(
+        DbSchema.products,
+        {'sizes': '39,40,41'},
+        where: 'id = ?',
+        whereArgs: [shoes],
+      );
+
+      await expectLater(
+        place(),
+        throwsA(
+          isA<AppException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('Size 42'), contains('"')),
+          ),
+        ),
+      );
+      expect(await stockOf(shoes), 10);
+      expect(await count(DbSchema.orders), 4);
+    },
+  );
 
   test('rejects empty selection and blank receiver info', () async {
     await expectLater(place(), throwsA(isA<AppException>()));
