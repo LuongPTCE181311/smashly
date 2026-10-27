@@ -43,6 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
 
 # Widget Preview related
 .widget_preview/
+
+# SQLite runtime (moi may tu tao DB rieng, khong commit)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
