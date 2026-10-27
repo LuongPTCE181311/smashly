@@ -196,8 +196,7 @@ class _TimelineRow extends StatelessWidget {
                 children: [
                   Text(
                     step.status.label,
-                    style: AppTextStyles.subtitle.copyWith(
-                      fontSize: 14,
+                    style: AppTextStyles.label.copyWith(
                       color: switch (step.state) {
                         TimelineStepState.cancelled => AppColors.error,
                         TimelineStepState.upcoming => AppColors.inkMuted,

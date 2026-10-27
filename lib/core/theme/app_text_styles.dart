@@ -63,6 +63,14 @@ abstract final class AppTextStyles {
   );
 
   /// 12/16 — brand, ngày, nhãn phụ.
+  static const label = TextStyle(
+    fontFamily: AppFonts.inter,
+    fontWeight: FontWeight.w600,
+    fontSize: 14,
+    height: 20 / 14,
+    color: AppColors.ink,
+  );
+
   static const caption = TextStyle(
     fontFamily: AppFonts.inter,
     fontWeight: FontWeight.w500,

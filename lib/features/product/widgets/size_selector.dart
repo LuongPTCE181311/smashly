@@ -43,8 +43,7 @@ class SizeSelector extends StatelessWidget {
                 selected: size == selected,
                 onSelected: (_) => onSelected(size),
                 showCheckmark: false,
-                labelStyle: AppTextStyles.subtitle.copyWith(
-                  fontSize: 14,
+                labelStyle: AppTextStyles.label.copyWith(
                   color: size == selected ? AppColors.primary : AppColors.ink,
                 ),
                 side: BorderSide(

@@ -85,7 +85,7 @@ class PlayStyleSection extends StatelessWidget {
                     color: AppColors.primarySoft,
                     borderRadius: AppRadius.mdAll,
                   ),
-                  child: Icon(item.icon, color: const Color(0xFF96E403)),
+                  child: Icon(item.icon, color: AppColors.primary),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
