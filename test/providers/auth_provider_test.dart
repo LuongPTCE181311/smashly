@@ -28,17 +28,20 @@ void main() {
     expect(provider.isAdmin, isTrue);
   });
 
-  test('field AppException populates field error without general message', () async {
-    const error = AppException('Email không đúng định dạng', field: 'email');
-    final repository = _FakeAuthRepository(user: admin, loginError: error);
-    final provider = AuthProvider(repository);
+  test(
+    'field AppException populates field error without general message',
+    () async {
+      const error = AppException('Email không đúng định dạng', field: 'email');
+      final repository = _FakeAuthRepository(user: admin, loginError: error);
+      final provider = AuthProvider(repository);
 
-    await provider.login('bad-email', 'Admin@123');
+      await provider.login('bad-email', 'Admin@123');
 
-    expect(provider.fieldErrors['email'], error.message);
-    expect(provider.errorMessage, isNull);
-    expect(provider.status, ViewStatus.error);
-  });
+      expect(provider.fieldErrors['email'], error.message);
+      expect(provider.errorMessage, isNull);
+      expect(provider.status, ViewStatus.error);
+    },
+  );
 
   test('StateError sets error status and fallback message', () async {
     final repository = _FakeAuthRepository(
@@ -54,23 +57,26 @@ void main() {
     expect(provider.errorMessage, 'Không thể đăng nhập lúc này');
   });
 
-  test('second concurrent login is ignored while the first is loading', () async {
-    final completer = Completer<User>();
-    final repository = _FakeAuthRepository(
-      user: admin,
-      loginHandler: (_, _) => completer.future,
-    );
-    final provider = AuthProvider(repository);
+  test(
+    'second concurrent login is ignored while the first is loading',
+    () async {
+      final completer = Completer<User>();
+      final repository = _FakeAuthRepository(
+        user: admin,
+        loginHandler: (_, _) => completer.future,
+      );
+      final provider = AuthProvider(repository);
 
-    final firstLogin = provider.login('admin@smashly.com', 'Admin@123');
-    final secondLogin = provider.login('admin@smashly.com', 'Admin@123');
+      final firstLogin = provider.login('admin@smashly.com', 'Admin@123');
+      final secondLogin = provider.login('admin@smashly.com', 'Admin@123');
 
-    expect(repository.loginCalls, 1);
-    expect(await secondLogin, isNull);
+      expect(repository.loginCalls, 1);
+      expect(await secondLogin, isNull);
 
-    completer.complete(admin);
-    expect(await firstLogin, admin);
-  });
+      completer.complete(admin);
+      expect(await firstLogin, admin);
+    },
+  );
 
   test('logout clears current user and sets empty status', () async {
     final repository = _FakeAuthRepository(user: admin);
@@ -85,11 +91,7 @@ void main() {
 }
 
 class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({
-    required this.user,
-    this.loginError,
-    this.loginHandler,
-  });
+  _FakeAuthRepository({required this.user, this.loginError, this.loginHandler});
 
   final User user;
   final Object? loginError;
@@ -120,4 +122,16 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {}
+
+  @override
+  Future<User> updateProfile({
+    required int userId,
+    required String fullName,
+    required String phone,
+    required String? address,
+  }) => throw UnimplementedError('Không dùng trong file test này');
+
+  @override
+  Future<void> resetDemoData() =>
+      throw UnimplementedError('Không dùng trong file test này');
 }

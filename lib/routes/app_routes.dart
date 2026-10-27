@@ -26,6 +26,7 @@ import '../core/database/db_check_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/cart/cart_screen.dart';
+import '../features/profile/profile_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/app_tab.dart';
 import 'app_page_route.dart';
@@ -156,11 +157,7 @@ abstract final class AppRoutes {
         update: (_, auth, orders) => orders!..updateUser(auth.currentUser?.id),
         child: const MyOrdersScreen(),
       ),
-      profile || adminProfile => const PlaceholderScreen(
-        code: 'S12',
-        title: 'Tài khoản',
-        owner: 'Hào',
-      ),
+      profile || adminProfile => const ProfileScreen(),
 
       productDetail => ChangeNotifierProvider<ProductDetailProvider>(
         create: (_) => ProductDetailProvider(

@@ -22,6 +22,13 @@ String? validatePhone(String? value) {
   return null;
 }
 
+String? validateAddress(String? value) {
+  if ((value ?? '').trim().length > 200) {
+    return 'Địa chỉ không được vượt quá 200 ký tự';
+  }
+  return null;
+}
+
 String? validatePassword(String? value) {
   final password = value ?? '';
   if (password.length < 8) return 'Mật khẩu phải có ít nhất 8 ký tự';

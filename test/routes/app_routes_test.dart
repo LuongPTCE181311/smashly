@@ -36,7 +36,6 @@ void main() {
     AppRoutes.register: 'customer@smashly.com',
     AppRoutes.adminDashboard: null,
     AppRoutes.adminProductForm: 1,
-    AppRoutes.adminProfile: null,
   };
 
   for (final MapEntry(key: route, value: arguments) in pushedRoutes.entries) {
