@@ -11,6 +11,7 @@ import '../../data/models/admin_dashboard.dart';
 import '../../providers/admin_dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
+import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/buttons/primary_button.dart';
 import '../../shared/widgets/states/error_state.dart';
 import '../../shared/widgets/states/loading_state.dart';
@@ -73,10 +74,7 @@ class AdminDashboardScreen extends StatelessWidget {
           AppSpacing.xl,
         ),
         children: [
-          const _SectionTitle(
-            icon: Icons.insights_rounded,
-            title: 'Tổng quan',
-          ),
+          const _SectionTitle(icon: Icons.insights_rounded, title: 'Tổng quan'),
           const SizedBox(height: AppSpacing.md),
           _StatGrid(stats: data.stats),
           const SizedBox(height: AppSpacing.section),
@@ -138,27 +136,80 @@ class AdminDashboardScreen extends StatelessWidget {
   // ===== ĐIỀU HƯỚNG: quay về thì làm mới số liệu =====
 
   /// Mở S15 ở chế độ sửa [productId].
-  Future<void> _openForm(BuildContext context, int productId) async {
-    await Navigator.pushNamed(
-      context,
-      AppRoutes.adminProductForm,
-      arguments: productId,
-    );
-    if (!context.mounted) return;
-    context.read<AdminDashboardProvider>().refresh();
-  }
+  Future<void> _openForm(BuildContext context, int productId) =>
+      _pushAndRefresh(context, AppRoutes.adminProductForm, productId);
 
-  Future<void> _openProducts(BuildContext context) async {
-    await Navigator.pushNamed(context, AppRoutes.adminProducts);
-    if (!context.mounted) return;
-    context.read<AdminDashboardProvider>().refresh();
-  }
+  Future<void> _openProducts(BuildContext context) =>
+      _pushAndRefresh(context, AppRoutes.adminProducts);
 }
 
-// ===== HEADER: dải Midnight "SMASHLY Admin" + avatar =====
+/// Mở [route]; quay về Dashboard thì tải lại số liệu (có thể đã đổi kho/đơn).
+Future<void> _pushAndRefresh(
+  BuildContext context,
+  String route, [
+  Object? arguments,
+]) async {
+  await Navigator.pushNamed(context, route, arguments: arguments);
+  if (!context.mounted) return;
+  context.read<AdminDashboardProvider>().refresh();
+}
+
+// ===== HEADER: dải Midnight "SMASHLY Admin" + avatar (menu avatar admin) =====
+
+/// Các mục trong menu avatar admin.
+enum _AdminMenuItem {
+  products('Quản lý sản phẩm', Icons.inventory_2_outlined),
+  addProduct('Thêm sản phẩm', Icons.add_box_outlined),
+  profile('Hồ sơ', Icons.person_outline_rounded),
+  logout('Đăng xuất', Icons.logout_rounded);
+
+  const _AdminMenuItem(this.label, this.icon);
+
+  final String label;
+  final IconData icon;
+}
 
 class _Header extends StatelessWidget {
   const _Header();
+
+  void _onMenuSelected(BuildContext context, _AdminMenuItem item) {
+    switch (item) {
+      case _AdminMenuItem.products:
+        _pushAndRefresh(context, AppRoutes.adminProducts);
+      case _AdminMenuItem.addProduct:
+        // Không truyền id = Form ở chế độ thêm mới.
+        _pushAndRefresh(context, AppRoutes.adminProductForm);
+      case _AdminMenuItem.profile:
+        _pushAndRefresh(context, AppRoutes.adminProfile);
+      case _AdminMenuItem.logout:
+        _logout(context);
+    }
+  }
+
+  /// Giống `ProfileScreen._logout`: hỏi xác nhận → logout → về Login.
+  Future<void> _logout(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Đăng xuất?',
+      message: 'Bạn có muốn đăng xuất khỏi tài khoản này?',
+      confirmLabel: 'Đăng xuất',
+      destructive: true,
+    );
+    if (!context.mounted || !confirmed) return;
+    await auth.logout();
+    if (!context.mounted) return;
+    if (auth.status == ViewStatus.empty) {
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.errorMessage ?? 'Không thể đăng xuất lúc này'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -186,9 +237,7 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       'SMASHLY Admin',
-                      style: AppTextStyles.h2.copyWith(
-                        color: AppColors.onDark,
-                      ),
+                      style: AppTextStyles.h2.copyWith(color: AppColors.onDark),
                     ),
                     Text(
                       'Bảng điều khiển',
@@ -199,13 +248,50 @@ class _Header extends StatelessWidget {
                   ],
                 ),
               ),
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppColors.accentVolt,
-                child: Text(
-                  initial,
-                  style: AppTextStyles.subtitle.copyWith(
-                    color: AppColors.midnight,
+              // Menu avatar admin: lối sang Products / Form / Profile admin.
+              PopupMenuButton<_AdminMenuItem>(
+                tooltip: 'Menu quản trị',
+                color: AppColors.navy,
+                position: PopupMenuPosition.under,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AppRadius.mdAll,
+                ),
+                onSelected: (item) => _onMenuSelected(context, item),
+                itemBuilder: (_) => [
+                  for (final item in _AdminMenuItem.values)
+                    PopupMenuItem(
+                      value: item,
+                      child: Row(
+                        children: [
+                          Icon(
+                            item.icon,
+                            size: 20,
+                            color: item == _AdminMenuItem.logout
+                                ? AppColors.error
+                                : AppColors.onDarkMuted,
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Flexible(
+                            child: Text(
+                              item.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.body.copyWith(
+                                color: AppColors.onDark,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: AppColors.accentVolt,
+                  child: Text(
+                    initial,
+                    style: AppTextStyles.subtitle.copyWith(
+                      color: AppColors.midnight,
+                    ),
                   ),
                 ),
               ),
