@@ -3,6 +3,7 @@ import 'package:smashly/core/constants/enums.dart';
 import 'package:smashly/core/database/database_helper.dart';
 import 'package:smashly/core/database/db_schema.dart';
 import 'package:smashly/core/database/seed/seed_users.dart';
+import 'package:smashly/core/utils/app_exception.dart';
 import 'package:smashly/data/daos/order_dao.dart';
 import 'package:smashly/data/models/order.dart';
 import 'package:smashly/data/repositories/order_repository.dart';
@@ -121,5 +122,91 @@ void main() {
     expect(steps.last.status, OrderStatus.cancelled);
     expect(steps.last.state, TimelineStepState.cancelled);
     expect(steps.where((s) => s.status == OrderStatus.delivered), isEmpty);
+  });
+
+  Future<int> pendingOrderId() async {
+    final id = await orderIdWith(OrderStatus.confirmed);
+    await db.update(
+      DbSchema.orders,
+      {'status': OrderStatus.pending.dbValue, 'confirmed_at': null},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    return id;
+  }
+
+  Future<int> stockOf(int productId) async {
+    final rows = await db.query(
+      DbSchema.products,
+      columns: ['stock'],
+      where: 'id = ?',
+      whereArgs: [productId],
+    );
+    return rows.single['stock'] as int;
+  }
+
+  test('hủy đơn chờ xác nhận: đổi sang Đã hủy và hoàn lại tồn kho', () async {
+    final provider = await loaded(await pendingOrderId(), SeedUserIds.customer);
+    final item = provider.order!.items.single;
+    final before = await stockOf(item.productId!);
+    expect(provider.canCancel, isTrue);
+
+    final error = await provider.cancelOrder();
+
+    expect(error, isNull);
+    expect(provider.order?.status, OrderStatus.cancelled);
+    expect(provider.order?.cancelledAt, isNotNull);
+    expect(provider.canCancel, isFalse);
+    expect(await stockOf(item.productId!), before + item.quantity);
+  });
+
+  test('đơn đã xác nhận: không có nút hủy, repository từ chối hủy', () async {
+    final id = await orderIdWith(OrderStatus.shipping);
+    final provider = await loaded(id, SeedUserIds.customer);
+
+    expect(provider.canCancel, isFalse);
+    await expectLater(
+      repository.cancelOrder(id, userId: SeedUserIds.customer),
+      throwsA(isA<AppException>()),
+    );
+  });
+
+  test('không hủy được đơn của người khác, kho giữ nguyên', () async {
+    final id = await pendingOrderId();
+    final productId =
+        (await db.query(
+              DbSchema.orderItems,
+              where: 'order_id = ?',
+              whereArgs: [id],
+            )).single['product_id']
+            as int;
+    final before = await stockOf(productId);
+
+    await expectLater(
+      repository.cancelOrder(id, userId: SeedUserIds.newbie),
+      throwsA(isA<AppException>()),
+    );
+    expect(await stockOf(productId), before);
+    final row = await db.query(
+      DbSchema.orders,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    expect(row.single['status'], OrderStatus.pending.dbValue);
+  });
+
+  test('hủy lần hai báo lỗi, kho chỉ được hoàn một lần', () async {
+    final id = await pendingOrderId();
+    final provider = await loaded(id, SeedUserIds.customer);
+    final item = provider.order!.items.single;
+    final before = await stockOf(item.productId!);
+
+    await provider.cancelOrder();
+    await expectLater(
+      repository.cancelOrder(id, userId: SeedUserIds.customer),
+      throwsA(isA<AppException>()),
+    );
+
+    expect(await stockOf(item.productId!), before + item.quantity);
   });
 }

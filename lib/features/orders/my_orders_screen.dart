@@ -119,11 +119,14 @@ class _OrderList extends StatelessWidget {
                 final summary = orders[index];
                 return OrderCard(
                   summary: summary,
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    AppRoutes.orderDetail,
-                    arguments: summary.order.id,
-                  ),
+                  onTap: () async {
+                    await Navigator.pushNamed(
+                      context,
+                      AppRoutes.orderDetail,
+                      arguments: summary.order.id,
+                    );
+                    if (context.mounted) provider.refresh();
+                  },
                 );
               },
             ),

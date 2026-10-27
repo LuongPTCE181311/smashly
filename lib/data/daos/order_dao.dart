@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../../core/constants/enums.dart';
 import '../../core/database/db_schema.dart';
 import '../models/order.dart';
 import '../models/order_item.dart';
@@ -140,6 +141,37 @@ class OrderDao {
       [quantity, updatedAt, productId, quantity],
     );
     return changed == 1;
+  }
+
+  Future<bool> cancelPendingOrder(
+    DatabaseExecutor db,
+    int orderId,
+    String cancelledAt,
+  ) async {
+    final changed = await db.rawUpdate(
+      'UPDATE ${DbSchema.orders} SET status = ?, cancelled_at = ? '
+      'WHERE id = ? AND status = ?',
+      [
+        OrderStatus.cancelled.dbValue,
+        cancelledAt,
+        orderId,
+        OrderStatus.pending.dbValue,
+      ],
+    );
+    return changed == 1;
+  }
+
+  Future<void> increaseStock(
+    DatabaseExecutor db,
+    int productId,
+    int quantity,
+    String updatedAt,
+  ) {
+    return db.rawUpdate(
+      'UPDATE ${DbSchema.products} SET stock = stock + ?, updated_at = ? '
+      'WHERE id = ?',
+      [quantity, updatedAt, productId],
+    );
   }
 
   OrderSummary _summaryFromRow(Map<String, Object?> row) {

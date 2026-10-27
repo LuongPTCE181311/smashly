@@ -15,11 +15,14 @@ class OrderDetailProvider extends ChangeNotifier {
   ViewStatus _status = ViewStatus.initial;
   Order? _order;
   String? _errorMessage;
+  bool _isCancelling = false;
   bool _disposed = false;
 
   ViewStatus get status => _status;
   Order? get order => _order;
   String? get errorMessage => _errorMessage;
+  bool get isCancelling => _isCancelling;
+  bool get canCancel => _order?.status == OrderStatus.pending && userId != null;
 
   Future<void> load() async {
     final id = orderId;
@@ -45,6 +48,30 @@ class OrderDetailProvider extends ChangeNotifier {
     }
 
     _notify();
+  }
+
+  Future<String?> cancelOrder() async {
+    final current = _order;
+    final user = userId;
+    if (current == null || user == null || !canCancel || _isCancelling) {
+      return null;
+    }
+
+    _isCancelling = true;
+    _notify();
+
+    String? error;
+    try {
+      _order = await _repository.cancelOrder(current.id, userId: user);
+    } catch (caught) {
+      error = caught is AppException && caught.message.isNotEmpty
+          ? caught.message
+          : 'Không thể hủy đơn hàng. Vui lòng thử lại.';
+    }
+
+    _isCancelling = false;
+    _notify();
+    return error;
   }
 
   void _notify() {
