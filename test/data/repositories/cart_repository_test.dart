@@ -164,4 +164,103 @@ void main() {
     expect((await repo.loadItems(newbie)).single.isSelected, isFalse);
     expect((await repo.loadItems(customer)).single.isSelected, isTrue);
   });
+
+  test('quantity below 1 is rejected and the cart stays untouched', () async {
+    Matcher mustBeAtLeastOne() => throwsA(
+      isA<AppException>().having(
+        (e) => e.message,
+        'message',
+        'Số lượng phải từ 1 trở lên',
+      ),
+    );
+
+    await expectLater(
+      repo.addToCart(userId: newbie, productId: 2, quantity: 0),
+      mustBeAtLeastOne(),
+    );
+    await expectLater(
+      repo.addToCart(userId: newbie, productId: 2, quantity: -3),
+      mustBeAtLeastOne(),
+    );
+    expect(await repo.loadItems(newbie), isEmpty);
+
+    final item = (await repo.loadItems(customer)).single;
+    await expectLater(repo.setQuantity(item, 0), mustBeAtLeastOne());
+    await expectLater(repo.setQuantity(item, -1), mustBeAtLeastOne());
+    expect((await repo.loadItems(customer)).single.quantity, item.quantity);
+  });
+
+  test(
+    'setQuantity on a deactivated product says it is no longer sold',
+    () async {
+      final item = (await repo.loadItems(customer)).single;
+      await db.update(
+        DbSchema.products,
+        {'is_active': 0},
+        where: 'id = ?',
+        whereArgs: [item.productId],
+      );
+
+      await expectLater(
+        repo.setQuantity(item, 2),
+        throwsA(
+          isA<AppException>().having(
+            (e) => e.message,
+            'message',
+            'Sản phẩm này không còn được bán',
+          ),
+        ),
+      );
+      expect((await repo.loadItems(customer)).single.quantity, item.quantity);
+    },
+  );
+
+  test('database failures become a friendly AppException', () async {
+    final item = (await repo.loadItems(customer)).single;
+    await db.close();
+
+    Matcher friendly(String message) => throwsA(
+      isA<AppException>().having((e) => e.message, 'message', message),
+    );
+
+    await expectLater(
+      repo.loadItems(customer),
+      friendly('Không thể tải giỏ hàng'),
+    );
+    await expectLater(
+      repo.addToCart(userId: customer, productId: 2),
+      friendly('Không thể thêm vào giỏ hàng'),
+    );
+    await expectLater(
+      repo.setQuantity(item, 2),
+      friendly('Không thể đổi số lượng'),
+    );
+    await expectLater(repo.remove(item), friendly('Không thể xóa sản phẩm'));
+  });
+
+  test('sizeProblem covers products with and without sizes', () {
+    const shoeSizes = ['41', '42'];
+
+    expect(CartRepository.sizeProblem(const [], ''), isNull);
+    expect(
+      CartRepository.sizeProblem(const [], '42'),
+      'Sản phẩm này không có size',
+    );
+    expect(CartRepository.sizeProblem(shoeSizes, ''), 'Vui lòng chọn size');
+    expect(
+      CartRepository.sizeProblem(shoeSizes, '43'),
+      'Size 43 không còn bán',
+    );
+    expect(CartRepository.sizeProblem(shoeSizes, '42'), isNull);
+  });
+
+  test('loadItems lists the newest line first', () async {
+    await repo.addToCart(userId: newbie, productId: 2);
+    await repo.addToCart(userId: newbie, productId: 20);
+    await repo.addToCart(userId: newbie, productId: 5);
+
+    final items = await repo.loadItems(newbie);
+
+    expect(items.map((i) => i.productId), [5, 20, 2]);
+  });
 }
