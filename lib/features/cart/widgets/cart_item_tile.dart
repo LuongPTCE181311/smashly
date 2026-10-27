@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -5,7 +7,17 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/cart_item.dart';
+import '../../../data/repositories/cart_repository.dart';
 import 'quantity_stepper.dart';
+
+int cartMaxQuantity(CartItem item) =>
+    math.min(item.stock, CartRepository.maxQuantityPerLine);
+
+String? cartStockWarning(CartItem item) {
+  if (item.stock <= 0) return 'Đã hết hàng';
+  if (item.quantity > item.stock) return 'Chỉ còn ${item.stock} sản phẩm';
+  return null;
+}
 
 /// Một dòng giỏ hàng: ô chọn, ảnh, tên, size, giá, stepper số lượng.
 class CartItemTile extends StatelessWidget {
@@ -15,6 +27,7 @@ class CartItemTile extends StatelessWidget {
     required this.onToggle,
     required this.onDecrease,
     required this.onIncrease,
+    this.onSetQuantity,
   });
 
   final CartItem item;
@@ -22,15 +35,12 @@ class CartItemTile extends StatelessWidget {
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
 
+  final ValueChanged<int>? onSetQuantity;
+
   @override
   Widget build(BuildContext context) {
-    final soldOut = item.stock <= 0;
-    final overStock = !soldOut && item.quantity > item.stock;
-    final warning = soldOut
-        ? 'Đã hết hàng'
-        : overStock
-        ? 'Chỉ còn ${item.stock} sản phẩm'
-        : null;
+    final maxQuantity = cartMaxQuantity(item);
+    final warning = cartStockWarning(item);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -47,7 +57,7 @@ class CartItemTile extends StatelessWidget {
             onChanged: (_) => onToggle(),
             materialTapTargetSize: MaterialTapTargetSize.padded,
           ),
-          _Thumbnail(path: item.imagePath),
+          CartThumbnail(path: item.imagePath),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
@@ -93,7 +103,9 @@ class CartItemTile extends StatelessWidget {
                   child: QuantityStepper(
                     quantity: item.quantity,
                     onDecrease: item.quantity > 1 ? onDecrease : null,
-                    onIncrease: item.quantity < item.stock ? onIncrease : null,
+                    onIncrease: item.quantity < maxQuantity ? onIncrease : null,
+                    max: maxQuantity,
+                    onQuantityChanged: onSetQuantity,
                   ),
                 ),
               ],
@@ -105,8 +117,8 @@ class CartItemTile extends StatelessWidget {
   }
 }
 
-class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.path});
+class CartThumbnail extends StatelessWidget {
+  const CartThumbnail({super.key, required this.path});
 
   final String path;
 

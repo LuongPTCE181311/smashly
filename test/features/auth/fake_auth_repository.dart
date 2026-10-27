@@ -11,6 +11,16 @@ import 'package:smashly/data/repositories/auth_repository.dart';
 class FakeAuthRepository implements AuthRepository {
   final _loginResults = Queue<Future<User> Function()>();
   final _restoreResults = Queue<Future<User?> Function()>();
+  final _registerResults = Queue<Future<String> Function()>();
+
+  ({
+    String fullName,
+    String email,
+    String phone,
+    String password,
+    String confirmPassword,
+  })?
+  lastRegister;
 
   int loginCalls = 0;
   int registerCalls = 0;
@@ -21,8 +31,15 @@ class FakeAuthRepository implements AuthRepository {
   /// lỗi, nên test phải tự kiểm số này bằng 0 trong tearDown.
   int unexpectedCalls = 0;
 
-  /// Lỗi `register` sẽ ném; `null` = thành công, trả email đã chuẩn hóa.
+  /// Dùng khi hàng đợi register rỗng; null trả email đã chuẩn hóa như trước.
   Object? registerError;
+
+  /// Xếp một lần register chờ test complete/completeError theo thứ tự FIFO.
+  Completer<String> holdRegister() {
+    final completer = Completer<String>();
+    _registerResults.add(() => completer.future);
+    return completer;
+  }
 
   /// Lần `login` kế tiếp trả [user].
   void willLogin(User user) => _loginResults.add(() async => user);
@@ -61,6 +78,14 @@ class FakeAuthRepository implements AuthRepository {
     required String confirmPassword,
   }) async {
     registerCalls++;
+    lastRegister = (
+      fullName: fullName,
+      email: email,
+      phone: phone,
+      password: password,
+      confirmPassword: confirmPassword,
+    );
+    if (_registerResults.isNotEmpty) return _registerResults.removeFirst()();
     final error = registerError;
     if (error != null) throw error;
     return email.trim().toLowerCase();
@@ -94,6 +119,63 @@ class FakeAuthRepository implements AuthRepository {
     return _restoreResults.removeFirst()();
   }
 
+  final _updateResults = Queue<Future<User> Function()>();
+  int updateCalls = 0;
+  ({int userId, String fullName, String phone, String? address})? lastUpdate;
+
+  /// Lần `updateProfile` kế tiếp trả [user] (giá trị "đọc lại từ DB").
+  void willUpdate(User user) => _updateResults.add(() async => user);
+
+  /// Lần `updateProfile` kế tiếp ném [error].
+  void willFailUpdate(Object error) =>
+      _updateResults.add(() async => throw error);
+
+  /// Lần `updateProfile` kế tiếp treo (đang lưu).
+  Completer<User> holdUpdate() {
+    final completer = Completer<User>();
+    _updateResults.add(() => completer.future);
+    return completer;
+  }
+
   @override
-  Future<void> logout() async {}
+  Future<User> updateProfile({
+    required int userId,
+    required String fullName,
+    required String phone,
+    required String? address,
+  }) {
+    updateCalls++;
+    lastUpdate = (
+      userId: userId,
+      fullName: fullName,
+      phone: phone,
+      address: address,
+    );
+    if (_updateResults.isEmpty) {
+      unexpectedCalls++;
+      return Future.error(
+        StateError(
+          'FakeAuthRepository: updateProfile lần $updateCalls chưa được lập trình',
+        ),
+      );
+    }
+    return _updateResults.removeFirst()();
+  }
+
+  int resetCalls = 0;
+
+  @override
+  Future<void> resetDemoData() async => resetCalls++;
+
+  int logoutCalls = 0;
+
+  /// Lỗi `logout` sẽ ném (vd. PlatformException của SharedPreferences).
+  Object? logoutError;
+
+  @override
+  Future<void> logout() async {
+    logoutCalls++;
+    final error = logoutError;
+    if (error != null) throw error;
+  }
 }

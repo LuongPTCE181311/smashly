@@ -17,6 +17,10 @@ class AuthProvider extends ChangeNotifier {
   String? _errorMessage;
   final Map<String, String> _fieldErrors = {};
 
+  bool _isSaving = false;
+  String? _saveErrorMessage;
+  final Map<String, String> _saveFieldErrors = {};
+
   ViewStatus get status => _status;
   User? get currentUser => _currentUser;
   String? get errorMessage => _errorMessage;
@@ -24,6 +28,89 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _status == ViewStatus.loading;
   bool get isLoggedIn => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
+
+  bool get isSaving => _isSaving;
+  String? get saveErrorMessage => _saveErrorMessage;
+  Map<String, String> get saveFieldErrors => UnmodifiableMapView(_saveFieldErrors);
+
+  void clearSaveErrors() {
+    if (_saveErrorMessage == null && _saveFieldErrors.isEmpty) return;
+    _saveErrorMessage = null;
+    _saveFieldErrors.clear();
+    notifyListeners();
+  }
+
+  Future<bool> updateProfile({
+    required String fullName,
+    required String phone,
+    required String? address,
+  }) async {
+    final userId = _currentUser?.id;
+    if (isSaving || userId == null) return false;
+
+    _isSaving = true;
+    _saveErrorMessage = null;
+    _saveFieldErrors.clear();
+    notifyListeners();
+
+    try {
+      final user = await _authRepository.updateProfile(
+        userId: userId,
+        fullName: fullName,
+        phone: phone,
+        address: address,
+      );
+      // Không hồi sinh phiên nếu user đã đăng xuất trong lúc chờ lưu.
+      if (_currentUser?.id == userId) _currentUser = user;
+      return true;
+    } on AppException catch (error) {
+      final message = error.message.isEmpty
+          ? 'Không thể lưu lúc này'
+          : error.message;
+      final field = error.field;
+      if (field == AuthRepository.accountGoneField) {
+        if (_currentUser?.id != userId) return false;
+        _saveErrorMessage = message;
+        try {
+          await _authRepository.logout();
+        } catch (logoutError) {
+          debugPrint('AuthProvider.updateProfile.logout: $logoutError');
+        } finally {
+          if (_currentUser?.id == userId) {
+            _currentUser = null;
+            _status = ViewStatus.empty;
+          }
+        }
+      } else if (field == null) {
+        _saveErrorMessage = message;
+      } else {
+        _saveFieldErrors[field] = message;
+      }
+      return false;
+    } catch (error) {
+      debugPrint('AuthProvider.updateProfile: $error');
+      _saveErrorMessage = 'Không thể lưu lúc này';
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> resetDemoData() async {
+    if (isLoading || isSaving) return;
+    _beginLoading();
+    _currentUser = null;
+    notifyListeners();
+    try {
+      await _authRepository.resetDemoData();
+      _status = ViewStatus.empty;
+    } catch (error) {
+      _handleError(error, 'Không thể đặt lại dữ liệu demo lúc này');
+    } finally {
+      notifyListeners();
+    }
+  }
 
   Future<void> restoreSession() async {
     if (isLoading) return;

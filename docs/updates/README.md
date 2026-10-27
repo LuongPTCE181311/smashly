@@ -2,6 +2,10 @@
 
 Mỗi PR vào `develop` thay đổi thứ người khác dùng (`main.dart`, `app.dart`, routes, widget chung, DB/schema, quy ước, cách chạy app, `android/`) kèm một file ở đây, theo khuôn `2026-10-06-auth-database.md`. Mới nhất ở trên.
 
+- 27/10 · Hào · [Admin guard UC02](2026-10-27-admin-guard.md) · Ai cần đọc: Lượng, Trọng, cả nhóm
+- 27/10 · Hào · [Register S03](2026-10-27-register.md) · Ai cần đọc: Lượng, Trọng
+- 2026-10-27 · Hào · S12 Profile · Lượng (routes), Trọng (Dashboard), cả nhóm (quy ước updateUser)
+
 | Ngày  | Tác giả | Tiêu đề                                                                     | Ai cần đọc                                      |
 | ----- | ------- | --------------------------------------------------------------------------- | ----------------------------------------------- |
 | 08/10 | Danh    | [Cart: model, DAO, Repository, Provider, màn Giỏ hàng](2026-10-08-cart.md) | **Hào** (`ProxyProvider` trong `main.dart`); **Lượng** (badge `AppShell`, `addToCart`, `QuantityStepper`) |

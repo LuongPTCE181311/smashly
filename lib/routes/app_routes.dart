@@ -9,6 +9,8 @@ import 'package:smashly/data/repositories/order_repository.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
 import 'package:smashly/features/admin/admin_dashboard_screen.dart';
 import 'package:smashly/features/admin/admin_products_screen.dart';
+import 'package:smashly/features/checkout/checkout_screen.dart';
+import 'package:smashly/features/checkout/order_success_screen.dart';
 import 'package:smashly/features/home/home_screen.dart';
 import 'package:smashly/features/orders/my_orders_screen.dart';
 import 'package:smashly/features/orders/order_detail_screen.dart';
@@ -17,6 +19,7 @@ import 'package:smashly/features/product/product_detail_screen.dart';
 import 'package:smashly/providers/admin_dashboard_provider.dart';
 import 'package:smashly/providers/admin_product_provider.dart';
 import 'package:smashly/providers/auth_provider.dart';
+import 'package:smashly/providers/checkout_provider.dart';
 import 'package:smashly/providers/home_provider.dart';
 import 'package:smashly/providers/order_detail_provider.dart';
 import 'package:smashly/providers/order_provider.dart';
@@ -24,9 +27,12 @@ import 'package:smashly/providers/product_detail_provider.dart';
 import 'package:smashly/providers/shop_provider.dart';
 
 import '../core/database/db_check_screen.dart';
+import '../features/auth/admin_guard.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/register_screen.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/cart/cart_screen.dart';
+import '../features/profile/profile_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/app_tab.dart';
 import 'app_page_route.dart';
@@ -71,6 +77,7 @@ abstract final class AppRoutes {
       '/admin/product-form'; // arguments: int? productId (null = thêm mới)
   static const adminProfile =
       '/admin/profile'; // cùng màn Profile, mở từ menu avatar admin
+  static const _adminOnly = {adminDashboard, adminProducts, adminProductForm};
 
   // Chỉ dùng khi dev.
   static const devMenu = '/dev';
@@ -84,6 +91,8 @@ abstract final class AppRoutes {
       settings: settings,
       builder: (_) => tab != null
           ? AppShell(initialTab: tab)
+          : _adminOnly.contains(name)
+          ? AdminGuard(child: screen(name, settings.arguments))
           : screen(name, settings.arguments),
     );
   }
@@ -98,11 +107,7 @@ abstract final class AppRoutes {
       login => LoginScreen(
         initialEmail: arguments is String ? arguments : null,
       ),
-      register => const PlaceholderScreen(
-        code: 'S03',
-        title: 'Register',
-        owner: 'Hào',
-      ),
+      register => const RegisterScreen(),
 
       home => ChangeNotifierProvider<HomeProvider>(
         create: (context) {
@@ -157,11 +162,7 @@ abstract final class AppRoutes {
         update: (_, auth, orders) => orders!..updateUser(auth.currentUser?.id),
         child: const MyOrdersScreen(),
       ),
-      profile || adminProfile => const PlaceholderScreen(
-        code: 'S12',
-        title: 'Tài khoản',
-        owner: 'Hào',
-      ),
+      profile || adminProfile => const ProfileScreen(),
 
       productDetail => ChangeNotifierProvider<ProductDetailProvider>(
         create: (_) => ProductDetailProvider(
@@ -173,27 +174,17 @@ abstract final class AppRoutes {
         )..load(),
         child: const ProductDetailScreen(),
       ),
-      checkout => const PlaceholderScreen(
-        code: 'S08',
-        title: 'Thanh toán',
-        owner: 'Danh',
-      ),
-      orderSuccess => const PlaceholderScreen(
-        code: 'S09',
-        title: 'Đặt hàng thành công',
-        owner: 'Danh',
-      ),
-      orderDetail => ChangeNotifierProvider<OrderDetailProvider>(
-        create: (context) => OrderDetailProvider(
+      checkout => ChangeNotifierProvider<CheckoutProvider>(
+        create: (_) => CheckoutProvider(
           OrderRepository(
             database: () => DatabaseHelper.instance.database,
             orderDao: const OrderDao(),
           ),
-          orderId: arguments is int ? arguments : null,
-          userId: context.read<AuthProvider>().currentUser?.id,
-        )..load(),
-        child: const OrderDetailScreen(),
+        ),
+        child: const CheckoutScreen(),
       ),
+      orderSuccess => _withOrder(arguments, const OrderSuccessScreen()),
+      orderDetail => _withOrder(arguments, const OrderDetailScreen()),
 
       adminDashboard => ChangeNotifierProvider<AdminDashboardProvider>(
         create: (_) => AdminDashboardProvider(
@@ -227,5 +218,20 @@ abstract final class AppRoutes {
         owner: '—',
       ),
     };
+  }
+
+  /// Nạp đơn `arguments` (int orderId) của user đang đăng nhập cho [child].
+  static Widget _withOrder(Object? arguments, Widget child) {
+    return ChangeNotifierProvider<OrderDetailProvider>(
+      create: (context) => OrderDetailProvider(
+        OrderRepository(
+          database: () => DatabaseHelper.instance.database,
+          orderDao: const OrderDao(),
+        ),
+        orderId: arguments is int ? arguments : null,
+        userId: context.read<AuthProvider>().currentUser?.id,
+      )..load(),
+      child: child,
+    );
   }
 }

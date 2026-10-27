@@ -59,7 +59,7 @@ class OrderItemRow extends StatelessWidget {
         const SizedBox(width: AppSpacing.md),
         Text(
           CurrencyFormatter.format(item.lineTotal),
-          style: AppTextStyles.priceSmall.copyWith(fontSize: 14),
+          style: AppTextStyles.priceSmall,
         ),
       ],
     );

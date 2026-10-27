@@ -100,4 +100,26 @@ void main() {
       );
     });
   });
+
+  group('validateAddress', () {
+    test('19. chấp nhận địa chỉ null', () {
+      expect(validateAddress(null), isNull);
+    });
+
+    test('20. chấp nhận địa chỉ rỗng', () {
+      expect(validateAddress(''), isNull);
+    });
+
+    test('21. chấp nhận địa chỉ chỉ dấu cách', () {
+      expect(validateAddress('   '), isNull);
+    });
+
+    test('22. chấp nhận địa chỉ 200 ký tự sau trim', () {
+      expect(validateAddress('  ${'x' * 200}  '), isNull);
+    });
+
+    test('23. từ chối địa chỉ 201 ký tự', () {
+      expect(validateAddress('x' * 201), isNotNull);
+    });
+  });
 }

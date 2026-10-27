@@ -12,11 +12,7 @@ import '../models/product_detail.dart';
 import '../models/racket_spec.dart';
 
 class ProductRepository {
-  const ProductRepository({
-    required Future<Database> Function() database,
-    required ProductDao productDao,
-  }) : _database = database,
-       _productDao = productDao;
+  const ProductRepository({required this._database, required this._productDao});
 
   final Future<Database> Function() _database;
   final ProductDao _productDao;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:smashly/core/utils/currency_formatter.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -66,9 +65,9 @@ class HeroBanner extends StatelessWidget {
                     product.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.display.copyWith(
+                    style: AppTextStyles.h1.copyWith(
                       color: AppColors.onDark,
-                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
 

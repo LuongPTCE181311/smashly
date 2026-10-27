@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../../core/constants/enums.dart';
 import '../../core/database/db_schema.dart';
 import '../models/order.dart';
 import '../models/order_item.dart';
@@ -62,6 +63,115 @@ class OrderDao {
     );
 
     return rows.map(OrderItem.fromMap).toList();
+  }
+
+  /// Thêm đơn PENDING và trả về id. Mã đơn cần id nên truyền mã tạm,
+  /// gọi [setOrderCode] ngay sau đó (trong cùng transaction).
+  Future<int> insertOrder(
+    DatabaseExecutor db, {
+    required String tempCode,
+    required int userId,
+    required String receiverName,
+    required String receiverPhone,
+    required String shippingAddress,
+    required String paymentMethod,
+    required String? note,
+    required int subtotal,
+    required int shippingFee,
+    required String createdAt,
+  }) {
+    return db.insert(DbSchema.orders, {
+      'order_code': tempCode,
+      'user_id': userId,
+      'receiver_name': receiverName,
+      'receiver_phone': receiverPhone,
+      'shipping_address': shippingAddress,
+      'payment_method': paymentMethod,
+      'note': note,
+      'subtotal': subtotal,
+      'shipping_fee': shippingFee,
+      'total': subtotal + shippingFee,
+      'created_at': createdAt,
+    });
+  }
+
+  Future<int> setOrderCode(DatabaseExecutor db, int orderId, String code) {
+    return db.update(
+      DbSchema.orders,
+      {'order_code': code},
+      where: 'id = ?',
+      whereArgs: [orderId],
+    );
+  }
+
+  /// Chụp lại tên/ảnh/giá lúc mua: đổi giá hay xóa sản phẩm sau này không làm
+  /// sai đơn cũ.
+  Future<int> insertItem(
+    DatabaseExecutor db, {
+    required int orderId,
+    required int productId,
+    required String productName,
+    required String productImage,
+    required int unitPrice,
+    required int quantity,
+    required String size,
+  }) {
+    return db.insert(DbSchema.orderItems, {
+      'order_id': orderId,
+      'product_id': productId,
+      'product_name': productName,
+      'product_image': productImage,
+      'unit_price': unitPrice,
+      'quantity': quantity,
+      'size': size,
+    });
+  }
+
+  /// Trừ kho nếu còn đủ; trả false khi sản phẩm ngừng bán / không đủ hàng.
+  /// Điều kiện nằm trong câu UPDATE nên không bao giờ trừ quá tồn kho.
+  Future<bool> decreaseStock(
+    DatabaseExecutor db,
+    int productId,
+    int quantity,
+    String updatedAt,
+  ) async {
+    final changed = await db.rawUpdate(
+      'UPDATE ${DbSchema.products} SET stock = stock - ?, updated_at = ? '
+      'WHERE id = ? AND is_active = 1 AND stock >= ?',
+      [quantity, updatedAt, productId, quantity],
+    );
+    return changed == 1;
+  }
+
+  Future<bool> cancelPendingOrder(
+    DatabaseExecutor db,
+    int orderId,
+    String cancelledAt,
+  ) async {
+    final changed = await db.rawUpdate(
+      'UPDATE ${DbSchema.orders} SET status = ?, cancelled_at = ? '
+      'WHERE id = ? AND status = ?',
+      [
+        OrderStatus.cancelled.dbValue,
+        cancelledAt,
+        orderId,
+        OrderStatus.pending.dbValue,
+      ],
+    );
+    return changed == 1;
+  }
+
+  Future<void> increaseStock(
+    DatabaseExecutor db,
+    int productId,
+    int quantity,
+    String updatedAt,
+  ) {
+    return db.rawUpdate(
+      'UPDATE ${DbSchema.products} SET stock = stock + ?, updated_at = ? '
+      'WHERE id = ?',
+      [quantity, updatedAt, productId],
+    );
   }
 
   OrderSummary _summaryFromRow(Map<String, Object?> row) {

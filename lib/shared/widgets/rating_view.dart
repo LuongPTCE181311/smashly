@@ -22,7 +22,7 @@ class RatingView extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             Text(
               rating.toStringAsFixed(1),
-              style: AppTextStyles.subtitle.copyWith(fontSize: 14),
+              style: AppTextStyles.label,
             ),
             const SizedBox(width: AppSpacing.xs),
             Text('($count)', style: AppTextStyles.caption),

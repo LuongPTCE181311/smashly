@@ -11,6 +11,7 @@ class CartItem {
     required this.quantity,
     required this.size,
     required this.isSelected,
+    this.brand = '',
   });
 
   final int id;
@@ -24,6 +25,7 @@ class CartItem {
   /// Chuỗi rỗng khi sản phẩm không có size (cột cart_items.size là NOT NULL).
   final String size;
   final bool isSelected;
+  final String brand;
 
   int get lineTotal => price * quantity;
 
@@ -31,6 +33,7 @@ class CartItem {
     id: id,
     productId: productId,
     name: name,
+    brand: brand,
     imagePath: imagePath,
     price: price,
     stock: stock,
@@ -43,6 +46,7 @@ class CartItem {
     id: map['id'] as int,
     productId: map['product_id'] as int,
     name: map['name'] as String,
+    brand: (map['brand'] as String?) ?? '',
     imagePath: map['image_path'] as String,
     price: map['price'] as int,
     stock: map['stock'] as int,

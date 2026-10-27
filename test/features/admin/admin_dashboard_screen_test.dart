@@ -60,6 +60,7 @@ void main() {
                 userDao: const UserDao(),
                 cartDao: const CartDao(),
                 sessionService: SessionService(),
+                resetDatabase: () async {},
               ),
             ),
           ),
