@@ -23,6 +23,7 @@ import 'package:smashly/providers/product_detail_provider.dart';
 import 'package:smashly/providers/shop_provider.dart';
 
 import '../core/database/db_check_screen.dart';
+import '../features/auth/admin_guard.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/splash_screen.dart';
@@ -72,6 +73,7 @@ abstract final class AppRoutes {
       '/admin/product-form'; // arguments: int? productId (null = thêm mới)
   static const adminProfile =
       '/admin/profile'; // cùng màn Profile, mở từ menu avatar admin
+  static const _adminOnly = {adminDashboard, adminProducts, adminProductForm};
 
   // Chỉ dùng khi dev.
   static const devMenu = '/dev';
@@ -85,6 +87,8 @@ abstract final class AppRoutes {
       settings: settings,
       builder: (_) => tab != null
           ? AppShell(initialTab: tab)
+          : _adminOnly.contains(name)
+          ? AdminGuard(child: screen(name, settings.arguments))
           : screen(name, settings.arguments),
     );
   }
