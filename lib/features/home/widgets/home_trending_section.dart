@@ -33,6 +33,7 @@ class HomeTrendingSection extends StatelessWidget {
 
         return ProductCard(
           product: product,
+          heroTag: ProductCard.heroTagFor(product.id),
           onTap: () => onProductTap(product),
           isFavorite: wishlist.isFavorite(product.id),
           isWishlistLoading: wishlist.isPending(product.id),

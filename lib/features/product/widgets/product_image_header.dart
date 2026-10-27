@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/models/product.dart';
+import '../../../shared/widgets/product_card.dart';
 
 class ProductImageHeader extends StatelessWidget {
   const ProductImageHeader({super.key, required this.product});
@@ -36,13 +37,16 @@ class ProductImageHeader extends StatelessWidget {
                   AppSpacing.xxl,
                   AppSpacing.xl,
                 ),
-                child: Image.asset(
-                  product.imagePath,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) => const Icon(
-                    Icons.sports_tennis_rounded,
-                    size: 96,
-                    color: AppColors.inkMuted,
+                child: Hero(
+                  tag: ProductCard.heroTagFor(product.id),
+                  child: Image.asset(
+                    product.imagePath,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.sports_tennis_rounded,
+                      size: 96,
+                      color: AppColors.inkMuted,
+                    ),
                   ),
                 ),
               ),
