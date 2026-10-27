@@ -27,6 +27,7 @@ class AppTextField extends StatefulWidget {
     super.key,
     required this.label,
     this.controller,
+    this.fieldKey,
     this.hint,
     this.validator,
     this.isPassword = false,
@@ -47,6 +48,7 @@ class AppTextField extends StatefulWidget {
 
   final String label;
   final TextEditingController? controller;
+  final GlobalKey<FormFieldState<String>>? fieldKey;
   final String? hint;
   final FormFieldValidator<String>? validator;
   final bool isPassword;
@@ -69,10 +71,13 @@ class AppTextField extends StatefulWidget {
 }
 
 class _AppTextFieldState extends State<AppTextField> {
-  final _fieldKey = GlobalKey<FormFieldState<String>>();
+  final _ownFieldKey = GlobalKey<FormFieldState<String>>();
   FocusNode? _ownFocusNode;
   bool _touched = false;
   bool _obscured = true;
+
+  GlobalKey<FormFieldState<String>> get _fieldKey =>
+      widget.fieldKey ?? _ownFieldKey;
 
   FocusNode get _focusNode =>
       widget.focusNode ?? (_ownFocusNode ??= FocusNode());
