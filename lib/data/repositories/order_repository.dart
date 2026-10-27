@@ -163,6 +163,42 @@ class OrderRepository {
     );
   }
 
+  Future<Order> cancelOrder(int orderId, {required int userId}) {
+    return _guard(
+      'cancelOrder',
+      'Không thể hủy đơn hàng. Vui lòng thử lại.',
+      () async {
+        final db = await _database();
+        return db.transaction((txn) async {
+          final order = await _orderDao.findById(txn, orderId);
+          if (order == null || order.userId != userId) {
+            throw const AppException('Không tìm thấy đơn hàng');
+          }
+
+          final stamp = dbTime(DateTime.now());
+          final cancelled = await _orderDao.cancelPendingOrder(
+            txn,
+            orderId,
+            stamp,
+          );
+          if (!cancelled) {
+            throw const AppException(
+              'Đơn hàng đã được xác nhận nên không thể hủy',
+            );
+          }
+
+          for (final item in order.items) {
+            final productId = item.productId;
+            if (productId == null) continue;
+            await _orderDao.increaseStock(txn, productId, item.quantity, stamp);
+          }
+
+          return (await _orderDao.findById(txn, orderId))!;
+        });
+      },
+    );
+  }
+
   Future<T> _guard<T>(
     String action,
     String fallback,

@@ -10,9 +10,11 @@ import '../../core/utils/date_formatter.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../data/models/order.dart';
 import '../../providers/order_detail_provider.dart';
+import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/order_status_badge.dart';
 import '../../shared/widgets/states/empty_state.dart';
 import '../../shared/widgets/states/error_state.dart';
+import 'widgets/cancel_order_bar.dart';
 import 'widgets/order_detail_skeleton.dart';
 import 'widgets/order_item_row.dart';
 import 'widgets/order_section_card.dart';
@@ -42,7 +44,46 @@ class OrderDetailScreen extends StatelessWidget {
         ),
         ViewStatus.success => _OrderDetailContent(order: provider.order!),
       },
+      bottomNavigationBar:
+          provider.status == ViewStatus.success && provider.canCancel
+          ? CancelOrderBar(
+              isLoading: provider.isCancelling,
+              onCancel: () => _confirmCancel(context, provider),
+            )
+          : null,
     );
+  }
+
+  Future<void> _confirmCancel(
+    BuildContext context,
+    OrderDetailProvider provider,
+  ) async {
+    final order = provider.order;
+    if (order == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Hủy đơn hàng?',
+      message:
+          'Đơn ${order.orderCode} sẽ bị hủy và sản phẩm được hoàn lại kho. '
+          'Bạn không thể hoàn tác thao tác này.',
+      confirmLabel: 'Hủy đơn',
+      cancelLabel: 'Giữ đơn',
+      destructive: true,
+      icon: Icons.cancel_outlined,
+    );
+    if (!confirmed) return;
+
+    final error = await provider.cancelOrder();
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(error ?? 'Đã hủy đơn ${order.orderCode}'),
+          backgroundColor: error == null ? null : AppColors.error,
+        ),
+      );
   }
 }
 
@@ -61,7 +102,7 @@ class _OrderDetailContent extends StatelessWidget {
         OrderSectionCard(
           title: 'Trạng thái đơn hàng',
           icon: Icons.history_rounded,
-          child: OrderTimeline(order: order),
+          child: OrderTimeline(key: ValueKey(order.status), order: order),
         ),
         const SizedBox(height: AppSpacing.md),
         OrderSectionCard(
@@ -181,7 +222,11 @@ class _Header extends StatelessWidget {
               children: [
                 Text('Mã đơn hàng', style: AppTextStyles.caption),
                 const SizedBox(height: 2),
-                Text(order.orderCode, style: AppTextStyles.h2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(order.orderCode, style: AppTextStyles.h2),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Đặt lúc ${DateFormatter.dateTime(order.createdAt)}',
