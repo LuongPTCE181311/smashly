@@ -24,6 +24,7 @@ import 'package:smashly/providers/shop_provider.dart';
 
 import '../core/database/db_check_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/register_screen.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/cart/cart_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -98,11 +99,7 @@ abstract final class AppRoutes {
       login => LoginScreen(
         initialEmail: arguments is String ? arguments : null,
       ),
-      register => const PlaceholderScreen(
-        code: 'S03',
-        title: 'Register',
-        owner: 'Hào',
-      ),
+      register => const RegisterScreen(),
 
       home => ChangeNotifierProvider<HomeProvider>(
         create: (context) {
