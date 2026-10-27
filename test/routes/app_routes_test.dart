@@ -36,7 +36,6 @@ void main() {
     AppRoutes.register: 'customer@smashly.com',
     AppRoutes.checkout: null,
     AppRoutes.orderSuccess: 1,
-    AppRoutes.adminDashboard: null,
     AppRoutes.adminProductForm: 1,
     AppRoutes.adminProfile: null,
   };
@@ -109,16 +108,16 @@ void main() {
   ) async {
     await tester.pumpWidget(_app(AppRoutes.devMenu));
     final navigator = tester.state<NavigatorState>(find.byType(Navigator));
-    navigator.pushNamed(AppRoutes.adminDashboard);
+    navigator.pushNamed(AppRoutes.adminProductForm);
     await tester.pumpAndSettle();
 
     AppShell.goToTab(
-      tester.element(find.text('S13 · Admin Dashboard')),
+      tester.element(find.text('S15 · Thêm / sửa sản phẩm')),
       AppTab.cart,
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('S13 · Admin Dashboard'), findsOneWidget);
+    expect(find.text('S15 · Thêm / sửa sản phẩm'), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
   });
 }
