@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smashly/core/database/database_helper.dart';
+import 'package:smashly/data/daos/admin_dashboard_dao.dart';
 import 'package:smashly/data/daos/order_dao.dart';
 import 'package:smashly/data/daos/product_dao.dart';
+import 'package:smashly/data/repositories/admin_dashboard_repository.dart';
 import 'package:smashly/data/repositories/order_repository.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
+import 'package:smashly/features/admin/admin_dashboard_screen.dart';
 import 'package:smashly/features/admin/admin_products_screen.dart';
 import 'package:smashly/features/checkout/checkout_screen.dart';
 import 'package:smashly/features/checkout/order_success_screen.dart';
@@ -13,6 +16,7 @@ import 'package:smashly/features/orders/my_orders_screen.dart';
 import 'package:smashly/features/orders/order_detail_screen.dart';
 import 'package:smashly/features/shop/shop_screen.dart';
 import 'package:smashly/features/product/product_detail_screen.dart';
+import 'package:smashly/providers/admin_dashboard_provider.dart';
 import 'package:smashly/providers/admin_product_provider.dart';
 import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/checkout_provider.dart';
@@ -182,10 +186,14 @@ abstract final class AppRoutes {
       orderSuccess => _withOrder(arguments, const OrderSuccessScreen()),
       orderDetail => _withOrder(arguments, const OrderDetailScreen()),
 
-      adminDashboard => const PlaceholderScreen(
-        code: 'S13',
-        title: 'Admin Dashboard',
-        owner: 'Trọng',
+      adminDashboard => ChangeNotifierProvider<AdminDashboardProvider>(
+        create: (_) => AdminDashboardProvider(
+          AdminDashboardRepository(
+            database: () => DatabaseHelper.instance.database,
+            dashboardDao: const AdminDashboardDao(),
+          ),
+        )..load(),
+        child: const AdminDashboardScreen(),
       ),
       adminProducts => ChangeNotifierProvider<AdminProductProvider>(
         create: (_) => AdminProductProvider(

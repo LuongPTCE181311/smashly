@@ -70,7 +70,6 @@ FakeAuthRepository _newRepo() {
 void main() {
   // Argument đúng kiểu đã ghi ở hằng số trong AppRoutes.
   const pushedRoutes = <String, Object?>{
-    AppRoutes.adminDashboard: null,
     AppRoutes.adminProductForm: 1,
   };
 
