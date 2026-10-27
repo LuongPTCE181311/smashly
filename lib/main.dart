@@ -31,6 +31,7 @@ void main() {
     userDao: const UserDao(),
     cartDao: const CartDao(),
     sessionService: SessionService(),
+    resetDatabase: DatabaseHelper.instance.resetDatabase,
   );
   final cartRepository = CartRepository(
     database: () => DatabaseHelper.instance.database,

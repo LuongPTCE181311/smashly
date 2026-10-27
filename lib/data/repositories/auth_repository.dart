@@ -16,12 +16,17 @@ class AuthRepository {
     required this._userDao,
     required this._cartDao,
     required this._sessionService,
+    required this._resetDatabase,
   });
+
+  static const String accountGoneField = 'account';
+  static const String accountGoneMessage = 'Tài khoản không còn tồn tại';
 
   final Future<Database> Function() _database;
   final UserDao _userDao;
   final CartDao _cartDao;
   final SessionService _sessionService;
+  final Future<void> Function() _resetDatabase;
 
   Future<User> login(String email, String password) async {
     final normalizedEmail = email.trim().toLowerCase();
@@ -132,4 +137,67 @@ class AuthRepository {
   }
 
   Future<void> logout() => _sessionService.clear();
+
+  Future<User> updateProfile({
+    required int userId,
+    required String fullName,
+    required String phone,
+    required String? address,
+  }) async {
+    final normalizedFullName = fullName.trim();
+    final normalizedPhone = phone.trim();
+    final trimmedAddress = address?.trim();
+    final normalizedAddress =
+        trimmedAddress == null || trimmedAddress.isEmpty ? null : trimmedAddress;
+
+    final validations = <String, String?>{
+      'fullName': validateFullName(normalizedFullName),
+      'phone': validatePhone(normalizedPhone),
+      'address': validateAddress(normalizedAddress),
+    };
+    for (final entry in validations.entries) {
+      final message = entry.value;
+      if (message != null) throw AppException(message, field: entry.key);
+    }
+
+    try {
+      final db = await _database();
+      final rowsAffected = await _userDao.updateProfile(
+        db,
+        userId: userId,
+        fullName: normalizedFullName,
+        phone: normalizedPhone,
+        address: normalizedAddress,
+      );
+      if (rowsAffected == 0) {
+        throw const AppException(
+          accountGoneMessage,
+          field: accountGoneField,
+        );
+      }
+
+      final user = await _userDao.findById(db, userId);
+      if (user == null) {
+        throw const AppException(
+          accountGoneMessage,
+          field: accountGoneField,
+        );
+      }
+      return user;
+    } on DatabaseException catch (error) {
+      debugPrint('AuthRepository.updateProfile: $error');
+      throw const AppException('Không thể lưu lúc này');
+    }
+  }
+
+  Future<void> resetDemoData() async {
+    assert(kDebugMode);
+    try {
+      await _sessionService.clear();
+      await _resetDatabase();
+    } on DatabaseException catch (error) {
+      debugPrint('AuthRepository.resetDemoData: $error');
+      throw const AppException('Không thể đặt lại dữ liệu demo lúc này');
+    }
+  }
 }

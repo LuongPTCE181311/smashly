@@ -33,11 +33,12 @@ void main() {
       userDao: const UserDao(),
       cartDao: const CartDao(),
       sessionService: sessionService,
+      resetDatabase: () async {},
     );
   });
 
   tearDown(() async {
-    await db.close();
+    if (db.isOpen) await db.close();
   });
 
   test('login returns customer and admin with their roles', () async {
@@ -110,6 +111,7 @@ void main() {
         userDao: const UserDao(),
         cartDao: const CartDao(),
         sessionService: sessionService,
+        resetDatabase: () async {},
       );
 
       final emailError = await _captureAppException(
@@ -184,6 +186,7 @@ void main() {
         userDao: const _UniqueEmailUserDao(),
         cartDao: const CartDao(),
         sessionService: sessionService,
+        resetDatabase: () async {},
       );
       final before = await _countRows(db, DbSchema.users);
 
@@ -210,6 +213,7 @@ void main() {
       userDao: const UserDao(),
       cartDao: const _FailingCartDao(),
       sessionService: sessionService,
+      resetDatabase: () async {},
     );
 
     final usersBefore = await _countRows(db, DbSchema.users);
@@ -244,6 +248,156 @@ void main() {
     },
   );
 
+  group('updateProfile', () {
+    late int customerId;
+
+    setUp(() async {
+      final customer = await const UserDao().findByEmail(
+        db,
+        'customer@smashly.com',
+      );
+      customerId = customer!.id!;
+    });
+
+    Future<Map<String, Object?>> row() async => (await db.query(
+      DbSchema.users,
+      columns: ['full_name', 'phone', 'address', 'email'],
+      where: 'id = ?',
+      whereArgs: [customerId],
+    )).single;
+
+    test(
+      '14. trim dữ liệu và trả user đọc lại từ DB',
+      () async {
+        final user = await repository.updateProfile(
+          userId: customerId,
+          fullName: '  Trần Thị Bích  ',
+          phone: ' 0912345678 ',
+          address: '  12 Lê Lợi, Quận 1  ',
+        );
+
+        expect(user.id, customerId);
+        expect(user.fullName, 'Trần Thị Bích');
+        expect(user.phone, '0912345678');
+        expect(user.address, '12 Lê Lợi, Quận 1');
+        expect(user.email, 'customer@smashly.com');
+        final saved = await row();
+        expect(saved['full_name'], 'Trần Thị Bích');
+        expect(saved['phone'], '0912345678');
+        expect(saved['address'], '12 Lê Lợi, Quận 1');
+      },
+    );
+
+    test('15. địa chỉ chỉ dấu cách được lưu thành NULL', () async {
+      final user = await repository.updateProfile(
+        userId: customerId,
+        fullName: 'Trần Thị Bích',
+        phone: '0912345678',
+        address: '   ',
+      );
+
+      expect(user.address, isNull);
+      expect((await row())['address'], isNull);
+    });
+
+    for (final (number, field, fullName, phone, address) in [
+      (16, 'fullName', 'A', '0912345678', null),
+      (17, 'phone', 'Trần Thị Bích', '12345', null),
+      (18, 'address', 'Trần Thị Bích', '0912345678', 'x' * 201),
+    ]) {
+      test(
+        '$number. $field sai ném AppException đúng field và không đổi DB',
+        () async {
+          final before = await row();
+
+          final error = await _captureAppException(
+            () => repository.updateProfile(
+              userId: customerId,
+              fullName: fullName,
+              phone: phone,
+              address: address,
+            ),
+          );
+
+          expect(error.field, field);
+          expect(await row(), before);
+        },
+      );
+    }
+
+    test('19. user không tồn tại ném AppException với field account', () async {
+      final error = await _captureAppException(
+        () => repository.updateProfile(
+          userId: 999999,
+          fullName: 'Trần Thị Bích',
+          phone: '0912345678',
+          address: null,
+        ),
+      );
+
+      expect(error.message, AuthRepository.accountGoneMessage);
+      expect(error.field, AuthRepository.accountGoneField);
+    });
+
+    test('20. DB đã đóng được chuyển thành AppException chung', () async {
+      await db.close();
+
+      final error = await _captureAppException(
+        () => repository.updateProfile(
+          userId: customerId,
+          fullName: 'Trần Thị Bích',
+          phone: '0912345678',
+          address: null,
+        ),
+      );
+
+      expect(error.message, 'Không thể lưu lúc này');
+      expect(error.field, isNull);
+    });
+  });
+
+  test('21. resetDemoData xóa session trước khi reset DB', () async {
+    var resets = 0;
+    int? sessionAtReset = 1;
+    final resettingRepository = AuthRepository(
+      database: () async => db,
+      userDao: const UserDao(),
+      cartDao: const CartDao(),
+      sessionService: sessionService,
+      resetDatabase: () async {
+        sessionAtReset = await sessionService.getLoggedInUserId();
+        resets++;
+      },
+    );
+    await sessionService.saveSession(1);
+
+    await resettingRepository.resetDemoData();
+
+    expect(resets, 1);
+    expect(sessionAtReset, isNull);
+    expect(await sessionService.getLoggedInUserId(), isNull);
+  });
+
+  test('22. lỗi SQLite trong callback reset ném AppException không field', () async {
+    final resettingRepository = AuthRepository(
+      database: () async => db,
+      userDao: const UserDao(),
+      cartDao: const CartDao(),
+      sessionService: sessionService,
+      resetDatabase: () async {
+        await db.close();
+        await db.query(DbSchema.users);
+      },
+    );
+    await sessionService.saveSession(1);
+
+    final error = await _captureAppException(resettingRepository.resetDemoData);
+
+    expect(error.message, 'Không thể đặt lại dữ liệu demo lúc này');
+    expect(error.field, isNull);
+    expect(await sessionService.getLoggedInUserId(), isNull);
+  });
+
   test('getCurrentUser opens the database even without a session', () async {
     // Splash dựa vào getCurrentUser để mở DB: người dùng mới (chưa có session)
     // cũng phải gặp lỗi DB ở Splash (có nút Thử lại), không phải muộn ở Login.
@@ -256,6 +410,7 @@ void main() {
       userDao: const UserDao(),
       cartDao: const CartDao(),
       sessionService: sessionService,
+      resetDatabase: () async {},
     );
 
     final user = await countingRepository.getCurrentUser();

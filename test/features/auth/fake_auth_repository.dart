@@ -94,6 +94,63 @@ class FakeAuthRepository implements AuthRepository {
     return _restoreResults.removeFirst()();
   }
 
+  final _updateResults = Queue<Future<User> Function()>();
+  int updateCalls = 0;
+  ({int userId, String fullName, String phone, String? address})? lastUpdate;
+
+  /// Lần `updateProfile` kế tiếp trả [user] (giá trị "đọc lại từ DB").
+  void willUpdate(User user) => _updateResults.add(() async => user);
+
+  /// Lần `updateProfile` kế tiếp ném [error].
+  void willFailUpdate(Object error) =>
+      _updateResults.add(() async => throw error);
+
+  /// Lần `updateProfile` kế tiếp treo (đang lưu).
+  Completer<User> holdUpdate() {
+    final completer = Completer<User>();
+    _updateResults.add(() => completer.future);
+    return completer;
+  }
+
   @override
-  Future<void> logout() async {}
+  Future<User> updateProfile({
+    required int userId,
+    required String fullName,
+    required String phone,
+    required String? address,
+  }) {
+    updateCalls++;
+    lastUpdate = (
+      userId: userId,
+      fullName: fullName,
+      phone: phone,
+      address: address,
+    );
+    if (_updateResults.isEmpty) {
+      unexpectedCalls++;
+      return Future.error(
+        StateError(
+          'FakeAuthRepository: updateProfile lần $updateCalls chưa được lập trình',
+        ),
+      );
+    }
+    return _updateResults.removeFirst()();
+  }
+
+  int resetCalls = 0;
+
+  @override
+  Future<void> resetDemoData() async => resetCalls++;
+
+  int logoutCalls = 0;
+
+  /// Lỗi `logout` sẽ ném (vd. PlatformException của SharedPreferences).
+  Object? logoutError;
+
+  @override
+  Future<void> logout() async {
+    logoutCalls++;
+    final error = logoutError;
+    if (error != null) throw error;
+  }
 }
