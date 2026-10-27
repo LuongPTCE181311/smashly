@@ -95,9 +95,12 @@ class _AppShellState extends State<AppShell> {
             index: _tab.index,
             children: [
               for (final tab in AppTab.values)
-                _opened.contains(tab)
-                    ? AppRoutes.screen(tab.routeName)
-                    : const SizedBox.shrink(),
+                HeroMode(
+                  enabled: tab == _tab,
+                  child: _opened.contains(tab)
+                      ? AppRoutes.screen(tab.routeName)
+                      : const SizedBox.shrink(),
+                ),
             ],
           ),
         ),

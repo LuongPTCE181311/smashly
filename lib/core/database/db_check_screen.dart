@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 import 'database_helper.dart';
 import 'db_schema.dart';
 
@@ -48,9 +50,9 @@ class _DbCheckScreenState extends State<DbCheckScreen> {
     await DatabaseHelper.instance.resetDatabase();
     if (!mounted) return;
     setState(() => _counts = _loadCounts());
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Đã xóa và tạo lại database')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Đã xóa và tạo lại database')));
   }
 
   @override
@@ -72,19 +74,23 @@ class _DbCheckScreenState extends State<DbCheckScreen> {
             );
           }
           final counts = snapshot.data!;
-          final allOk = _expected.entries.every((e) => counts[e.key] == e.value);
+          final allOk = _expected.entries.every(
+            (e) => counts[e.key] == e.value,
+          );
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               Card(
-                color: allOk ? Colors.green.shade50 : Colors.orange.shade50,
+                color: allOk ? AppColors.successSoft : AppColors.warningSoft,
                 child: ListTile(
                   leading: Icon(
                     allOk ? Icons.check_circle : Icons.warning_amber,
-                    color: allOk ? Colors.green : Colors.orange,
+                    color: allOk ? AppColors.success : AppColors.warning,
                   ),
                   title: Text(allOk ? 'Database OK' : 'Số dòng chưa khớp'),
-                  subtitle: const Text('File smashly.db nằm riêng trên máy này'),
+                  subtitle: const Text(
+                    'File smashly.db nằm riêng trên máy này',
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -96,7 +102,9 @@ class _DbCheckScreenState extends State<DbCheckScreen> {
                     '${counts[e.key]} / ${e.value}',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: counts[e.key] == e.value ? Colors.green : Colors.orange,
+                      color: counts[e.key] == e.value
+                          ? AppColors.success
+                          : AppColors.warning,
                     ),
                   ),
                 ),

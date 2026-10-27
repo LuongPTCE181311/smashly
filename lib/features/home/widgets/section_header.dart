@@ -26,7 +26,7 @@ class SectionHeader extends StatelessWidget {
             child: Text(
               actionLabel!,
               style: AppTextStyles.caption.copyWith(
-                color: const Color(0xFF96E403),
+                color: AppColors.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),

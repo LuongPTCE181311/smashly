@@ -8,12 +8,10 @@ import '../models/product.dart';
 
 class WishlistRepository {
   const WishlistRepository({
-    required Future<Database> Function() database,
-    required WishlistDao wishlistDao,
-    required ProductDao productDao,
-  }) : _database = database,
-       _wishlistDao = wishlistDao,
-       _productDao = productDao;
+    required this._database,
+    required this._wishlistDao,
+    required this._productDao,
+  });
 
   final Future<Database> Function() _database;
   final WishlistDao _wishlistDao;

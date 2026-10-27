@@ -365,6 +365,7 @@ class _ShopScreenState extends State<ShopScreen> {
           final product = shop.products[index];
           return ProductCard(
             product: product,
+            heroTag: ProductCard.heroTagFor(product.id),
             isFavorite: wishlist.isFavorite(product.id),
             isWishlistLoading: wishlist.isPending(product.id),
             onTap: () {

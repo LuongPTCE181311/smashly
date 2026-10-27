@@ -15,13 +15,17 @@ class ProductCard extends StatelessWidget {
     this.onWishlistTap,
     this.isFavorite = false,
     this.isWishlistLoading = false,
+    this.heroTag,
   });
+
+  static String heroTagFor(int productId) => 'product-$productId';
 
   final Product product;
   final VoidCallback onTap;
   final VoidCallback? onWishlistTap;
   final bool isFavorite;
   final bool isWishlistLoading;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -50,13 +54,15 @@ class ProductCard extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Image.asset(
-                        product.imagePath,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const Icon(
-                          Icons.sports_tennis_rounded,
-                          size: 56,
-                          color: AppColors.inkMuted,
+                      child: _withHero(
+                        Image.asset(
+                          product.imagePath,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.sports_tennis_rounded,
+                            size: 56,
+                            color: AppColors.inkMuted,
+                          ),
                         ),
                       ),
                     ),
@@ -157,9 +163,7 @@ class ProductCard extends StatelessWidget {
 
                   Text(
                     CurrencyFormatter.format(product.price),
-                    style: AppTextStyles.priceSmall.copyWith(
-                      color: const Color(0xFF96E403),
-                    ),
+                    style: AppTextStyles.priceSmall,
                   ),
                 ],
               ),
@@ -168,5 +172,11 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _withHero(Widget child) {
+    final tag = heroTag;
+    if (tag == null) return child;
+    return Hero(tag: tag, child: child);
   }
 }
