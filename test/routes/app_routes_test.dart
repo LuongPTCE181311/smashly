@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:smashly/core/constants/enums.dart';
 import 'package:smashly/core/theme/app_theme.dart';
 import 'package:smashly/data/daos/cart_dao.dart';
+import 'package:smashly/data/models/user.dart';
 import 'package:smashly/data/repositories/cart_repository.dart';
+import 'package:smashly/features/admin/admin_products_screen.dart';
+import 'package:smashly/features/auth/login_screen.dart';
 import 'package:smashly/features/auth/register_screen.dart';
 import 'package:smashly/features/cart/cart_screen.dart';
+import 'package:smashly/features/profile/profile_screen.dart';
 import 'package:smashly/features/shell/app_shell.dart';
 import 'package:smashly/features/shell/app_tab.dart';
 import 'package:smashly/providers/auth_provider.dart';
@@ -18,10 +23,10 @@ import '../features/auth/fake_auth_repository.dart';
 // Dựng đúng 1 route: `initialRoute: '/dev'` sẽ dựng cả `/` (SplashScreen, cần
 // AuthProvider) bên dưới, giống lý do trong lib/app.dart.
 // AppShell đọc CartProvider cho badge; chưa có user nên repository không bị gọi.
-Widget _app(String initialRoute) => MultiProvider(
+Widget _app(String initialRoute, {AuthProvider? auth}) => MultiProvider(
   providers: [
     ChangeNotifierProvider<AuthProvider>(
-      create: (_) => AuthProvider(FakeAuthRepository()),
+      create: (_) => auth ?? AuthProvider(_newRepo()),
     ),
     ChangeNotifierProvider<CartProvider>(
       create: (_) => CartProvider(
@@ -41,6 +46,27 @@ Widget _app(String initialRoute) => MultiProvider(
   ),
 );
 
+const _admin = User(
+  id: 1,
+  fullName: 'Smashly Admin',
+  email: 'admin@smashly.com',
+  phone: '0900000000',
+  role: UserRole.admin,
+);
+const _customer = User(
+  id: 2,
+  fullName: 'Smashly Customer',
+  email: 'customer@smashly.com',
+  phone: '0900000001',
+  role: UserRole.customer,
+);
+
+FakeAuthRepository _newRepo() {
+  final repo = FakeAuthRepository();
+  addTearDown(() => expect(repo.unexpectedCalls, 0));
+  return repo;
+}
+
 void main() {
   // Argument đúng kiểu đã ghi ở hằng số trong AppRoutes.
   const pushedRoutes = <String, Object?>{
@@ -50,7 +76,10 @@ void main() {
 
   for (final MapEntry(key: route, value: arguments) in pushedRoutes.entries) {
     testWidgets('route $route dựng được màn', (tester) async {
-      await tester.pumpWidget(_app(AppRoutes.devMenu));
+      final repo = _newRepo()..willLogin(_admin);
+      final auth = AuthProvider(repo);
+      expect(await auth.login(_admin.email, 'Admin@123'), same(_admin));
+      await tester.pumpWidget(_app(AppRoutes.devMenu, auth: auth));
       final navigator = tester.state<NavigatorState>(find.byType(Navigator));
       navigator.pushNamed(route, arguments: arguments);
       await tester.pumpAndSettle();
@@ -126,16 +155,56 @@ void main() {
   ) async {
     await tester.pumpWidget(_app(AppRoutes.devMenu));
     final navigator = tester.state<NavigatorState>(find.byType(Navigator));
-    navigator.pushNamed(AppRoutes.adminDashboard);
+    navigator.pushNamed<dynamic>('/route-not-found-test');
     await tester.pumpAndSettle();
 
-    AppShell.goToTab(
-      tester.element(find.text('S13 · Admin Dashboard')),
-      AppTab.cart,
-    );
+    final placeholder = find.byType(PlaceholderScreen);
+    expect(tester.widget<PlaceholderScreen>(placeholder).code, '404');
+    AppShell.goToTab(tester.element(placeholder), AppTab.cart);
     await tester.pumpAndSettle();
 
-    expect(find.text('S13 · Admin Dashboard'), findsOneWidget);
+    expect(tester.widget<PlaceholderScreen>(placeholder).code, '404');
+    expect(navigator.canPop(), isTrue);
     expect(find.byType(NavigationBar), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Chưa đăng nhập mở adminProducts về Login', (tester) async {
+    await tester.pumpWidget(_app(AppRoutes.devMenu));
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.pushNamed<dynamic>(AppRoutes.adminProducts);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.byType(AdminProductsScreen, skipOffstage: false), findsNothing);
+    expect(navigator.canPop(), isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('CUSTOMER mở adminDashboard về Login', (tester) async {
+    final repo = _newRepo()..willLogin(_customer);
+    final auth = AuthProvider(repo);
+    expect(await auth.login(_customer.email, 'Customer@123'), same(_customer));
+    await tester.pumpWidget(_app(AppRoutes.devMenu, auth: auth));
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.pushNamed<dynamic>(AppRoutes.adminDashboard);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(navigator.canPop(), isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('adminProfile không bị guard', (tester) async {
+    await tester.pumpWidget(_app(AppRoutes.devMenu));
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.pushNamed<dynamic>(AppRoutes.adminProfile);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileScreen), findsOneWidget);
+    expect(find.text('Chưa đăng nhập'), findsOneWidget);
+    expect(find.byType(LoginScreen), findsNothing);
+    expect(navigator.canPop(), isTrue);
+    expect(tester.takeException(), isNull);
   });
 }
