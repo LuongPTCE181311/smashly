@@ -114,4 +114,62 @@ void main() {
       expect(find.text(_emptyError), findsNothing);
     },
   );
+
+  testWidgets(
+    '(e) fieldKey từ bên ngoài: đổi mật khẩu thì ô nhập lại tự kiểm tra, ô khác chưa chạm không báo lỗi',
+    (tester) async {
+      final password = TextEditingController();
+      final confirmKey = GlobalKey<FormFieldState<String>>();
+      addTearDown(password.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: Form(
+              child: Column(
+                children: [
+                  const AppTextField(label: 'Email', validator: validateEmail),
+                  AppTextField(
+                    label: 'Mật khẩu',
+                    controller: password,
+                    onChanged: (_) {
+                      if (confirmKey.currentState?.value?.isNotEmpty ?? false) {
+                        confirmKey.currentState!.validate();
+                      }
+                    },
+                  ),
+                  AppTextField(
+                    label: 'Nhập lại',
+                    fieldKey: confirmKey,
+                    validator: (value) =>
+                        value == password.text ? null : 'Mật khẩu không khớp',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final passwordField = find.widgetWithText(TextFormField, 'Mật khẩu');
+      final confirmField = find.widgetWithText(TextFormField, 'Nhập lại');
+
+      await tester.enterText(passwordField, 'Abc@1234');
+      await tester.enterText(confirmField, 'Abc@1234');
+      await tester.tap(passwordField);
+      await tester.pump();
+      expect(confirmKey.currentState!.value, 'Abc@1234');
+      expect(find.text('Mật khẩu không khớp'), findsNothing);
+
+      await tester.enterText(passwordField, 'Abc@12345');
+      await tester.pump();
+      expect(find.text('Mật khẩu không khớp'), findsOneWidget);
+      expect(find.text(_emptyError), findsNothing);
+
+      await tester.enterText(passwordField, 'Abc@1234');
+      await tester.pump();
+      expect(find.text('Mật khẩu không khớp'), findsNothing);
+    },
+  );
 }
