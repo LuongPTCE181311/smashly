@@ -49,7 +49,14 @@ class DevMenuScreen extends StatelessWidget {
     ),
     (
       'Debug',
-      [('Kiểm tra SQLite (số dòng mỗi bảng)', AppRoutes.dbCheck, null)],
+      [
+        ('Kiểm tra SQLite (số dòng mỗi bảng)', AppRoutes.dbCheck, null),
+        (
+          'Widget Catalog (mọi component dùng chung)',
+          AppRoutes.widgetCatalog,
+          null,
+        ),
+      ],
     ),
   ];
 

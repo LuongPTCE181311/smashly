@@ -38,6 +38,7 @@ import '../features/shell/app_tab.dart';
 import 'app_page_route.dart';
 import 'dev_menu_screen.dart';
 import 'placeholder_screen.dart';
+import 'widget_catalog_screen.dart';
 
 /// Tên route + bảng "tên route → màn hình" của cả app. OWNER: Lượng.
 ///
@@ -82,6 +83,7 @@ abstract final class AppRoutes {
   // Chỉ dùng khi dev.
   static const devMenu = '/dev';
   static const dbCheck = '/dev/db';
+  static const widgetCatalog = '/dev/widgets';
 
   /// Truyền vào `MaterialApp.onGenerateRoute`.
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -212,6 +214,7 @@ abstract final class AppRoutes {
 
       devMenu => const DevMenuScreen(),
       dbCheck => const DbCheckScreen(),
+      widgetCatalog => const WidgetCatalogScreen(),
       _ => PlaceholderScreen(
         code: '404',
         title: 'Không tìm thấy màn "$name"',
