@@ -13,6 +13,7 @@ import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/states/empty_state.dart';
 import '../../shared/widgets/states/error_state.dart';
 import '../../shared/widgets/states/loading_state.dart';
+import 'admin_category_label.dart';
 import 'widgets/admin_product_tile.dart';
 
 /// S14 — Admin Products (UC17): tìm, lọc, xóa sản phẩm.
@@ -178,7 +179,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
           for (final category in admin.categories)
             _categoryChip(
               admin,
-              label: _categoryLabel(category.name),
+              label: adminCategoryLabel(category.name),
               categoryId: category.id,
             ),
         ],
@@ -262,7 +263,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
           return AdminProductTile(
             key: ValueKey(product.id),
             product: product,
-            categoryName: _categoryLabel(
+            categoryName: adminCategoryLabel(
               admin.categoryNameOf(product.categoryId),
             ),
             busy: admin.isBusy(product.id),
@@ -373,21 +374,4 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
       ..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(message), action: action));
   }
-}
-
-/// Tên danh mục tiếng Việt (DB lưu tiếng Anh, giống màn Shop).
-String _categoryLabel(String name) {
-  return switch (name) {
-    'Rackets' => 'Vợt',
-    'Shoes' => 'Giày',
-    'Shirts' => 'Áo',
-    'Shorts' => 'Quần',
-    'Socks' => 'Tất',
-    'Bags' => 'Túi',
-    'Grips' => 'Quấn cán',
-    'Strings' => 'Cước',
-    'Nets' => 'Lưới',
-    'Accessories' => 'Phụ kiện',
-    _ => name,
-  };
 }

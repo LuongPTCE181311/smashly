@@ -21,7 +21,7 @@
 
 | Tiêu chí | Đáp ứng ở đâu |
 | --- | --- |
-| Dialog xóa nêu tên sản phẩm + hậu quả | [`_confirmDelete`](../../lib/features/admin/admin_products_screen.dart#L292): tiêu đề `Xóa "Tên"?`, nội dung khác nhau theo số đơn hàng |
+| Dialog xóa nêu tên sản phẩm + hậu quả | [`_confirmDelete`](../../lib/features/admin/admin_products_screen.dart#L293): tiêu đề `Xóa "Tên"?`, nội dung khác nhau theo số đơn hàng |
 | Tồn kho bằng màu + chữ | [`AdminStockLabel`](../../lib/features/admin/widgets/admin_stock_label.dart#L12), có test [admin_stock_label_test.dart](../../test/features/admin/admin_stock_label_test.dart) |
 
 ## 2. Những gì đã làm
@@ -32,7 +32,7 @@
 | --- | --- |
 | [lib/data/models/admin_product_query.dart](../../lib/data/models/admin_product_query.dart#L5) | `AdminProductQuery`: điều kiện lọc (`keyword`, `categoryId`, `onlyHidden`) + `hasFilter` + `copyWith`. Tách riêng để không sửa `ProductQuery` của Kha |
 | [lib/providers/admin_product_provider.dart](../../lib/providers/admin_product_provider.dart#L13) | `AdminProductProvider`: giữ query, danh sách, danh mục, `ViewStatus`; tìm/lọc/xóa/hoàn tác |
-| [lib/features/admin/admin_products_screen.dart](../../lib/features/admin/admin_products_screen.dart#L19) | Màn S14: header Midnight + ô search, hàng chip lọc, danh sách theo 4 trạng thái, FAB, luồng xóa |
+| [lib/features/admin/admin_products_screen.dart](../../lib/features/admin/admin_products_screen.dart#L20) | Màn S14: header Midnight + ô search, hàng chip lọc, danh sách theo 4 trạng thái, FAB, luồng xóa |
 | [lib/features/admin/widgets/admin_product_tile.dart](../../lib/features/admin/widgets/admin_product_tile.dart#L14) | Một hàng sản phẩm: ảnh 56, tên, brand · danh mục, giá, tồn kho, nhãn "Đang ẩn", menu ⋮ Sửa / Xóa |
 | [lib/features/admin/widgets/admin_stock_label.dart](../../lib/features/admin/widgets/admin_stock_label.dart#L12) | `AdminStockLabel` (tồn kho màu + chữ) và `AdminHiddenLabel` ("Đang ẩn") |
 | [test/providers/admin_product_provider_test.dart](../../test/providers/admin_product_provider_test.dart) | 7 ca test Provider trên SQLite in-memory có seed |
@@ -44,8 +44,8 @@
 | --- | --- |
 | [lib/data/daos/product_dao.dart](../../lib/data/daos/product_dao.dart#L260) | Thêm khối `// ===== ADMIN READ (Trọng) =====` cuối file với `getAdminProducts` + import model mới |
 | [lib/data/repositories/product_repository.dart](../../lib/data/repositories/product_repository.dart#L191) | Thêm `getAdminProducts(query)` bọc lỗi thành `AppException` + import |
-| [lib/routes/app_routes.dart](../../lib/routes/app_routes.dart#L181) | Thay đúng dòng placeholder `adminProducts` bằng `ChangeNotifierProvider<AdminProductProvider>` + `AdminProductsScreen` (file của Lượng, theo quy tắc ghi trong file) |
-| [test/routes/app_routes_test.dart](../../test/routes/app_routes_test.dart#L34) | Bỏ `AppRoutes.adminProducts` khỏi map `pushedRoutes` vì route này không còn là `PlaceholderScreen` (file của Lượng — cần báo Lượng) |
+| [lib/routes/app_routes.dart](../../lib/routes/app_routes.dart#L202) | Thay đúng dòng placeholder `adminProducts` bằng `ChangeNotifierProvider<AdminProductProvider>` + `AdminProductsScreen` (file của Lượng, theo quy tắc ghi trong file) |
+| [test/routes/app_routes_test.dart](../../test/routes/app_routes_test.dart#L72) | Bỏ `AppRoutes.adminProducts` khỏi map `pushedRoutes` vì route này không còn là `PlaceholderScreen` (file của Lượng — cần báo Lượng) |
 
 ## 3. Nguyên lí hoạt động
 
@@ -170,20 +170,20 @@ Dùng lại (SML-083): `getCategories` ([#L24](../../lib/data/repositories/produ
 | [`isBusy`](../../lib/providers/admin_product_provider.dart#L43) | `int` → `bool` | Hàng đang xóa/khôi phục? | Khi dựng mỗi hàng | — |
 | [`dispose`](../../lib/providers/admin_product_provider.dart#L187) | — | Hủy timer, vô hiệu request đang chạy | Rời màn | — |
 
-### 4.4. Màn hình — [AdminProductsScreen](../../lib/features/admin/admin_products_screen.dart#L19)
+### 4.4. Màn hình — [AdminProductsScreen](../../lib/features/admin/admin_products_screen.dart#L20)
 
 | Hàm | Làm gì | Gọi tiếp |
 | --- | --- | --- |
-| [`build`](../../lib/features/admin/admin_products_screen.dart#L38) | `context.watch<AdminProductProvider>()`, ghép header + bộ lọc + body + FAB | `_buildHeader`, `_buildFilters`, `_buildBody` |
-| [`_buildHeader`](../../lib/features/admin/admin_products_screen.dart#L60) | Dải gradient Midnight, nút Back (nếu có màn trước), tiêu đề + số sản phẩm, ô search có nút X | `setKeyword`, `loadProducts` (Enter), `_clearSearch` |
-| [`_buildFilters`](../../lib/features/admin/admin_products_screen.dart#L153) | Chip "Đang ẩn" (FilterChip) + "Tất cả" + chip từng danh mục (tên tiếng Việt) | `toggleHidden`, `selectCategory` qua `_runFilter` |
-| [`_buildBody`](../../lib/features/admin/admin_products_screen.dart#L211) | `switch (status)`: LoadingState / ErrorState (Thử lại) / 2 kiểu EmptyState / danh sách | `retry`, `_resetFilters`, `_openForm`, `_buildList` |
-| [`_buildList`](../../lib/features/admin/admin_products_screen.dart#L245) | `RefreshIndicator` + `ListView` các `AdminProductTile` | `refresh`, `_openForm`, `_confirmDelete` |
-| [`_openForm`](../../lib/features/admin/admin_products_screen.dart#L280) | `pushNamed(adminProductForm, arguments: id \| null)`, quay về thì `refresh` | — |
-| [`_confirmDelete`](../../lib/features/admin/admin_products_screen.dart#L292) | Đếm đơn → dialog tên + hậu quả → xóa → SnackBar theo outcome | `countOrdersOf`, `AppDialog.confirm`, `deleteProduct`, `_showMessage` |
-| [`_undoDeactivate`](../../lib/features/admin/admin_products_screen.dart#L354) | Hoàn tác ngừng bán, báo kết quả | `restoreProduct`, `_showMessage` |
-| [`_showMessage`](../../lib/features/admin/admin_products_screen.dart#L367) | Xóa SnackBar cũ, hiện SnackBar mới (có thể kèm action) | — |
-| [`_categoryLabel`](../../lib/features/admin/admin_products_screen.dart#L379) | Đổi tên danh mục DB (Rackets...) sang tiếng Việt (Vợt...) | — |
+| [`build`](../../lib/features/admin/admin_products_screen.dart#L39) | `context.watch<AdminProductProvider>()`, ghép header + bộ lọc + body + FAB | `_buildHeader`, `_buildFilters`, `_buildBody` |
+| [`_buildHeader`](../../lib/features/admin/admin_products_screen.dart#L61) | Dải gradient Midnight, nút Back (nếu có màn trước), tiêu đề + số sản phẩm, ô search có nút X | `setKeyword`, `loadProducts` (Enter), `_clearSearch` |
+| [`_buildFilters`](../../lib/features/admin/admin_products_screen.dart#L154) | Chip "Đang ẩn" (FilterChip) + "Tất cả" + chip từng danh mục (tên tiếng Việt) | `toggleHidden`, `selectCategory` qua `_runFilter` |
+| [`_buildBody`](../../lib/features/admin/admin_products_screen.dart#L212) | `switch (status)`: LoadingState / ErrorState (Thử lại) / 2 kiểu EmptyState / danh sách | `retry`, `_resetFilters`, `_openForm`, `_buildList` |
+| [`_buildList`](../../lib/features/admin/admin_products_screen.dart#L246) | `RefreshIndicator` + `ListView` các `AdminProductTile` | `refresh`, `_openForm`, `_confirmDelete` |
+| [`_openForm`](../../lib/features/admin/admin_products_screen.dart#L281) | `pushNamed(adminProductForm, arguments: id \| null)`, quay về thì `refresh` | — |
+| [`_confirmDelete`](../../lib/features/admin/admin_products_screen.dart#L293) | Đếm đơn → dialog tên + hậu quả → xóa → SnackBar theo outcome | `countOrdersOf`, `AppDialog.confirm`, `deleteProduct`, `_showMessage` |
+| [`_undoDeactivate`](../../lib/features/admin/admin_products_screen.dart#L355) | Hoàn tác ngừng bán, báo kết quả | `restoreProduct`, `_showMessage` |
+| [`_showMessage`](../../lib/features/admin/admin_products_screen.dart#L368) | Xóa SnackBar cũ, hiện SnackBar mới (có thể kèm action) | — |
+| [`adminCategoryLabel`](../../lib/features/admin/admin_category_label.dart#L2) | Đổi tên danh mục DB (Rackets...) sang tiếng Việt (Vợt...). Từ UC18 tách ra file riêng để S15 dùng chung | — |
 
 Widget: [`AdminProductTile`](../../lib/features/admin/widgets/admin_product_tile.dart#L14) (nhận `product`, `categoryName`, `onEdit`, `onDelete`, `busy`; sản phẩm ẩn: nền xám, ảnh mờ, chữ muted + nhãn "Đang ẩn"), [`AdminStockLabel`](../../lib/features/admin/widgets/admin_stock_label.dart#L12) (ngưỡng "Sắp hết" dùng chung `StockBadge.lowStockThreshold = 5`), [`AdminHiddenLabel`](../../lib/features/admin/widgets/admin_stock_label.dart#L50).
 
