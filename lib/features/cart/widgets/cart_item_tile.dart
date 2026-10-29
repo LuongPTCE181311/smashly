@@ -8,6 +8,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/cart_item.dart';
 import '../../../data/repositories/cart_repository.dart';
+import 'cart_open_area.dart';
 import 'quantity_stepper.dart';
 
 int cartMaxQuantity(CartItem item) =>
@@ -28,6 +29,7 @@ class CartItemTile extends StatelessWidget {
     required this.onDecrease,
     required this.onIncrease,
     this.onSetQuantity,
+    this.onOpen,
   });
 
   final CartItem item;
@@ -36,6 +38,9 @@ class CartItemTile extends StatelessWidget {
   final VoidCallback onIncrease;
 
   final ValueChanged<int>? onSetQuantity;
+
+  /// Bấm ảnh / tên / giá để xem chi tiết sản phẩm.
+  final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -49,69 +54,92 @@ class CartItemTile extends StatelessWidget {
         borderRadius: AppRadius.lgAll,
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Checkbox(
-            value: item.isSelected,
-            onChanged: (_) => onToggle(),
-            materialTapTargetSize: MaterialTapTargetSize.padded,
-          ),
-          CartThumbnail(path: item.imagePath),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.subtitle,
-                ),
-                if (item.size.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text('Size: ${item.size}', style: AppTextStyles.caption),
-                ],
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  CurrencyFormatter.format(item.price),
-                  style: AppTextStyles.priceSmall,
-                ),
-                if (warning != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        size: 14,
-                        color: AppColors.error,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        warning,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.error,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.sm),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: QuantityStepper(
-                    quantity: item.quantity,
-                    onDecrease: item.quantity > 1 ? onDecrease : null,
-                    onIncrease: item.quantity < maxQuantity ? onIncrease : null,
-                    max: maxQuantity,
-                    onQuantityChanged: onSetQuantity,
-                  ),
-                ),
-              ],
+      // Material trong suốt nằm trên nền Container để gợn sóng của InkWell hiện.
+      child: Material(
+        type: MaterialType.transparency,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: item.isSelected,
+              onChanged: (_) => onToggle(),
+              materialTapTargetSize: MaterialTapTargetSize.padded,
             ),
-          ),
-        ],
+            CartOpenArea(
+              onOpen: onOpen,
+              child: CartThumbnail(path: item.imagePath),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CartOpenArea(
+                    onOpen: onOpen,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.subtitle,
+                          ),
+                          if (item.size.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Size: ${item.size}',
+                              style: AppTextStyles.caption,
+                            ),
+                          ],
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            CurrencyFormatter.format(item.price),
+                            style: AppTextStyles.priceSmall,
+                          ),
+                          if (warning != null) ...[
+                            const SizedBox(height: AppSpacing.xs),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  size: 14,
+                                  color: AppColors.error,
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Text(
+                                  warning,
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: QuantityStepper(
+                      quantity: item.quantity,
+                      onDecrease: item.quantity > 1 ? onDecrease : null,
+                      onIncrease: item.quantity < maxQuantity
+                          ? onIncrease
+                          : null,
+                      max: maxQuantity,
+                      onQuantityChanged: onSetQuantity,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

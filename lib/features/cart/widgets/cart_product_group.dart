@@ -7,6 +7,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/cart_item.dart';
 import 'cart_item_tile.dart';
+import 'cart_open_area.dart';
 import 'quantity_stepper.dart';
 
 class CartProductGroup extends StatelessWidget {
@@ -19,8 +20,11 @@ class CartProductGroup extends StatelessWidget {
     required this.onIncrease,
     required this.onSetQuantity,
     required this.onRemove,
+    this.onOpen,
   });
 
+  /// Bấm ảnh / tên / giá ở phần đầu thẻ để xem chi tiết sản phẩm.
+  final VoidCallback? onOpen;
   final List<CartItem> items;
   final ValueChanged<bool> onToggleGroup;
   final ValueChanged<CartItem> onToggle;
@@ -49,41 +53,54 @@ class CartProductGroup extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Checkbox(
-                value: groupValue,
-                tristate: true,
-                onChanged: (_) => onToggleGroup(groupValue != true),
-                materialTapTargetSize: MaterialTapTargetSize.padded,
-              ),
-              CartThumbnail(path: first.imagePath),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      first.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.subtitle,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '${items.length} size trong giỏ',
-                      style: AppTextStyles.caption,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      CurrencyFormatter.format(first.price),
-                      style: AppTextStyles.priceSmall,
-                    ),
-                  ],
+          // Material trong suốt nằm trên nền Container để gợn sóng InkWell hiện.
+          Material(
+            type: MaterialType.transparency,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Checkbox(
+                  value: groupValue,
+                  tristate: true,
+                  onChanged: (_) => onToggleGroup(groupValue != true),
+                  materialTapTargetSize: MaterialTapTargetSize.padded,
                 ),
-              ),
-            ],
+                CartOpenArea(
+                  onOpen: onOpen,
+                  child: CartThumbnail(path: first.imagePath),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: CartOpenArea(
+                    onOpen: onOpen,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            first.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.subtitle,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            '${items.length} size trong giỏ',
+                            style: AppTextStyles.caption,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            CurrencyFormatter.format(first.price),
+                            style: AppTextStyles.priceSmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const Divider(height: AppSpacing.xl),
           for (var i = 0; i < items.length; i++) ...[
