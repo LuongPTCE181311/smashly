@@ -8,6 +8,7 @@ import 'package:smashly/data/repositories/admin_dashboard_repository.dart';
 import 'package:smashly/data/repositories/order_repository.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
 import 'package:smashly/features/admin/admin_dashboard_screen.dart';
+import 'package:smashly/features/admin/admin_product_form_screen.dart';
 import 'package:smashly/features/admin/admin_products_screen.dart';
 import 'package:smashly/features/checkout/checkout_screen.dart';
 import 'package:smashly/features/checkout/order_success_screen.dart';
@@ -17,6 +18,7 @@ import 'package:smashly/features/orders/order_detail_screen.dart';
 import 'package:smashly/features/shop/shop_screen.dart';
 import 'package:smashly/features/product/product_detail_screen.dart';
 import 'package:smashly/providers/admin_dashboard_provider.dart';
+import 'package:smashly/providers/admin_product_form_provider.dart';
 import 'package:smashly/providers/admin_product_provider.dart';
 import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/checkout_provider.dart';
@@ -206,10 +208,15 @@ abstract final class AppRoutes {
         )..loadInitial(),
         child: const AdminProductsScreen(),
       ),
-      adminProductForm => const PlaceholderScreen(
-        code: 'S15',
-        title: 'Thêm / sửa sản phẩm',
-        owner: 'Trọng',
+      adminProductForm => ChangeNotifierProvider<AdminProductFormProvider>(
+        create: (_) => AdminProductFormProvider(
+          ProductRepository(
+            database: () => DatabaseHelper.instance.database,
+            productDao: const ProductDao(),
+          ),
+          productId: arguments is int ? arguments : null,
+        ),
+        child: const AdminProductFormScreen(),
       ),
 
       devMenu => const DevMenuScreen(),
