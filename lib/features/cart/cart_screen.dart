@@ -117,6 +117,7 @@ class _CartList extends StatelessWidget {
         onDecrease: () => _show(context, cart.changeQuantity(item, -1)),
         onIncrease: () => _show(context, cart.changeQuantity(item, 1)),
         onSetQuantity: (value) => _show(context, cart.setQuantity(item, value)),
+        onOpen: () => _openProduct(context, item.productId),
       ),
     );
   }
@@ -132,7 +133,17 @@ class _CartList extends StatelessWidget {
       onSetQuantity: (item, value) =>
           _show(context, cart.setQuantity(item, value)),
       onRemove: (item) => _remove(context, item),
+      onOpen: () => _openProduct(context, group.first.productId),
     );
+  }
+
+  /// Mở chi tiết sản phẩm bằng push nên Back (nút mũi tên hay cử chỉ hệ thống)
+  /// quay về đúng tab Giỏ hàng, giữ nguyên vị trí cuộn và các món đang chọn.
+  void _openProduct(BuildContext context, int productId) {
+    // Đã có màn khác đè lên (bấm đúp nhanh): bỏ qua để không mở 2 lần.
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    Navigator.of(context)
+        .pushNamed(AppRoutes.productDetail, arguments: productId);
   }
 
   Future<String?> _setMany(List<CartItem> items, bool selected) async {
