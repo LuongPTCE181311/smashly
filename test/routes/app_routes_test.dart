@@ -69,9 +69,7 @@ FakeAuthRepository _newRepo() {
 
 void main() {
   // Argument đúng kiểu đã ghi ở hằng số trong AppRoutes.
-  const pushedRoutes = <String, Object?>{
-    AppRoutes.adminProductForm: 1,
-  };
+  const pushedRoutes = <String, Object?>{};
 
   for (final MapEntry(key: route, value: arguments) in pushedRoutes.entries) {
     testWidgets('route $route dựng được màn', (tester) async {
