@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:smashly/providers/wishlist_provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
@@ -56,10 +57,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (saveError != null) {
         messenger.showSnackBar(SnackBar(content: Text(saveError)));
       }
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (_) => false,
-      );
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
     } else if (saved == true) {
       messenger.showSnackBar(const SnackBar(content: Text('Đã lưu')));
     }
@@ -78,14 +77,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await auth.logout();
     if (!mounted) return;
     if (auth.status == ViewStatus.empty) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (_) => false,
-      );
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(auth.errorMessage ?? 'Không thể đăng xuất lúc này'),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.errorMessage ?? 'Không thể đăng xuất lúc này'),
+        ),
+      );
     }
   });
 
@@ -118,29 +117,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: auth.isLoading
           ? const LoadingState()
           : user == null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Chưa đăng nhập', style: AppTextStyles.h2),
-                        const SizedBox(height: AppSpacing.lg),
-                        PrimaryButton(
-                          label: 'Đăng nhập',
-                          onPressed: _busy ? null : () {
-                            auth.clearErrors();
-                            Navigator.of(context).pushNamedAndRemoveUntil(
-                              AppRoutes.login,
-                              (_) => false,
-                            );
-                          },
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Chưa đăng nhập', style: AppTextStyles.h2),
+                    const SizedBox(height: AppSpacing.lg),
+                    PrimaryButton(
+                      label: 'Đăng nhập',
+                      onPressed: _busy
+                          ? null
+                          : () {
+                              auth.clearErrors();
+                              Navigator.of(context).pushNamedAndRemoveUntil(
+                                AppRoutes.login,
+                                (_) => false,
+                              );
+                            },
                     ),
-                  ),
-                )
-              : _profile(user, auth),
+                  ],
+                ),
+              ),
+            )
+          : _profile(user, auth),
     );
   }
 
@@ -162,8 +163,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        Text(user.fullName, textAlign: TextAlign.center, style: AppTextStyles.h1),
-        Text(user.email, textAlign: TextAlign.center, style: AppTextStyles.body),
+        Text(
+          user.fullName,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.h1,
+        ),
+        Text(
+          user.email,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.body,
+        ),
         const SizedBox(height: AppSpacing.sm),
         Center(child: Chip(label: Text(user.isAdmin ? 'Admin' : 'Khách hàng'))),
         if (createdAt != null)
@@ -196,6 +205,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
           subtitle: Text(user.address ?? 'Chưa có địa chỉ'),
         ),
         const Divider(),
+
+        if (!user.isAdmin) ...[
+          const SizedBox(height: AppSpacing.lg),
+
+          // Nút mở màn hình danh sách yêu thích.
+          Consumer<WishlistProvider>(
+            builder: (context, wishlist, child) {
+              return Card(
+                color: AppColors.surface,
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.favorite_rounded,
+                    color: AppColors.error,
+                  ),
+
+                  title: const Text(
+                    'Xem danh sách yêu thích',
+                    style: AppTextStyles.subtitle,
+                  ),
+
+                  subtitle: Text(
+                    wishlist.status == ViewStatus.loading ||
+                            wishlist.status == ViewStatus.initial
+                        ? 'Đang tải...'
+                        : '${wishlist.products.length} sản phẩm đã lưu',
+                    style: AppTextStyles.caption,
+                  ),
+
+                  trailing: const Icon(Icons.chevron_right_rounded),
+
+                  enabled: !disabled,
+
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRoutes.wishlist);
+                  },
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: AppSpacing.section),
+          const Divider(),
+        ],
+
         if (widget.showDevTools) ...[
           ListTile(
             leading: const Icon(Icons.developer_mode),

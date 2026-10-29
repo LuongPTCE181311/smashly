@@ -15,6 +15,7 @@ import 'package:smashly/features/checkout/order_success_screen.dart';
 import 'package:smashly/features/home/home_screen.dart';
 import 'package:smashly/features/orders/my_orders_screen.dart';
 import 'package:smashly/features/orders/order_detail_screen.dart';
+import 'package:smashly/features/profile/wishlist_screen.dart';
 import 'package:smashly/features/shop/shop_screen.dart';
 import 'package:smashly/features/product/product_detail_screen.dart';
 import 'package:smashly/providers/admin_dashboard_provider.dart';
@@ -66,6 +67,9 @@ abstract final class AppRoutes {
   static const cart = '/cart';
   static const myOrders = '/orders';
   static const profile = '/profile';
+
+  // Màn hình yêu thích mở từ Profile.
+  static const wishlist = '/wishlist';
 
   // Màn đẩy lên trên AppShell (có nút Back).
   static const productDetail = '/product'; // arguments: int productId
@@ -167,7 +171,7 @@ abstract final class AppRoutes {
         child: const MyOrdersScreen(),
       ),
       profile || adminProfile => const ProfileScreen(),
-
+      wishlist => const WishlistScreen(),
       productDetail => ChangeNotifierProvider<ProductDetailProvider>(
         create: (_) => ProductDetailProvider(
           ProductRepository(
