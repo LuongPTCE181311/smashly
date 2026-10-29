@@ -6,7 +6,7 @@ import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 
-/// Nút − số lượng +. Truyền `null` cho [onDecrease]/[onIncrease] để khóa nút.
+/// Minus / quantity / plus control. Pass `null` to [onDecrease]/[onIncrease] to disable.
 class QuantityStepper extends StatefulWidget {
   const QuantityStepper({
     super.key,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_motion.dart';
 
-/// Icon tab Giỏ hàng kèm badge số lượng; badge nảy lên khi số tăng.
+/// Cart tab icon with a count badge; the badge bounces when the count grows.
 class CartBadgeIcon extends StatefulWidget {
   const CartBadgeIcon({super.key, required this.icon, required this.count});
 

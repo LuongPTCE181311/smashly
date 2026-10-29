@@ -19,7 +19,7 @@ import 'widgets/cart_product_group.dart';
 import 'widgets/cart_skeleton.dart';
 import 'widgets/cart_summary_bar.dart';
 
-/// S07 · Giỏ hàng. OWNER: Danh.
+/// S07 · Cart screen. OWNER: Danh.
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
@@ -122,9 +122,9 @@ class _CartList extends StatelessWidget {
     );
   }
 
-  /// Vuốt phần đầu thẻ (ảnh, tên, giá) xóa cả sản phẩm; vuốt một dòng size bên
-  /// trong chỉ xóa size đó (Dismissible lồng nhau: dòng size ở sâu hơn nên
-  /// thắng cuộc thi cử chỉ khi vuốt bắt đầu trên dòng đó).
+  /// Swiping the card header (image, name, price) removes the whole product;
+  /// swiping a size row removes only that size (nested Dismissibles: the size
+  /// row is deeper, so it wins when the swipe starts on that row).
   Widget _groupCard(BuildContext context, List<CartItem> group) {
     return Dismissible(
       key: ValueKey('group-${group.first.productId}'),
@@ -147,10 +147,10 @@ class _CartList extends StatelessWidget {
     );
   }
 
-  /// Mở chi tiết sản phẩm bằng push nên Back (nút mũi tên hay cử chỉ hệ thống)
-  /// quay về đúng tab Giỏ hàng, giữ nguyên vị trí cuộn và các món đang chọn.
+  /// Opens the product detail with a push, so Back (arrow button or system
+  /// gesture) returns to the Cart tab with scroll position and selection kept.
   void _openProduct(BuildContext context, int productId) {
-    // Đã có màn khác đè lên (bấm đúp nhanh): bỏ qua để không mở 2 lần.
+    // Another route is already on top (fast double tap): skip, do not open twice.
     if (ModalRoute.of(context)?.isCurrent == false) return;
     Navigator.of(context)
         .pushNamed(AppRoutes.productDetail, arguments: productId);
@@ -243,7 +243,7 @@ class _UndoContent extends StatelessWidget {
   }
 }
 
-/// Hiện SnackBar nếu thao tác trả về lỗi (null = thành công).
+/// Shows a SnackBar when the action returns an error (null = success).
 Future<void> _show(BuildContext context, Future<String?> action) async {
   final messenger = ScaffoldMessenger.of(context);
   final error = await action;

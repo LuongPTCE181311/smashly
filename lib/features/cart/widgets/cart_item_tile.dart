@@ -20,8 +20,8 @@ String? cartStockWarning(CartItem item) {
   return null;
 }
 
-/// Món hết hàng (kho bằng 0): ảnh, tên, giá và stepper hiện mờ. Ô chọn và dòng
-/// cảnh báo giữ nguyên độ rõ để vẫn bỏ chọn / đọc được lý do.
+/// Sold-out line (stock 0): image, name, price and stepper are dimmed; the
+/// checkbox and the warning stay clear so it can be unticked and explained.
 bool cartIsSoldOut(CartItem item) => item.stock <= 0;
 
 const cartSoldOutOpacity = 0.5;
@@ -29,7 +29,7 @@ const cartSoldOutOpacity = 0.5;
 Widget cartDimmed({required bool dim, required Widget child}) =>
     dim ? Opacity(opacity: cartSoldOutOpacity, child: child) : child;
 
-/// Một dòng giỏ hàng: ô chọn, ảnh, tên, size, giá, stepper số lượng.
+/// One cart line: checkbox, image, name, size, price, quantity stepper.
 class CartItemTile extends StatelessWidget {
   const CartItemTile({
     super.key,
@@ -48,7 +48,7 @@ class CartItemTile extends StatelessWidget {
 
   final ValueChanged<int>? onSetQuantity;
 
-  /// Bấm ảnh / tên / giá để xem chi tiết sản phẩm.
+  /// Tap the image / name / price to open the product detail.
   final VoidCallback? onOpen;
 
   @override
@@ -64,7 +64,7 @@ class CartItemTile extends StatelessWidget {
         borderRadius: AppRadius.lgAll,
         border: Border.all(color: AppColors.border),
       ),
-      // Material trong suốt nằm trên nền Container để gợn sóng của InkWell hiện.
+      // Transparent Material over the Container background so the ripple shows.
       child: Material(
         type: MaterialType.transparency,
         child: Row(

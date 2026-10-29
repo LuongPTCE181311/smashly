@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 class CurrencyFormatter {
   CurrencyFormatter._();
 
-  // Tự đổi dấu ngăn cách để không cần initializeDateFormatting('vi_VN').
+  // Swap the separator by hand so initializeDateFormatting('vi_VN') is not needed.
   static final _fmt = NumberFormat('#,##0', 'en_US');
 
   /// 2890000 -> "2.890.000₫"

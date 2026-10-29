@@ -13,14 +13,14 @@ import 'package:smashly/routes/app_routes.dart';
 
 import 'cart_screen_test.dart' show FakeCartRepository, item;
 
-/// Ghi lại các route được đẩy lên / gỡ xuống trên Navigator của test.
+/// Records the routes pushed onto / popped from the test Navigator.
 class _NavSpy extends NavigatorObserver {
   final pushed = <RouteSettings>[];
   int popped = 0;
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    // Bỏ route đầu tiên (màn Giỏ hàng làm `home`).
+    // Skip the first route (the Cart screen is `home`).
     if (previousRoute != null) pushed.add(route.settings);
   }
 
@@ -28,7 +28,7 @@ class _NavSpy extends NavigatorObserver {
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => popped++;
 }
 
-/// Màn thay cho Product Detail: chỉ cần AppBar có nút Back và hiện productId.
+/// Stand-in for Product Detail: an AppBar with a Back button, shows the productId.
 class _DetailStub extends StatelessWidget {
   const _DetailStub(this.arguments);
 
@@ -49,7 +49,7 @@ Future<({CartProvider cart, _NavSpy spy})> _pump(
   final cart = CartProvider(FakeCartRepository(items))..updateUser(2);
   await tester.pumpWidget(
     ChangeNotifierProvider.value(
-      key: UniqueKey(), // mỗi lần dựng một Navigator mới, không giữ route cũ
+      key: UniqueKey(), // a fresh Navigator per pump, no old routes kept
       value: cart,
       child: MaterialApp(
         theme: AppTheme.light,
@@ -66,13 +66,13 @@ Future<({CartProvider cart, _NavSpy spy})> _pump(
   return (cart: cart, spy: spy);
 }
 
-/// Bấm mũi tên trên AppBar;  chỉ pump 1 lần nên phải chờ xong hiệu ứng.
+/// Taps the AppBar arrow; pageBack() pumps only once, so wait for the animation.
 Future<void> _back(WidgetTester tester) async {
   await tester.pageBack();
   await tester.pumpAndSettle();
 }
 
-/// Nút Back của hệ thống (Android) hoặc cử chỉ quay lại.
+/// The system Back button (Android) or the back gesture.
 Future<void> _systemBack(WidgetTester tester) async {
   await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
     'flutter/navigation',
@@ -167,8 +167,8 @@ void main() {
     testWidgets('hai lần mở trong cùng một khung hình chỉ push một lần', (
       tester,
     ) async {
-      // Hai sự kiện bấm đến trước khi Flutter kịp vẽ màn mới: chỉ chốt
-      // ModalRoute.isCurrent trong _openProduct mới chặn được lần thứ hai.
+      // Two taps arrive before Flutter can paint the new screen: only the
+      // ModalRoute.isCurrent guard in _openProduct stops the second one.
       final env = await _pump(tester, [item(1, productId: 3)]);
       final open = tester
           .widget<CartItemTile>(find.byType(CartItemTile))

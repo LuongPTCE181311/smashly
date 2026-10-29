@@ -13,18 +13,18 @@ import 'package:smashly/features/cart/widgets/cart_product_group.dart';
 import 'package:smashly/features/cart/widgets/cart_skeleton.dart';
 import 'package:smashly/providers/cart_provider.dart';
 
-/// Giỏ trong bộ nhớ; `implements` để thêm method public vào CartRepository
-/// thì file này lỗi biên dịch.
+/// In-memory cart. It uses `implements`, so a new public method on
+/// CartRepository makes this file fail to compile (forcing the fake to be updated).
 class FakeCartRepository implements CartRepository {
   FakeCartRepository(this.items);
 
   List<CartItem> items;
   Object? loadError;
 
-  /// Có giá trị: removeMany ném lỗi này (giả lập ghi DB thất bại).
+  /// When set, removeMany throws it (simulates a failed DB write).
   Object? removeError;
 
-  /// Có giá trị: loadItems treo tới khi test gọi complete.
+  /// When set, loadItems waits until the test completes it.
   Completer<void>? hold;
 
   @override
@@ -55,7 +55,7 @@ class FakeCartRepository implements CartRepository {
   @override
   Future<void> removeMany(List<CartItem> removed) async {
     if (removeError != null) {
-      // Ghi DB thật mất vài khung hình mới báo lỗi, không báo ngay trong khung này.
+      // A real DB write takes a few frames to fail, it does not fail within this frame.
       await Future<void>.delayed(const Duration(milliseconds: 80));
       throw removeError!;
     }
@@ -158,7 +158,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('700.000₫'), findsOneWidget);
 
-    await tester.tap(find.byType(Checkbox).first); // chọn tất cả -> bỏ chọn
+    await tester.tap(find.byType(Checkbox).first); // select all -> untick
     await tester.pumpAndSettle();
     expect(find.text('Thanh toán (0)'), findsOneWidget);
     final pay = find.widgetWithText(FilledButton, 'Thanh toán (0)');

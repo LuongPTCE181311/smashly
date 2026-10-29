@@ -23,7 +23,7 @@ class CartProductGroup extends StatelessWidget {
     this.onOpen,
   });
 
-  /// Bấm ảnh / tên / giá ở phần đầu thẻ để xem chi tiết sản phẩm.
+  /// Tap the image / name / price in the card header to open the product detail.
   final VoidCallback? onOpen;
   final List<CartItem> items;
   final ValueChanged<bool> onToggleGroup;
@@ -36,7 +36,7 @@ class CartProductGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final first = items.first;
-    // Kho tính theo sản phẩm nên mọi size cùng hết hàng một lúc.
+    // Stock is per product, so every size sells out at the same time.
     final soldOut = cartIsSoldOut(first);
     final selectedCount = items.where((i) => i.isSelected).length;
     final groupValue = selectedCount == items.length
@@ -55,7 +55,7 @@ class CartProductGroup extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Material trong suốt nằm trên nền Container để gợn sóng InkWell hiện.
+          // Transparent Material over the card background so the ripple shows.
           Material(
             type: MaterialType.transparency,
             child: Row(

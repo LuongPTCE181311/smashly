@@ -29,7 +29,7 @@ void main() {
     );
   });
 
-  // updateUser tải ở microtask, sqflite_ffi trả kết quả bất đồng bộ thật.
+  // updateUser loads in a microtask; sqflite_ffi returns results asynchronously for real.
   Future<void> settle() async {
     await pumpEventQueue();
     while (cart.status == ViewStatus.loading) {

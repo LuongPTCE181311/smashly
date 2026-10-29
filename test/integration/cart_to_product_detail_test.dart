@@ -24,21 +24,21 @@ import 'package:smashly/providers/cart_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-/// Tích hợp từ đầu đến cuối: SQLite thật (file tạm), seed thật, phiên đăng
-/// nhập thật (SharedPreferences giả lập user 2), router thật, Product Detail
-/// thật. Chỉ có trình duyệt hệ thống là không có.
+/// End-to-end integration: real SQLite (temp file), real seed, real session
+/// (SharedPreferences set up as user 2), real router, real Product Detail.
 ///
-/// DB và tương tác dùng I/O thật nên mọi chờ đợi đi qua `runAsync`.
-const _grip = 'Yonex Super Grap (3 cuộn)'; // product 19, giỏ seed của customer
+/// The DB and interactions use real I/O, so every wait goes through `runAsync`.
+const _grip =
+    'Yonex Super Grap (3 cuộn)'; // product 19, the customer's seeded cart
 const _gripId = 19;
-const _shoeId = 10; // Power Cushion 65 Z3, có size 39–44
+const _shoeId = 10; // Power Cushion 65 Z3, sizes 39–44
 
 late Directory _tempDir;
 late String _originalDbPath;
 
 Future<Database> _db() => DatabaseHelper.instance.database;
 
-/// Đợi I/O thật rồi vẽ lại, tối đa ~4 giây, tới khi [done] đúng.
+/// Waits for real I/O and repaints, up to ~4 seconds, until [done] is true.
 Future<void> _until(
   WidgetTester tester,
   bool Function() done, {
@@ -68,7 +68,7 @@ Future<AuthProvider> _loginAsCustomer(WidgetTester tester) async {
   return auth;
 }
 
-/// Mở app thẳng ở tab Giỏ hàng với router và provider thật.
+/// Opens the app straight on the Cart tab with the real router and providers.
 Future<CartProvider> _pumpApp(WidgetTester tester, AuthProvider auth) async {
   final cartRepository = CartRepository(
     database: _db,
@@ -137,7 +137,7 @@ Future<void> _systemBack(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-/// Cart đang hiện ở tab Giỏ hàng và không có màn nào đè lên.
+/// The Cart tab is showing and no screen is on top of it.
 void _expectOnCartTab(WidgetTester tester) {
   expect(find.byType(ProductDetailScreen), findsNothing);
   expect(find.byType(CartScreen), findsOneWidget);
@@ -145,7 +145,7 @@ void _expectOnCartTab(WidgetTester tester) {
   expect(bar.selectedIndex, AppTab.cart.index);
 }
 
-/// Đóng cây widget để các Timer của màn hình được hủy trước khi test kết thúc.
+/// Tears the widget tree down so the screens' Timers are cancelled before the test ends.
 Future<void> _teardown(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pump(const Duration(seconds: 2));
@@ -180,7 +180,7 @@ void main() {
 
       await _openDetail(tester, find.text(_grip));
 
-      // Chi tiết thật của sản phẩm 19, đọc từ SQLite.
+      // The real detail of product 19, read from SQLite.
       expect(find.byType(ProductDetailScreen), findsOneWidget);
       expect(find.text(_grip), findsWidgets);
       expect(find.text('Thêm vào giỏ'), findsOneWidget);
@@ -223,7 +223,7 @@ void main() {
       await _tapBackArrow(tester);
 
       _expectOnCartTab(tester);
-      // Cùng sản phẩm, không size: cộng dồn thành một dòng số lượng 2.
+      // Same product, no size: accumulated into one line with quantity 2.
       expect(find.byType(CartItemTile), findsOneWidget);
       expect(cart.items.single.quantity, 2);
       expect(

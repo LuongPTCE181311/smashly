@@ -5,13 +5,13 @@ import 'package:smashly/data/daos/cart_dao.dart';
 import 'package:smashly/data/repositories/cart_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-/// Hợp đồng dữ liệu cho việc bấm sản phẩm trong giỏ để mở Product Detail:
-/// mỗi dòng giỏ phải mang `productId` hợp lệ, kể cả khi sản phẩm đổi trạng thái.
+/// Data contract for tapping a cart product to open Product Detail:
+/// every cart line must carry a valid `productId`, even when the product's state changes.
 void main() {
   late Database db;
   late CartRepository repo;
-  const newbie = 3; // giỏ trống
-  const customer = 2; // giỏ có sẵn product 19
+  const newbie = 3; // empty cart
+  const customer = 2; // has product 19 seeded
 
   setUpAll(sqfliteFfiInit);
 

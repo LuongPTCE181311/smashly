@@ -8,10 +8,10 @@ import 'package:smashly/data/repositories/cart_repository.dart';
 import 'package:smashly/providers/cart_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-/// Xóa nhiều dòng giỏ cùng lúc (xóa cả sản phẩm nhiều size) và hoàn tác trọn
-/// vẹn: DAO -> Repository -> Provider, trên SQLite thật.
+/// Removing several cart lines at once (a whole multi-size product) and a full
+/// undo: DAO -> Repository -> Provider, on real SQLite.
 void main() {
-  const user = 3; // newbie: giỏ trống
+  const user = 3; // newbie: empty cart
   const dao = CartDao();
 
   late Database db;
@@ -33,8 +33,8 @@ void main() {
 
   tearDown(() => db.close());
 
-  /// Giỏ: vợt (2), giày 41/42/43 (10), dây (20) — thêm lần lượt nên giỏ hiện
-  /// theo thứ tự mới nhất trước: 20, 10/43, 10/42, 10/41, 2.
+  /// Cart: racket (2), shoe 41/42/43 (10), string (20), added in that order so the
+  /// cart shows newest first: 20, 10/43, 10/42, 10/41, 2.
   Future<void> fillCart() async {
     await repo.addToCart(userId: user, productId: 2);
     await repo.addToCart(userId: user, productId: 10, size: '41');
@@ -82,7 +82,7 @@ void main() {
       'không đụng tới giỏ của người khác dù trùng id không tồn tại',
       () async {
         await fillCart();
-        final other = await repo.loadItems(2); // customer: 1 dòng seed
+        final other = await repo.loadItems(2); // customer: 1 seeded line
 
         await dao.deleteLines(db, [
           for (final i in await repo.loadItems(user)) i.id,
@@ -102,7 +102,7 @@ void main() {
       final shoes = (await repo.loadItems(user))
           .where((i) => i.productId == 10)
           .toList();
-      // Bỏ chọn size 42 để kiểm tra trạng thái được giữ khi hoàn tác.
+      // Untick size 42 to check that the selection is kept on undo.
       await repo.setSelected(shoes.firstWhere((i) => i.size == '42'), false);
       final before = (await repo.loadItems(user))
           .where((i) => i.productId == 10)
@@ -136,7 +136,7 @@ void main() {
         await repo.removeMany([shoe42]);
         final before = await lineCount();
 
-        // size 42 chưa có -> chèn được; size 41 đang có sẵn -> vi phạm UNIQUE.
+        // size 42 is missing -> can be inserted; size 41 exists -> violates UNIQUE.
         await expectLater(
           repo.restoreMany(user, [shoe42, shoe41]),
           throwsA(

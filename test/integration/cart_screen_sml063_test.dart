@@ -29,13 +29,13 @@ import 'package:smashly/routes/app_routes.dart';
 import 'package:smashly/shared/widgets/product_card.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-/// SML-063 · tiêu chí "thoát app mở lại giỏ vẫn còn" và "tổng tiền chỉ tính
-/// món được chọn", kiểm bằng SQLite thật (file tạm), seed thật, phiên đăng
-/// nhập thật, router thật. "Thoát app" = gỡ cả cây widget, đóng DB rồi dựng
-/// lại provider và mở lại file DB từ đầu.
-const _grip = 'Yonex Super Grap (3 cuộn)'; // product 19, 150.000₫, kho 80
-const _astrox = 'Yonex Astrox 77 Pro'; // product 2, 3.690.000₫, kho 15
-const _string = 'Yonex BG66 Ultimax'; // product 20, 220.000₫, kho 50
+/// SML-063 · criteria "reopening the app keeps the cart" and "the total counts
+/// only selected items", checked with real SQLite (temp file), real seed, real
+/// session and real router. "Quit the app" = remove the whole widget tree, close
+/// the DB, then rebuild the providers and reopen the DB file from scratch.
+const _grip = 'Yonex Super Grap (3 cuộn)'; // product 19, 150.000₫, stock 80
+const _astrox = 'Yonex Astrox 77 Pro'; // product 2, 3.690.000₫, stock 15
+const _string = 'Yonex BG66 Ultimax'; // product 20, 220.000₫, stock 50
 
 late Directory _tempDir;
 late String _originalDbPath;
@@ -56,7 +56,7 @@ Future<void> _until(
   expect(done(), isTrue, reason: reason);
 }
 
-/// Chờ tới khi điều kiện dựa trên SQLite (async) đúng.
+/// Waits until a condition based on (async) SQLite becomes true.
 Future<void> _untilDb(
   WidgetTester tester,
   Future<bool> Function() done, {
@@ -85,7 +85,7 @@ AuthProvider _newAuth() => AuthProvider(
 );
 
 Future<AuthProvider> _restoreSession(WidgetTester tester) async {
-  // Màn cao để ListView lười dựng đủ mọi thẻ trong giỏ.
+  // Tall screen so the lazy ListView builds every cart card.
   tester.view.physicalSize = const Size(800, 2400);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
@@ -98,7 +98,7 @@ Future<AuthProvider> _restoreSession(WidgetTester tester) async {
 
 final _cartRepository = CartRepository(database: _db, cartDao: const CartDao());
 
-/// Thêm món vào giỏ của [userId] thẳng qua repository (chuẩn bị dữ liệu).
+/// Adds an item to [userId]'s cart straight through the repository (test data).
 Future<void> _seedLine(
   WidgetTester tester,
   int productId, {
@@ -116,7 +116,7 @@ Future<void> _seedLine(
   );
 }
 
-/// Chạy trong runAsync của _untilDb, nên không tự gọi runAsync.
+/// Runs inside _untilDb's runAsync, so it must not call runAsync itself.
 Future<List<Map<String, Object?>>> _queryLines() async {
   final db = await _db();
   return db.rawQuery(
@@ -127,7 +127,7 @@ Future<List<Map<String, Object?>>> _queryLines() async {
   );
 }
 
-/// Mở app thẳng ở tab Giỏ hàng, rồi chờ [ready].
+/// Opens the app straight on the Cart tab, then waits for [ready].
 Future<void> _pumpApp(
   WidgetTester tester,
   AuthProvider auth, {
@@ -169,10 +169,10 @@ Future<void> _pumpApp(
 bool _hasTiles() => find.byType(CartItemTile).evaluate().isNotEmpty;
 bool _isEmptyCart() => find.text('Giỏ hàng đang trống').evaluate().isNotEmpty;
 
-/// Kết thúc test: gỡ cây widget rồi chờ các truy vấn còn dang dở xong, để
-/// tearDown không đóng DB giữa chừng (làm test kế tiếp bị treo).
+/// Ends a test: waits for in-flight queries to finish, then removes the widget
+/// tree, so tearDown never closes the DB midway (which hangs the next test).
 Future<void> _finish(WidgetTester tester) async {
-  // Chờ trước khi gỡ cây: provider bị hủy giữa lúc đang tải sẽ notify sau dispose.
+  // Wait before removing the tree: a provider disposed mid-load notifies after dispose.
   await tester.runAsync(
     () => Future<void>.delayed(const Duration(milliseconds: 400)),
   );
@@ -180,7 +180,7 @@ Future<void> _finish(WidgetTester tester) async {
   await tester.pump(const Duration(seconds: 1));
 }
 
-/// "Thoát app": gỡ cây widget, đóng DB. Mở lại bằng `_restoreSession` + `_pumpApp`.
+/// "Quit the app": removes the tree, closes the DB. Reopen via `_restoreSession` + `_pumpApp`.
 Future<void> _quitApp(WidgetTester tester) async {
   await _finish(tester);
   await tester.runAsync(DatabaseHelper.instance.closeForTest);
@@ -227,7 +227,7 @@ void main() {
       // 150.000 + 2 x 3.690.000 + 220.000
       expect(_inBar('7.750.000₫'), findsOneWidget);
 
-      // Bỏ chọn dây, tăng số lượng cước, xóa vợt.
+      // Untick the string, raise the grip quantity, delete the racket.
       await tester.tap(
         find.descendant(of: _tile(_string), matching: find.byType(Checkbox)),
       );
@@ -240,7 +240,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       await _swipe(tester, _astrox);
-      // Số liệu chỉ đổi khi SQLite ghi xong (I/O thật), nên phải chờ.
+      // Values only change once SQLite has written (real I/O), so wait.
       await _until(
         tester,
         () => _inBar('300.000₫').evaluate().isNotEmpty,
@@ -254,7 +254,7 @@ void main() {
             rows.any((r) => r['product_id'] == 20 && r['is_selected'] == 0);
       }, reason: 'thay đổi chưa được ghi xuống SQLite');
 
-      // Thoát app rồi mở lại từ đầu.
+      // Quit the app, then reopen it from scratch.
       await _quitApp(tester);
       auth = await _restoreSession(tester);
       await _pumpApp(tester, auth, ready: _hasTiles);
@@ -332,7 +332,7 @@ void main() {
         () async => (await _queryLines()).every((r) => r['product_id'] != 20),
         reason: 'món chưa bị xóa khỏi SQLite',
       );
-      // SnackBar chỉ hiện sau khi lệnh xóa ghi xong.
+      // The SnackBar only appears after the delete has been written.
       await _until(
         tester,
         () => find.text('Hoàn tác').evaluate().isNotEmpty,
@@ -340,7 +340,7 @@ void main() {
       );
       await tester.pump(
         const Duration(milliseconds: 400),
-      ); // SnackBar trượt vào
+      ); // SnackBar slides in
       await tester.tap(find.text('Hoàn tác'));
       await tester.pump();
       await _untilDb(
@@ -382,7 +382,9 @@ void main() {
 
     await _swipe(tester, _grip);
     expect(find.text('Giỏ hàng đang trống'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 5)); // hết thời gian Hoàn tác
+    await tester.pump(
+      const Duration(seconds: 5),
+    ); // the Undo window has expired
     await _untilDb(
       tester,
       () async => (await _queryLines()).isEmpty,
@@ -432,7 +434,7 @@ void main() {
       await _seedLine(tester, 10, size: '43', quantity: 3);
     }
 
-    /// Chờ tới khi tập size của giày trong SQLite thỏa [ok].
+    /// Waits until the shoe's size set in SQLite satisfies [ok].
     Future<void> shoesInDb(
       WidgetTester tester,
       bool Function(Set<String> sizes) ok,
@@ -473,7 +475,7 @@ void main() {
           );
           return rows.first['price'] as int;
         }))!;
-        // grip 150.000 x 1 + giày x (1 + 2 + 3)
+        // grip 150.000 x 1 + shoe x (1 + 2 + 3)
         expect(
           _inBar(CurrencyFormatter.format(150000 + shoePrice * 6)),
           findsOneWidget,
@@ -518,7 +520,7 @@ void main() {
         );
         await tester.pump(
           const Duration(milliseconds: 400),
-        ); // SnackBar trượt vào
+        ); // SnackBar slides in
         await tester.tap(find.text('Hoàn tác'));
         await tester.pump();
         await shoesInDb(
@@ -607,7 +609,7 @@ void main() {
       reason: 'món hết hàng đang chọn nên chưa cho thanh toán',
     );
 
-    // Bỏ chọn món hết hàng: vẫn mờ nhưng không còn chặn thanh toán.
+    // Untick the sold-out item: still dimmed, but it no longer blocks checkout.
     await tester.tap(
       find.descendant(of: _tile(_grip), matching: find.byType(Checkbox)),
     );

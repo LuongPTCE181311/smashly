@@ -8,9 +8,9 @@ import '../models/cart_item.dart';
 class CartRepository {
   static const maxQuantityPerLine = 99;
 
-  /// Lỗi của [size] so với danh sách size đang bán [sizes]; null = hợp lệ.
-  /// Dùng chung cho thêm vào giỏ và đặt hàng (size có thể đã bị gỡ sau khi
-  /// món nằm trong giỏ).
+  /// Error for [size] against the sellable [sizes]; null = valid.
+  /// Shared by add-to-cart and checkout (a size may be removed after the item
+  /// is already in the cart).
   static String? sizeProblem(List<String> sizes, String size) {
     if (sizes.isEmpty) {
       return size.isEmpty ? null : 'Sản phẩm này không có size';
@@ -33,9 +33,9 @@ class CartRepository {
     });
   }
 
-  /// Thêm vào giỏ; cùng sản phẩm + size thì cộng dồn, không vượt tồn kho.
-  /// Sản phẩm có size bắt buộc chọn một size đang bán; món không có size
-  /// truyền `size: ''`. Cùng sản phẩm khác size là các dòng riêng.
+  /// Adds to the cart; same product + size accumulates, never above stock.
+  /// A product with sizes requires one of its sellable sizes; a product without
+  /// size passes `size: ''`. The same product in another size is a separate line.
   Future<void> addToCart({
     required int userId,
     required int productId,
@@ -97,7 +97,7 @@ class CartRepository {
     });
   }
 
-  /// Xóa một hoặc nhiều dòng giỏ cùng lúc (một lệnh DELETE, được cả hoặc không).
+  /// Removes one or many cart lines at once (a single DELETE, all or nothing).
   Future<void> removeMany(List<CartItem> items) {
     return _guard('removeMany', 'Không thể xóa sản phẩm', () async {
       await _cartDao.deleteLines(await _database(), [
@@ -106,8 +106,8 @@ class CartRepository {
     });
   }
 
-  /// Hoàn tác xóa: chèn lại đúng số lượng, size, trạng thái chọn của mọi dòng
-  /// trong một transaction (hoàn tác trọn vẹn hoặc không chèn dòng nào).
+  /// Undo for a removal: re-inserts every line with its quantity, size and
+  /// selection in one transaction (restores everything or inserts nothing).
   Future<void> restoreMany(int userId, List<CartItem> items) {
     return _guard('restoreMany', 'Không thể hoàn tác', () async {
       final db = await _database();

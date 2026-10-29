@@ -1,5 +1,5 @@
-/// Một dòng trong giỏ, ghép từ cart_items + products (JOIN).
-/// Giá luôn lấy từ products, giỏ hàng không lưu giá.
+/// One cart line, joined from cart_items + products.
+/// The price always comes from products; the cart does not store prices.
 class CartItem {
   const CartItem({
     required this.id,
@@ -22,7 +22,7 @@ class CartItem {
   final int stock;
   final int quantity;
 
-  /// Chuỗi rỗng khi sản phẩm không có size (cột cart_items.size là NOT NULL).
+  /// Empty string when the product has no size (cart_items.size is NOT NULL).
   final String size;
   final bool isSelected;
   final String brand;

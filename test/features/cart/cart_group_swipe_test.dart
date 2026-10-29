@@ -8,8 +8,8 @@ import 'package:smashly/features/cart/widgets/quantity_stepper.dart';
 
 import 'cart_screen_test.dart' show FakeCartRepository, item, pumpCart;
 
-/// Vuốt thẻ sản phẩm nhiều size: vuốt phần đầu thẻ xóa cả sản phẩm (mọi size),
-/// vuốt một dòng size chỉ xóa size đó; Hoàn tác khôi phục trọn nhóm.
+/// Swiping a multi-size card: swiping the header removes the whole product
+/// (every size); swiping a size row removes only that size; Undo restores the group.
 void main() {
   Finder inBar(String text) => find.descendant(
     of: find.byType(CartSummaryBar),
@@ -21,7 +21,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  // Sản phẩm 5 có 3 size trong giỏ, mỗi size 100.000₫ x số lượng.
+  // Product 5 has 3 sizes in the cart, each 100.000₫ x quantity.
   List<CartItem> shoes({int stock = 10}) => [
     item(1, productId: 5, size: '41', quantity: 1, stock: stock),
     item(2, productId: 5, size: '42', quantity: 2, stock: stock),
@@ -100,7 +100,7 @@ void main() {
     testWidgets(
       'xóa nhóm rồi xóa một món khác: Hoàn tác chỉ lấy lại lần xóa cuối',
       (tester) async {
-        // Giữ hành vi cũ: mỗi lần chỉ hoàn tác được lần xóa gần nhất.
+        // Keeps the old behaviour: only the most recent removal can be undone.
         final cart = await pumpCart(
           tester,
           FakeCartRepository([item(9, productId: 9), ...shoes()]),

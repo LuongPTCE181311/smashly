@@ -9,8 +9,8 @@ import 'package:smashly/providers/cart_provider.dart';
 
 import '../features/cart/cart_screen_test.dart' show FakeCartRepository, item;
 
-/// Hiệu năng giao diện giỏ hàng với danh sách lớn: ListView phải dựng lười,
-/// và mở / đóng chi tiết sản phẩm không được làm dựng lại cả danh sách.
+/// UI performance of the cart with a long list: the ListView must build lazily,
+/// and opening / closing a product detail must not rebuild the whole list.
 void main() {
   const total = 400;
 
@@ -74,8 +74,8 @@ void main() {
   testWidgets('mở/đóng chi tiết: số thẻ dựng lại không tăng theo độ dài giỏ', (
     tester,
   ) async {
-    // Bấm vào thẻ (ink/focus) và đóng màn làm dựng lại các thẻ đang hiển thị;
-    // điều cần giữ là con số này chỉ phụ thuộc phần nhìn thấy, không phụ thuộc N.
+    // Tapping a card (ink/focus) and closing the screen rebuild the visible cards;
+    // what must hold is that this number depends only on what is visible, not on N.
     Future<({int rebuilds, int notifications})> measure(int count) async {
       final cart = CartProvider(
         FakeCartRepository([

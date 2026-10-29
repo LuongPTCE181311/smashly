@@ -6,7 +6,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../shared/widgets/buttons/primary_button.dart';
 
-/// Thanh cố định đáy màn Giỏ hàng: tổng tiền các món đã chọn + nút Thanh toán.
+/// Bottom bar of the Cart screen: total of the selected items + Checkout button.
 class CartSummaryBar extends StatelessWidget {
   const CartSummaryBar({
     super.key,
@@ -19,7 +19,7 @@ class CartSummaryBar extends StatelessWidget {
   final int total;
   final int selectedCount;
 
-  /// Có món đang chọn hết hàng / vượt tồn kho.
+  /// A selected item is sold out or exceeds stock.
   final bool hasUnavailable;
   final VoidCallback onCheckout;
 

@@ -9,8 +9,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   late Database db;
   late CartRepository repo;
-  const newbie = 3; // newbie@smashly.com, giỏ trống
-  const customer = 2; // customer@smashly.com, giỏ có sẵn 1 món (product 19)
+  const newbie = 3; // newbie@smashly.com, empty cart
+  const customer = 2; // customer@smashly.com, one seeded item (product 19)
 
   setUpAll(sqfliteFfiInit);
 

@@ -7,24 +7,24 @@ import '../core/utils/app_exception.dart';
 import '../data/models/cart_item.dart';
 import '../data/repositories/cart_repository.dart';
 
-/// Giỏ hàng của người đang đăng nhập. Sống suốt app nên PHẢI được báo khi đổi
-/// người dùng: main.dart nối với AuthProvider bằng ChangeNotifierProxyProvider
-/// và gọi [updateUser].
+/// Cart of the signed-in user. It lives for the whole app, so it MUST be told
+/// when the user changes: main.dart wires it to AuthProvider with a
+/// ChangeNotifierProxyProvider that calls [updateUser].
 ///
-/// Các hàm thao tác trả về `String?`: `null` = thành công, ngược lại là câu
-/// lỗi tiếng Việt để màn hình hiện SnackBar.
+/// Action methods return `String?`: `null` means success, otherwise a
+/// Vietnamese message the screen shows in a SnackBar.
 class CartProvider extends ChangeNotifier {
   CartProvider(this._repository);
 
   final CartRepository _repository;
 
-  // Chưa có user = giỏ trống; có user thì chuyển initial -> loading ở updateUser.
+  // No user = empty cart; with a user it goes initial -> loading in updateUser.
   ViewStatus _status = ViewStatus.empty;
   int? _userId;
   List<CartItem> _items = [];
   String? _errorMessage;
 
-  /// Tăng mỗi khi đổi user để bỏ kết quả của lần tải cũ về muộn.
+  /// Bumped on every user change to discard a late result of an older load.
   int _generation = 0;
   bool _disposed = false;
 
@@ -41,16 +41,16 @@ class CartProvider extends ChangeNotifier {
   bool get allSelected =>
       _items.isNotEmpty && _items.every((i) => i.isSelected);
 
-  /// Số trên badge tab Giỏ hàng: số mặt hàng (dòng) trong giỏ, không cộng số
-  /// lượng. Cùng sản phẩm khác size tính là 2 dòng.
+  /// Number on the Cart tab badge: count of lines (items) in the cart, not the
+  /// sum of quantities. The same product in another size counts as 2 lines.
   int get itemCount => _items.length;
 
-  /// Có món đang chọn mà vượt tồn kho / hết hàng -> không cho thanh toán.
+  /// A selected item that is sold out or over stock blocks checkout.
   bool get hasUnavailableSelected =>
       selectedItems.any((i) => i.stock <= 0 || i.quantity > i.stock);
 
-  /// Gọi khi người dùng đổi hoặc đăng xuất: bỏ giỏ cũ khỏi bộ nhớ rồi tải giỏ
-  /// của người mới. Được gọi trong lúc build nên không notify đồng bộ.
+  /// Called when the user changes or signs out: clears the old cart from memory
+  /// and loads the new user's cart. Runs during build, so it never notifies sync.
   void updateUser(int? userId) {
     if (userId == _userId) return;
     _userId = userId;
@@ -88,7 +88,7 @@ class CartProvider extends ChangeNotifier {
     _notify();
   }
 
-  /// Lượng gọi từ Product Detail. `size = ''` nếu sản phẩm không có size.
+  /// Called by Product Detail. `size = ''` when the product has no size.
   Future<String?> addToCart({
     required int productId,
     int quantity = 1,
@@ -110,7 +110,7 @@ class CartProvider extends ChangeNotifier {
     return null;
   }
 
-  /// [delta] = +1 / -1. Giảm khi đang là 1 thì không làm gì (xóa bằng vuốt).
+  /// [delta] = +1 / -1. Decreasing at 1 does nothing (remove by swiping).
   Future<String?> changeQuantity(CartItem item, int delta) {
     final quantity = item.quantity + delta;
     if (quantity < 1) return Future.value();
@@ -155,9 +155,9 @@ class CartProvider extends ChangeNotifier {
 
   Future<String?> remove(CartItem item) => removeMany([item]);
 
-  /// Xóa ngay trên giao diện (để Dismissible gỡ được widget), lỗi DB thì hoàn
-  /// lại đúng vị trí cũ. Thành công thì nhớ các dòng vừa xóa cho [undoRemove]
-  /// (xóa cả sản phẩm nhiều size vẫn hoàn tác được trọn vẹn).
+  /// Removes right away in the UI (so Dismissible can drop the widget); on a DB
+  /// error every line goes back to its original position. On success the removed
+  /// lines are remembered for [undoRemove] (a multi-size product undoes fully).
   Future<String?> removeMany(List<CartItem> items) async {
     final ids = {for (final item in items) item.id};
     final removed = <(int, CartItem)>[
@@ -174,7 +174,7 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.removeMany([for (final (_, item) in removed) item]);
     } catch (error) {
-      // Chèn lại theo thứ tự tăng dần của vị trí gốc để mỗi dòng về đúng chỗ.
+      // Re-insert in ascending original order so each line returns to its place.
       final restored = [..._items];
       for (final (index, item) in removed) {
         restored.insert(index.clamp(0, restored.length), item);
@@ -202,7 +202,7 @@ class CartProvider extends ChangeNotifier {
     return null;
   }
 
-  /// Tải lại mà không nháy màn loading (sau khi thêm / hoàn tác).
+  /// Reloads without flashing the loading screen (after add / undo).
   Future<void> _reload(int userId) async {
     final generation = _generation;
     try {
@@ -228,7 +228,7 @@ class CartProvider extends ChangeNotifier {
     _status = _items.isEmpty ? ViewStatus.empty : ViewStatus.success;
   }
 
-  /// Bắt cả Error (xem AuthProvider._handleError): lỗi lạ chỉ hiện câu chung.
+  /// Catches Error too (see AuthProvider._handleError): unknown errors are generic.
   String _messageOf(Object error, String fallback) {
     if (error is AppException && error.message.isNotEmpty) {
       return error.message;

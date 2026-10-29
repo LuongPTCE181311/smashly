@@ -6,10 +6,10 @@ import 'package:smashly/features/cart/widgets/quantity_stepper.dart';
 
 import 'cart_screen_test.dart' show FakeCartRepository, item, pumpCart;
 
-/// SML-063 · UC11 · Màn Cart (S07): chọn tất cả, stepper, vuốt xóa + Undo,
-/// item hết hàng mờ, thanh tổng tiền, empty state.
-/// Tiêu chí: tổng tiền chỉ tính món được chọn; thoát app mở lại giỏ vẫn còn
-/// (phần này nằm ở test/integration/cart_screen_sml063_test.dart).
+/// SML-063 · UC11 · Cart screen (S07): select all, stepper, swipe delete + Undo,
+/// dimmed sold-out items, total bar, empty state.
+/// Criteria: the total counts only selected items; reopening the app keeps the
+/// cart (that part is in test/integration/cart_screen_sml063_test.dart).
 void main() {
   Finder tile(String name) =>
       find.ancestor(of: find.text(name), matching: find.byType(CartItemTile));
@@ -33,7 +33,7 @@ void main() {
   bool? ticked(WidgetTester tester, Finder checkbox) =>
       tester.widget<Checkbox>(checkbox).value;
 
-  /// Nút "Thanh toán (n)" có bấm được không.
+  /// Whether the "Thanh toán (n)" button can be pressed.
   bool canPay(WidgetTester tester, int count) {
     final pay = find.widgetWithText(FilledButton, 'Thanh toán ($count)');
     expect(pay, findsOneWidget);
@@ -96,7 +96,7 @@ void main() {
         tester,
         FakeCartRepository([item(1), item(2, price: 250000, quantity: 2)]),
       );
-      await tester.tap(find.byType(Checkbox).first); // bỏ tất cả
+      await tester.tap(find.byType(Checkbox).first); // untick all
       await tester.pumpAndSettle();
 
       await tester.tap(checkboxOf('Vợt 2'));
@@ -263,8 +263,8 @@ void main() {
       },
     );
 
-    // Trạng thái chọn sau Hoàn tác cần DB thật (bản giả không lưu is_selected):
-    // xem test/integration/cart_screen_sml063_test.dart.
+    // The selected state after Undo needs a real DB (the fake does not keep is_selected):
+    // see test/integration/cart_screen_sml063_test.dart.
     testWidgets('Hoàn tác giữ nguyên số lượng và tổng tiền', (tester) async {
       await pumpCart(
         tester,
@@ -287,7 +287,7 @@ void main() {
     testWidgets(
       'xóa hai món liên tiếp: Hoàn tác chỉ khôi phục món xóa sau cùng',
       (tester) async {
-        // Giới hạn hiện tại: CartProvider chỉ nhớ MỘT món vừa xóa (_lastRemoved).
+        // Current behaviour: Undo only covers the most recent removal.
         await pumpCart(tester, FakeCartRepository([item(1), item(2), item(3)]));
 
         await swipe(tester, 'Vợt 1');
@@ -335,7 +335,7 @@ void main() {
   });
 
   group('món hết hàng', () {
-    /// Độ trong suốt tích lũy của mọi Opacity / AnimatedOpacity bao quanh [target].
+    /// Accumulated opacity of every Opacity / AnimatedOpacity around [target].
     double opacityOf(Finder target) {
       var value = 1.0;
       final wrappers = find.ancestor(
@@ -413,7 +413,7 @@ void main() {
         ]),
       );
 
-      expect(opacityOf(find.text('Vợt 1')), lessThan(1.0)); // tên sản phẩm
+      expect(opacityOf(find.text('Vợt 1')), lessThan(1.0)); // product name
       expect(opacityOf(find.byType(CartThumbnail)), lessThan(1.0));
       for (final size in ['Size: 41', 'Size: 42']) {
         expect(opacityOf(find.text(size)), lessThan(1.0));
