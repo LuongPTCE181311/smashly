@@ -4,8 +4,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_spacing.dart';
 
-/// Khung xương lúc tải giỏ hàng: cùng bố cục với [CartScreen] (hàng chọn tất
-/// cả + vài thẻ món), nhấp nháy nhẹ. Máy bật "giảm chuyển động" thì đứng yên.
+/// Loading skeleton for the cart: same layout as [CartScreen] (select-all row
+/// + a few item cards) with a soft pulse; static when reduced motion is on.
 class CartSkeleton extends StatefulWidget {
   const CartSkeleton({super.key, this.itemCount = 3});
 

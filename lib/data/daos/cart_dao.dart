@@ -4,7 +4,7 @@ import '../../core/database/db_schema.dart';
 import '../../core/utils/db_time.dart';
 import '../models/cart_item.dart';
 
-/// Chỉ viết SQL cho carts + cart_items. Kiểm tra tồn kho thuộc CartRepository.
+/// Only SQL for carts + cart_items. Stock checks belong to CartRepository.
 class CartDao {
   const CartDao();
 
@@ -16,12 +16,12 @@ class CartDao {
       JOIN ${DbSchema.products} p ON p.id = ci.product_id
   ''';
 
-  /// Hào gọi khi đăng ký: mỗi khách đúng một giỏ.
+  /// Used by Hào on sign-up: exactly one cart per customer.
   Future<int> createForUser(DatabaseExecutor db, int userId) {
     return db.insert(DbSchema.carts, {'user_id': userId});
   }
 
-  /// Luôn tra theo `user_id`, không coi `cart_id = user_id`.
+  /// Always look up by `user_id`; never assume `cart_id = user_id`.
   Future<int> getOrCreateCartId(DatabaseExecutor db, int userId) async {
     final rows = await db.query(
       DbSchema.carts,
@@ -34,7 +34,7 @@ class CartDao {
     return createForUser(db, userId);
   }
 
-  /// Tồn kho hiện tại của sản phẩm đang bán; null nếu không có / đã ngừng bán.
+  /// Current stock of a product on sale; null if missing or discontinued.
   Future<int?> findStock(DatabaseExecutor db, int productId) async {
     final rows = await db.query(
       DbSchema.products,
@@ -46,8 +46,8 @@ class CartDao {
     return rows.isEmpty ? null : rows.first['stock'] as int;
   }
 
-  /// Các size đang bán của sản phẩm (cột products.sizes, ngăn bằng dấu phẩy).
-  /// Rỗng nếu sản phẩm không có size (vợt, phụ kiện) hoặc không tồn tại.
+  /// Sellable sizes of a product (products.sizes column, comma separated).
+  /// Empty if the product has no size (rackets, accessories) or does not exist.
   Future<List<String>> findSizes(DatabaseExecutor db, int productId) async {
     final rows = await db.query(
       DbSchema.products,
@@ -72,7 +72,7 @@ class CartDao {
     return rows.map(CartItem.fromMap).toList();
   }
 
-  /// Dòng cùng (sản phẩm, size) nếu đã có trong giỏ, để cộng dồn số lượng.
+  /// Existing line for the same (product, size), used to accumulate quantity.
   Future<CartItem?> findLine(
     DatabaseExecutor db,
     int cartId,
@@ -131,11 +131,19 @@ class CartDao {
     );
   }
 
-  Future<int> deleteLine(DatabaseExecutor db, int itemId) {
-    return db.delete(DbSchema.cartItems, where: 'id = ?', whereArgs: [itemId]);
+  /// Deletes several lines with one DELETE (atomic): a single line or every
+  /// size of one product.
+  Future<int> deleteLines(DatabaseExecutor db, List<int> itemIds) {
+    if (itemIds.isEmpty) return Future.value(0);
+    final marks = List.filled(itemIds.length, '?').join(', ');
+    return db.delete(
+      DbSchema.cartItems,
+      where: 'id IN ($marks)',
+      whereArgs: itemIds,
+    );
   }
 
-  /// Xóa các món đã chọn (gọi sau khi đặt hàng thành công).
+  /// Deletes the selected lines (called after a successful checkout).
   Future<int> deleteSelected(DatabaseExecutor db, int cartId) {
     return db.delete(
       DbSchema.cartItems,

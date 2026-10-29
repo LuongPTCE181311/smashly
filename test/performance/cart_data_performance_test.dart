@@ -6,13 +6,13 @@ import 'package:smashly/data/daos/cart_dao.dart';
 import 'package:smashly/data/repositories/cart_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-/// Hiệu năng lớp dữ liệu của giỏ hàng với giỏ rất lớn (nhiều hơn người dùng
-/// thật có thể tạo) để bắt sớm truy vấn quét toàn bảng hay vòng lặp N+1.
+/// Data-layer performance of the cart with a very large cart (more than a user
+/// can really build) to catch full table scans or N+1 loops early.
 ///
-/// Ngưỡng thời gian cố ý rộng (chạy được trên máy yếu / CI); kiểm tra chính
-/// là kế hoạch truy vấn có dùng chỉ mục và số lần gọi DB không tăng theo N.
+/// The time limits are deliberately loose (to run on slow machines / CI); the main
+/// checks are that the query plan uses indexes and DB calls do not grow with N.
 void main() {
-  const user = 3; // newbie: giỏ trống
+  const user = 3; // newbie: empty cart
   const lines = 3000;
 
   late Database db;
@@ -88,7 +88,7 @@ void main() {
       const rounds = 30;
       final watch = Stopwatch()..start();
       for (var i = 0; i < rounds; i++) {
-        // Luôn trúng dòng đã có (đường cộng dồn); sản phẩm 19 còn kho 80.
+        // Always hits an existing line (accumulate path); product 19 has stock 80.
         await repo.addToCart(userId: user, productId: 19);
       }
       watch.stop();
@@ -104,7 +104,7 @@ void main() {
         where: 'cart_id = ? AND product_id = ? AND size = ?',
         whereArgs: [cartId, 19, ''],
       );
-      // _fill đã tạo sẵn dòng này với số lượng 1.
+      // _fill already created this line with quantity 1.
       expect(row.single['quantity'], 1 + rounds);
     },
   );
@@ -130,7 +130,7 @@ void main() {
   );
 }
 
-/// Chèn [count] dòng giỏ khác nhau (sản phẩm x size) bằng một batch.
+/// Inserts [count] different cart lines (product x size) with one batch.
 Future<void> _fill(Database db, int cartId, int count) async {
   final products = await db.query(DbSchema.products, columns: ['id']);
   final batch = db.batch();
@@ -141,7 +141,7 @@ Future<void> _fill(Database db, int cartId, int count) async {
       batch.insert(DbSchema.cartItems, {
         'cart_id': cartId,
         'product_id': p['id'],
-        // Dòng không size '' chỉ một lần cho mỗi sản phẩm, còn lại s1, s2, ...
+        // The no-size '' line appears once per product, the rest are s1, s2, ...
         'size': size == 0 ? '' : 's$size',
         'quantity': 1,
       });

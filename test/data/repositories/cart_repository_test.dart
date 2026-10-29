@@ -9,8 +9,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   late Database db;
   late CartRepository repo;
-  const newbie = 3; // newbie@smashly.com, giỏ trống
-  const customer = 2; // customer@smashly.com, giỏ có sẵn 1 món (product 19)
+  const newbie = 3; // newbie@smashly.com, empty cart
+  const customer = 2; // customer@smashly.com, one seeded item (product 19)
 
   setUpAll(sqfliteFfiInit);
 
@@ -135,10 +135,10 @@ void main() {
     expect(updated.quantity, 4);
     expect(updated.isSelected, isFalse);
 
-    await repo.remove(updated);
+    await repo.removeMany([updated]);
     expect(await repo.loadItems(customer), isEmpty);
 
-    await repo.restore(customer, updated);
+    await repo.restoreMany(customer, [updated]);
     final restored = (await repo.loadItems(customer)).single;
     expect(restored.quantity, 4);
     expect(restored.isSelected, isFalse);
@@ -235,7 +235,10 @@ void main() {
       repo.setQuantity(item, 2),
       friendly('Không thể đổi số lượng'),
     );
-    await expectLater(repo.remove(item), friendly('Không thể xóa sản phẩm'));
+    await expectLater(
+      repo.removeMany([item]),
+      friendly('Không thể xóa sản phẩm'),
+    );
   });
 
   test('sizeProblem covers products with and without sizes', () {

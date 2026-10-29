@@ -23,7 +23,7 @@ class CartProductGroup extends StatelessWidget {
     this.onOpen,
   });
 
-  /// Bấm ảnh / tên / giá ở phần đầu thẻ để xem chi tiết sản phẩm.
+  /// Tap the image / name / price in the card header to open the product detail.
   final VoidCallback? onOpen;
   final List<CartItem> items;
   final ValueChanged<bool> onToggleGroup;
@@ -36,6 +36,8 @@ class CartProductGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final first = items.first;
+    // Stock is per product, so every size sells out at the same time.
+    final soldOut = cartIsSoldOut(first);
     final selectedCount = items.where((i) => i.isSelected).length;
     final groupValue = selectedCount == items.length
         ? true
@@ -53,7 +55,7 @@ class CartProductGroup extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Material trong suốt nằm trên nền Container để gợn sóng InkWell hiện.
+          // Transparent Material over the card background so the ripple shows.
           Material(
             type: MaterialType.transparency,
             child: Row(
@@ -67,34 +69,40 @@ class CartProductGroup extends StatelessWidget {
                 ),
                 CartOpenArea(
                   onOpen: onOpen,
-                  child: CartThumbnail(path: first.imagePath),
+                  child: cartDimmed(
+                    dim: soldOut,
+                    child: CartThumbnail(path: first.imagePath),
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: CartOpenArea(
                     onOpen: onOpen,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            first.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.subtitle,
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            '${items.length} size trong giỏ',
-                            style: AppTextStyles.caption,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            CurrencyFormatter.format(first.price),
-                            style: AppTextStyles.priceSmall,
-                          ),
-                        ],
+                    child: cartDimmed(
+                      dim: soldOut,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              first.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.subtitle,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              '${items.length} size trong giỏ',
+                              style: AppTextStyles.caption,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              CurrencyFormatter.format(first.price),
+                              style: AppTextStyles.priceSmall,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -173,7 +181,13 @@ class _VariantRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Size: ${item.size}', style: AppTextStyles.subtitle),
+                  cartDimmed(
+                    dim: cartIsSoldOut(item),
+                    child: Text(
+                      'Size: ${item.size}',
+                      style: AppTextStyles.subtitle,
+                    ),
+                  ),
                   if (warning != null)
                     Row(
                       children: [
@@ -196,12 +210,15 @@ class _VariantRow extends StatelessWidget {
                 ],
               ),
             ),
-            QuantityStepper(
-              quantity: item.quantity,
-              onDecrease: item.quantity > 1 ? onDecrease : null,
-              onIncrease: item.quantity < maxQuantity ? onIncrease : null,
-              max: maxQuantity,
-              onQuantityChanged: onSetQuantity,
+            cartDimmed(
+              dim: cartIsSoldOut(item),
+              child: QuantityStepper(
+                quantity: item.quantity,
+                onDecrease: item.quantity > 1 ? onDecrease : null,
+                onIncrease: item.quantity < maxQuantity ? onIncrease : null,
+                max: maxQuantity,
+                onQuantityChanged: onSetQuantity,
+              ),
             ),
           ],
         ),

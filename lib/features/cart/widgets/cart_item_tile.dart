@@ -20,7 +20,16 @@ String? cartStockWarning(CartItem item) {
   return null;
 }
 
-/// Một dòng giỏ hàng: ô chọn, ảnh, tên, size, giá, stepper số lượng.
+/// Sold-out line (stock 0): image, name, price and stepper are dimmed; the
+/// checkbox and the warning stay clear so it can be unticked and explained.
+bool cartIsSoldOut(CartItem item) => item.stock <= 0;
+
+const cartSoldOutOpacity = 0.5;
+
+Widget cartDimmed({required bool dim, required Widget child}) =>
+    dim ? Opacity(opacity: cartSoldOutOpacity, child: child) : child;
+
+/// One cart line: checkbox, image, name, size, price, quantity stepper.
 class CartItemTile extends StatelessWidget {
   const CartItemTile({
     super.key,
@@ -39,13 +48,14 @@ class CartItemTile extends StatelessWidget {
 
   final ValueChanged<int>? onSetQuantity;
 
-  /// Bấm ảnh / tên / giá để xem chi tiết sản phẩm.
+  /// Tap the image / name / price to open the product detail.
   final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
     final maxQuantity = cartMaxQuantity(item);
     final warning = cartStockWarning(item);
+    final soldOut = cartIsSoldOut(item);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -54,7 +64,7 @@ class CartItemTile extends StatelessWidget {
         borderRadius: AppRadius.lgAll,
         border: Border.all(color: AppColors.border),
       ),
-      // Material trong suốt nằm trên nền Container để gợn sóng của InkWell hiện.
+      // Transparent Material over the Container background so the ripple shows.
       child: Material(
         type: MaterialType.transparency,
         child: Row(
@@ -67,7 +77,10 @@ class CartItemTile extends StatelessWidget {
             ),
             CartOpenArea(
               onOpen: onOpen,
-              child: CartThumbnail(path: item.imagePath),
+              child: cartDimmed(
+                dim: soldOut,
+                child: CartThumbnail(path: item.imagePath),
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -81,23 +94,34 @@ class CartItemTile extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            item.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.subtitle,
-                          ),
-                          if (item.size.isNotEmpty) ...[
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              'Size: ${item.size}',
-                              style: AppTextStyles.caption,
+                          cartDimmed(
+                            dim: soldOut,
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.subtitle,
+                                  ),
+                                  if (item.size.isNotEmpty) ...[
+                                    const SizedBox(height: AppSpacing.xs),
+                                    Text(
+                                      'Size: ${item.size}',
+                                      style: AppTextStyles.caption,
+                                    ),
+                                  ],
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Text(
+                                    CurrencyFormatter.format(item.price),
+                                    style: AppTextStyles.priceSmall,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            CurrencyFormatter.format(item.price),
-                            style: AppTextStyles.priceSmall,
                           ),
                           if (warning != null) ...[
                             const SizedBox(height: AppSpacing.xs),
@@ -125,14 +149,17 @@ class CartItemTile extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: QuantityStepper(
-                      quantity: item.quantity,
-                      onDecrease: item.quantity > 1 ? onDecrease : null,
-                      onIncrease: item.quantity < maxQuantity
-                          ? onIncrease
-                          : null,
-                      max: maxQuantity,
-                      onQuantityChanged: onSetQuantity,
+                    child: cartDimmed(
+                      dim: soldOut,
+                      child: QuantityStepper(
+                        quantity: item.quantity,
+                        onDecrease: item.quantity > 1 ? onDecrease : null,
+                        onIncrease: item.quantity < maxQuantity
+                            ? onIncrease
+                            : null,
+                        max: maxQuantity,
+                        onQuantityChanged: onSetQuantity,
+                      ),
                     ),
                   ),
                 ],

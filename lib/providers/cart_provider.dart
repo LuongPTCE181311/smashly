@@ -7,33 +7,33 @@ import '../core/utils/app_exception.dart';
 import '../data/models/cart_item.dart';
 import '../data/repositories/cart_repository.dart';
 
-/// Giỏ hàng của người đang đăng nhập. Sống suốt app nên PHẢI được báo khi đổi
-/// người dùng: main.dart nối với AuthProvider bằng ChangeNotifierProxyProvider
-/// và gọi [updateUser].
+/// Cart of the signed-in user. It lives for the whole app, so it MUST be told
+/// when the user changes: main.dart wires it to AuthProvider with a
+/// ChangeNotifierProxyProvider that calls [updateUser].
 ///
-/// Các hàm thao tác trả về `String?`: `null` = thành công, ngược lại là câu
-/// lỗi tiếng Việt để màn hình hiện SnackBar.
+/// Action methods return `String?`: `null` means success, otherwise a
+/// Vietnamese message the screen shows in a SnackBar.
 class CartProvider extends ChangeNotifier {
   CartProvider(this._repository);
 
   final CartRepository _repository;
 
-  // Chưa có user = giỏ trống; có user thì chuyển initial -> loading ở updateUser.
+  // No user = empty cart; with a user it goes initial -> loading in updateUser.
   ViewStatus _status = ViewStatus.empty;
   int? _userId;
   List<CartItem> _items = [];
   String? _errorMessage;
 
-  /// Tăng mỗi khi đổi user để bỏ kết quả của lần tải cũ về muộn.
+  /// Bumped on every user change to discard a late result of an older load.
   int _generation = 0;
   bool _disposed = false;
 
-  CartItem? _lastRemoved;
+  List<CartItem> _lastRemoved = const [];
 
   ViewStatus get status => _status;
   String? get errorMessage => _errorMessage;
   List<CartItem> get items => UnmodifiableListView(_items);
-  bool get canUndoRemove => _lastRemoved != null;
+  bool get canUndoRemove => _lastRemoved.isNotEmpty;
 
   Iterable<CartItem> get selectedItems => _items.where((i) => i.isSelected);
   int get selectedCount => selectedItems.length;
@@ -41,22 +41,22 @@ class CartProvider extends ChangeNotifier {
   bool get allSelected =>
       _items.isNotEmpty && _items.every((i) => i.isSelected);
 
-  /// Số trên badge tab Giỏ hàng: số mặt hàng (dòng) trong giỏ, không cộng số
-  /// lượng. Cùng sản phẩm khác size tính là 2 dòng.
+  /// Number on the Cart tab badge: count of lines (items) in the cart, not the
+  /// sum of quantities. The same product in another size counts as 2 lines.
   int get itemCount => _items.length;
 
-  /// Có món đang chọn mà vượt tồn kho / hết hàng -> không cho thanh toán.
+  /// A selected item that is sold out or over stock blocks checkout.
   bool get hasUnavailableSelected =>
       selectedItems.any((i) => i.stock <= 0 || i.quantity > i.stock);
 
-  /// Gọi khi người dùng đổi hoặc đăng xuất: bỏ giỏ cũ khỏi bộ nhớ rồi tải giỏ
-  /// của người mới. Được gọi trong lúc build nên không notify đồng bộ.
+  /// Called when the user changes or signs out: clears the old cart from memory
+  /// and loads the new user's cart. Runs during build, so it never notifies sync.
   void updateUser(int? userId) {
     if (userId == _userId) return;
     _userId = userId;
     _generation++;
     _items = [];
-    _lastRemoved = null;
+    _lastRemoved = const [];
     _errorMessage = null;
     _status = userId == null ? ViewStatus.empty : ViewStatus.initial;
     Future.microtask(() {
@@ -88,7 +88,7 @@ class CartProvider extends ChangeNotifier {
     _notify();
   }
 
-  /// Lượng gọi từ Product Detail. `size = ''` nếu sản phẩm không có size.
+  /// Called by Product Detail. `size = ''` when the product has no size.
   Future<String?> addToCart({
     required int productId,
     int quantity = 1,
@@ -110,7 +110,7 @@ class CartProvider extends ChangeNotifier {
     return null;
   }
 
-  /// [delta] = +1 / -1. Giảm khi đang là 1 thì không làm gì (xóa bằng vuốt).
+  /// [delta] = +1 / -1. Decreasing at 1 does nothing (remove by swiping).
   Future<String?> changeQuantity(CartItem item, int delta) {
     final quantity = item.quantity + delta;
     if (quantity < 1) return Future.value();
@@ -153,33 +153,48 @@ class CartProvider extends ChangeNotifier {
     return null;
   }
 
-  /// Xóa ngay trên giao diện (để Dismissible gỡ được widget), lỗi DB thì hoàn
-  /// lại. Thành công thì nhớ món vừa xóa cho [undoRemove].
-  Future<String?> remove(CartItem item) async {
-    final index = _items.indexWhere((i) => i.id == item.id);
-    if (index < 0) return null;
-    _items = [..._items]..removeAt(index);
+  Future<String?> remove(CartItem item) => removeMany([item]);
+
+  /// Removes right away in the UI (so Dismissible can drop the widget); on a DB
+  /// error every line goes back to its original position. On success the removed
+  /// lines are remembered for [undoRemove] (a multi-size product undoes fully).
+  Future<String?> removeMany(List<CartItem> items) async {
+    final ids = {for (final item in items) item.id};
+    final removed = <(int, CartItem)>[
+      for (var i = 0; i < _items.length; i++)
+        if (ids.contains(_items[i].id)) (i, _items[i]),
+    ];
+    if (removed.isEmpty) return null;
+    _items = [
+      for (final item in _items)
+        if (!ids.contains(item.id)) item,
+    ];
     _refreshStatus();
     _notify();
     try {
-      await _repository.remove(item);
+      await _repository.removeMany([for (final (_, item) in removed) item]);
     } catch (error) {
-      _items = [..._items]..insert(index.clamp(0, _items.length), item);
+      // Re-insert in ascending original order so each line returns to its place.
+      final restored = [..._items];
+      for (final (index, item) in removed) {
+        restored.insert(index.clamp(0, restored.length), item);
+      }
+      _items = restored;
       _refreshStatus();
       _notify();
       return _messageOf(error, 'Không thể xóa sản phẩm');
     }
-    _lastRemoved = item;
+    _lastRemoved = [for (final (_, item) in removed) item];
     return null;
   }
 
   Future<String?> undoRemove() async {
     final userId = _userId;
     final removed = _lastRemoved;
-    if (userId == null || removed == null) return null;
-    _lastRemoved = null;
+    if (userId == null || removed.isEmpty) return null;
+    _lastRemoved = const [];
     try {
-      await _repository.restore(userId, removed);
+      await _repository.restoreMany(userId, removed);
     } catch (error) {
       return _messageOf(error, 'Không thể hoàn tác');
     }
@@ -187,7 +202,7 @@ class CartProvider extends ChangeNotifier {
     return null;
   }
 
-  /// Tải lại mà không nháy màn loading (sau khi thêm / hoàn tác).
+  /// Reloads without flashing the loading screen (after add / undo).
   Future<void> _reload(int userId) async {
     final generation = _generation;
     try {
@@ -213,7 +228,7 @@ class CartProvider extends ChangeNotifier {
     _status = _items.isEmpty ? ViewStatus.empty : ViewStatus.success;
   }
 
-  /// Bắt cả Error (xem AuthProvider._handleError): lỗi lạ chỉ hiện câu chung.
+  /// Catches Error too (see AuthProvider._handleError): unknown errors are generic.
   String _messageOf(Object error, String fallback) {
     if (error is AppException && error.message.isNotEmpty) {
       return error.message;

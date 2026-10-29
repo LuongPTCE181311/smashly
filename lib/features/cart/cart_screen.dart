@@ -19,7 +19,7 @@ import 'widgets/cart_product_group.dart';
 import 'widgets/cart_skeleton.dart';
 import 'widgets/cart_summary_bar.dart';
 
-/// S07 · Giỏ hàng. OWNER: Danh.
+/// S07 · Cart screen. OWNER: Danh.
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
@@ -122,25 +122,35 @@ class _CartList extends StatelessWidget {
     );
   }
 
+  /// Swiping the card header (image, name, price) removes the whole product;
+  /// swiping a size row removes only that size (nested Dismissibles: the size
+  /// row is deeper, so it wins when the swipe starts on that row).
   Widget _groupCard(BuildContext context, List<CartItem> group) {
-    return CartProductGroup(
+    return Dismissible(
       key: ValueKey('group-${group.first.productId}'),
-      items: group,
-      onToggleGroup: (selected) => _show(context, _setMany(group, selected)),
-      onToggle: (item) => _show(context, cart.toggleSelected(item)),
-      onDecrease: (item) => _show(context, cart.changeQuantity(item, -1)),
-      onIncrease: (item) => _show(context, cart.changeQuantity(item, 1)),
-      onSetQuantity: (item, value) =>
-          _show(context, cart.setQuantity(item, value)),
-      onRemove: (item) => _remove(context, item),
-      onOpen: () => _openProduct(context, group.first.productId),
+      direction: DismissDirection.endToStart,
+      movementDuration: AppMotion.of(context, AppMotion.normal),
+      resizeDuration: AppMotion.of(context, AppMotion.normal),
+      background: const _DeleteBackground(),
+      onDismissed: (_) => _removeGroup(context, group),
+      child: CartProductGroup(
+        items: group,
+        onToggleGroup: (selected) => _show(context, _setMany(group, selected)),
+        onToggle: (item) => _show(context, cart.toggleSelected(item)),
+        onDecrease: (item) => _show(context, cart.changeQuantity(item, -1)),
+        onIncrease: (item) => _show(context, cart.changeQuantity(item, 1)),
+        onSetQuantity: (item, value) =>
+            _show(context, cart.setQuantity(item, value)),
+        onRemove: (item) => _remove(context, item),
+        onOpen: () => _openProduct(context, group.first.productId),
+      ),
     );
   }
 
-  /// Mở chi tiết sản phẩm bằng push nên Back (nút mũi tên hay cử chỉ hệ thống)
-  /// quay về đúng tab Giỏ hàng, giữ nguyên vị trí cuộn và các món đang chọn.
+  /// Opens the product detail with a push, so Back (arrow button or system
+  /// gesture) returns to the Cart tab with scroll position and selection kept.
   void _openProduct(BuildContext context, int productId) {
-    // Đã có màn khác đè lên (bấm đúp nhanh): bỏ qua để không mở 2 lần.
+    // Another route is already on top (fast double tap): skip, do not open twice.
     if (ModalRoute.of(context)?.isCurrent == false) return;
     Navigator.of(context)
         .pushNamed(AppRoutes.productDetail, arguments: productId);
@@ -155,9 +165,23 @@ class _CartList extends StatelessWidget {
     return firstError;
   }
 
-  Future<void> _remove(BuildContext context, CartItem item) async {
+  Future<void> _remove(BuildContext context, CartItem item) =>
+      _removeLines(context, [item], 'Đã xóa "${item.name}"');
+
+  Future<void> _removeGroup(BuildContext context, List<CartItem> group) =>
+      _removeLines(
+        context,
+        group,
+        'Đã xóa "${group.first.name}" (${group.length} size)',
+      );
+
+  Future<void> _removeLines(
+    BuildContext context,
+    List<CartItem> items,
+    String message,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
-    final error = await cart.remove(item);
+    final error = await cart.removeMany(items);
     if (error != null) {
       messenger.showSnackBar(SnackBar(content: Text(error)));
       return;
@@ -166,7 +190,7 @@ class _CartList extends StatelessWidget {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: _UndoContent(message: 'Đã xóa "${item.name}"'),
+          content: _UndoContent(message: message),
           persist: false,
           duration: _undoDuration,
           action: SnackBarAction(
@@ -219,7 +243,7 @@ class _UndoContent extends StatelessWidget {
   }
 }
 
-/// Hiện SnackBar nếu thao tác trả về lỗi (null = thành công).
+/// Shows a SnackBar when the action returns an error (null = success).
 Future<void> _show(BuildContext context, Future<String?> action) async {
   final messenger = ScaffoldMessenger.of(context);
   final error = await action;

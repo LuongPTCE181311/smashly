@@ -13,15 +13,18 @@ import 'package:smashly/features/cart/widgets/cart_product_group.dart';
 import 'package:smashly/features/cart/widgets/cart_skeleton.dart';
 import 'package:smashly/providers/cart_provider.dart';
 
-/// Giỏ trong bộ nhớ; `implements` để thêm method public vào CartRepository
-/// thì file này lỗi biên dịch.
+/// In-memory cart. It uses `implements`, so a new public method on
+/// CartRepository makes this file fail to compile (forcing the fake to be updated).
 class FakeCartRepository implements CartRepository {
   FakeCartRepository(this.items);
 
   List<CartItem> items;
   Object? loadError;
 
-  /// Có giá trị: loadItems treo tới khi test gọi complete.
+  /// When set, removeMany throws it (simulates a failed DB write).
+  Object? removeError;
+
+  /// When set, loadItems waits until the test completes it.
   Completer<void>? hold;
 
   @override
@@ -50,10 +53,18 @@ class FakeCartRepository implements CartRepository {
   Future<void> setAllSelected(int userId, bool selected) async {}
 
   @override
-  Future<void> remove(CartItem item) async => items.remove(item);
+  Future<void> removeMany(List<CartItem> removed) async {
+    if (removeError != null) {
+      // A real DB write takes a few frames to fail, it does not fail within this frame.
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      throw removeError!;
+    }
+    items.removeWhere((i) => removed.any((r) => r.id == i.id));
+  }
 
   @override
-  Future<void> restore(int userId, CartItem item) async => items.add(item);
+  Future<void> restoreMany(int userId, List<CartItem> restored) async =>
+      items.addAll(restored);
 }
 
 CartItem item(
@@ -147,7 +158,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('700.000₫'), findsOneWidget);
 
-    await tester.tap(find.byType(Checkbox).first); // chọn tất cả -> bỏ chọn
+    await tester.tap(find.byType(Checkbox).first); // select all -> untick
     await tester.pumpAndSettle();
     expect(find.text('Thanh toán (0)'), findsOneWidget);
     final pay = find.widgetWithText(FilledButton, 'Thanh toán (0)');
