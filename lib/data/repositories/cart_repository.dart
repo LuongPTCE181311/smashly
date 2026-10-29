@@ -97,26 +97,32 @@ class CartRepository {
     });
   }
 
-  Future<void> remove(CartItem item) {
-    return _guard('remove', 'Không thể xóa sản phẩm', () async {
-      await _cartDao.deleteLine(await _database(), item.id);
+  /// Xóa một hoặc nhiều dòng giỏ cùng lúc (một lệnh DELETE, được cả hoặc không).
+  Future<void> removeMany(List<CartItem> items) {
+    return _guard('removeMany', 'Không thể xóa sản phẩm', () async {
+      await _cartDao.deleteLines(await _database(), [
+        for (final item in items) item.id,
+      ]);
     });
   }
 
-  /// Hoàn tác xóa: chèn lại đúng số lượng, size, trạng thái chọn.
-  Future<void> restore(int userId, CartItem item) {
-    return _guard('restore', 'Không thể hoàn tác', () async {
+  /// Hoàn tác xóa: chèn lại đúng số lượng, size, trạng thái chọn của mọi dòng
+  /// trong một transaction (hoàn tác trọn vẹn hoặc không chèn dòng nào).
+  Future<void> restoreMany(int userId, List<CartItem> items) {
+    return _guard('restoreMany', 'Không thể hoàn tác', () async {
       final db = await _database();
       await db.transaction((txn) async {
         final cartId = await _cartDao.getOrCreateCartId(txn, userId);
-        await _cartDao.insertLine(
-          txn,
-          cartId: cartId,
-          productId: item.productId,
-          quantity: item.quantity,
-          size: item.size,
-          isSelected: item.isSelected,
-        );
+        for (final item in items) {
+          await _cartDao.insertLine(
+            txn,
+            cartId: cartId,
+            productId: item.productId,
+            quantity: item.quantity,
+            size: item.size,
+            isSelected: item.isSelected,
+          );
+        }
       });
     });
   }

@@ -131,8 +131,16 @@ class CartDao {
     );
   }
 
-  Future<int> deleteLine(DatabaseExecutor db, int itemId) {
-    return db.delete(DbSchema.cartItems, where: 'id = ?', whereArgs: [itemId]);
+  /// Xóa nhiều dòng bằng một lệnh DELETE (nguyên tử): xóa một dòng hoặc cả các
+  /// size của một sản phẩm.
+  Future<int> deleteLines(DatabaseExecutor db, List<int> itemIds) {
+    if (itemIds.isEmpty) return Future.value(0);
+    final marks = List.filled(itemIds.length, '?').join(', ');
+    return db.delete(
+      DbSchema.cartItems,
+      where: 'id IN ($marks)',
+      whereArgs: itemIds,
+    );
   }
 
   /// Xóa các món đã chọn (gọi sau khi đặt hàng thành công).

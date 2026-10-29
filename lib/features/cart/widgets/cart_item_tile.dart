@@ -20,6 +20,15 @@ String? cartStockWarning(CartItem item) {
   return null;
 }
 
+/// Món hết hàng (kho bằng 0): ảnh, tên, giá và stepper hiện mờ. Ô chọn và dòng
+/// cảnh báo giữ nguyên độ rõ để vẫn bỏ chọn / đọc được lý do.
+bool cartIsSoldOut(CartItem item) => item.stock <= 0;
+
+const cartSoldOutOpacity = 0.5;
+
+Widget cartDimmed({required bool dim, required Widget child}) =>
+    dim ? Opacity(opacity: cartSoldOutOpacity, child: child) : child;
+
 /// Một dòng giỏ hàng: ô chọn, ảnh, tên, size, giá, stepper số lượng.
 class CartItemTile extends StatelessWidget {
   const CartItemTile({
@@ -46,6 +55,7 @@ class CartItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final maxQuantity = cartMaxQuantity(item);
     final warning = cartStockWarning(item);
+    final soldOut = cartIsSoldOut(item);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -67,7 +77,10 @@ class CartItemTile extends StatelessWidget {
             ),
             CartOpenArea(
               onOpen: onOpen,
-              child: CartThumbnail(path: item.imagePath),
+              child: cartDimmed(
+                dim: soldOut,
+                child: CartThumbnail(path: item.imagePath),
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -81,23 +94,34 @@ class CartItemTile extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            item.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.subtitle,
-                          ),
-                          if (item.size.isNotEmpty) ...[
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              'Size: ${item.size}',
-                              style: AppTextStyles.caption,
+                          cartDimmed(
+                            dim: soldOut,
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTextStyles.subtitle,
+                                  ),
+                                  if (item.size.isNotEmpty) ...[
+                                    const SizedBox(height: AppSpacing.xs),
+                                    Text(
+                                      'Size: ${item.size}',
+                                      style: AppTextStyles.caption,
+                                    ),
+                                  ],
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Text(
+                                    CurrencyFormatter.format(item.price),
+                                    style: AppTextStyles.priceSmall,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            CurrencyFormatter.format(item.price),
-                            style: AppTextStyles.priceSmall,
                           ),
                           if (warning != null) ...[
                             const SizedBox(height: AppSpacing.xs),
@@ -125,14 +149,17 @@ class CartItemTile extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: QuantityStepper(
-                      quantity: item.quantity,
-                      onDecrease: item.quantity > 1 ? onDecrease : null,
-                      onIncrease: item.quantity < maxQuantity
-                          ? onIncrease
-                          : null,
-                      max: maxQuantity,
-                      onQuantityChanged: onSetQuantity,
+                    child: cartDimmed(
+                      dim: soldOut,
+                      child: QuantityStepper(
+                        quantity: item.quantity,
+                        onDecrease: item.quantity > 1 ? onDecrease : null,
+                        onIncrease: item.quantity < maxQuantity
+                            ? onIncrease
+                            : null,
+                        max: maxQuantity,
+                        onQuantityChanged: onSetQuantity,
+                      ),
                     ),
                   ),
                 ],

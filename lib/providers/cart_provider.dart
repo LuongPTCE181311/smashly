@@ -28,12 +28,12 @@ class CartProvider extends ChangeNotifier {
   int _generation = 0;
   bool _disposed = false;
 
-  CartItem? _lastRemoved;
+  List<CartItem> _lastRemoved = const [];
 
   ViewStatus get status => _status;
   String? get errorMessage => _errorMessage;
   List<CartItem> get items => UnmodifiableListView(_items);
-  bool get canUndoRemove => _lastRemoved != null;
+  bool get canUndoRemove => _lastRemoved.isNotEmpty;
 
   Iterable<CartItem> get selectedItems => _items.where((i) => i.isSelected);
   int get selectedCount => selectedItems.length;
@@ -56,7 +56,7 @@ class CartProvider extends ChangeNotifier {
     _userId = userId;
     _generation++;
     _items = [];
-    _lastRemoved = null;
+    _lastRemoved = const [];
     _errorMessage = null;
     _status = userId == null ? ViewStatus.empty : ViewStatus.initial;
     Future.microtask(() {
@@ -153,33 +153,48 @@ class CartProvider extends ChangeNotifier {
     return null;
   }
 
+  Future<String?> remove(CartItem item) => removeMany([item]);
+
   /// Xóa ngay trên giao diện (để Dismissible gỡ được widget), lỗi DB thì hoàn
-  /// lại. Thành công thì nhớ món vừa xóa cho [undoRemove].
-  Future<String?> remove(CartItem item) async {
-    final index = _items.indexWhere((i) => i.id == item.id);
-    if (index < 0) return null;
-    _items = [..._items]..removeAt(index);
+  /// lại đúng vị trí cũ. Thành công thì nhớ các dòng vừa xóa cho [undoRemove]
+  /// (xóa cả sản phẩm nhiều size vẫn hoàn tác được trọn vẹn).
+  Future<String?> removeMany(List<CartItem> items) async {
+    final ids = {for (final item in items) item.id};
+    final removed = <(int, CartItem)>[
+      for (var i = 0; i < _items.length; i++)
+        if (ids.contains(_items[i].id)) (i, _items[i]),
+    ];
+    if (removed.isEmpty) return null;
+    _items = [
+      for (final item in _items)
+        if (!ids.contains(item.id)) item,
+    ];
     _refreshStatus();
     _notify();
     try {
-      await _repository.remove(item);
+      await _repository.removeMany([for (final (_, item) in removed) item]);
     } catch (error) {
-      _items = [..._items]..insert(index.clamp(0, _items.length), item);
+      // Chèn lại theo thứ tự tăng dần của vị trí gốc để mỗi dòng về đúng chỗ.
+      final restored = [..._items];
+      for (final (index, item) in removed) {
+        restored.insert(index.clamp(0, restored.length), item);
+      }
+      _items = restored;
       _refreshStatus();
       _notify();
       return _messageOf(error, 'Không thể xóa sản phẩm');
     }
-    _lastRemoved = item;
+    _lastRemoved = [for (final (_, item) in removed) item];
     return null;
   }
 
   Future<String?> undoRemove() async {
     final userId = _userId;
     final removed = _lastRemoved;
-    if (userId == null || removed == null) return null;
-    _lastRemoved = null;
+    if (userId == null || removed.isEmpty) return null;
+    _lastRemoved = const [];
     try {
-      await _repository.restore(userId, removed);
+      await _repository.restoreMany(userId, removed);
     } catch (error) {
       return _messageOf(error, 'Không thể hoàn tác');
     }

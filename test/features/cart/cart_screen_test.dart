@@ -21,6 +21,9 @@ class FakeCartRepository implements CartRepository {
   List<CartItem> items;
   Object? loadError;
 
+  /// Có giá trị: removeMany ném lỗi này (giả lập ghi DB thất bại).
+  Object? removeError;
+
   /// Có giá trị: loadItems treo tới khi test gọi complete.
   Completer<void>? hold;
 
@@ -50,10 +53,18 @@ class FakeCartRepository implements CartRepository {
   Future<void> setAllSelected(int userId, bool selected) async {}
 
   @override
-  Future<void> remove(CartItem item) async => items.remove(item);
+  Future<void> removeMany(List<CartItem> removed) async {
+    if (removeError != null) {
+      // Ghi DB thật mất vài khung hình mới báo lỗi, không báo ngay trong khung này.
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      throw removeError!;
+    }
+    items.removeWhere((i) => removed.any((r) => r.id == i.id));
+  }
 
   @override
-  Future<void> restore(int userId, CartItem item) async => items.add(item);
+  Future<void> restoreMany(int userId, List<CartItem> restored) async =>
+      items.addAll(restored);
 }
 
 CartItem item(

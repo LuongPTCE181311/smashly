@@ -122,18 +122,28 @@ class _CartList extends StatelessWidget {
     );
   }
 
+  /// Vuốt phần đầu thẻ (ảnh, tên, giá) xóa cả sản phẩm; vuốt một dòng size bên
+  /// trong chỉ xóa size đó (Dismissible lồng nhau: dòng size ở sâu hơn nên
+  /// thắng cuộc thi cử chỉ khi vuốt bắt đầu trên dòng đó).
   Widget _groupCard(BuildContext context, List<CartItem> group) {
-    return CartProductGroup(
+    return Dismissible(
       key: ValueKey('group-${group.first.productId}'),
-      items: group,
-      onToggleGroup: (selected) => _show(context, _setMany(group, selected)),
-      onToggle: (item) => _show(context, cart.toggleSelected(item)),
-      onDecrease: (item) => _show(context, cart.changeQuantity(item, -1)),
-      onIncrease: (item) => _show(context, cart.changeQuantity(item, 1)),
-      onSetQuantity: (item, value) =>
-          _show(context, cart.setQuantity(item, value)),
-      onRemove: (item) => _remove(context, item),
-      onOpen: () => _openProduct(context, group.first.productId),
+      direction: DismissDirection.endToStart,
+      movementDuration: AppMotion.of(context, AppMotion.normal),
+      resizeDuration: AppMotion.of(context, AppMotion.normal),
+      background: const _DeleteBackground(),
+      onDismissed: (_) => _removeGroup(context, group),
+      child: CartProductGroup(
+        items: group,
+        onToggleGroup: (selected) => _show(context, _setMany(group, selected)),
+        onToggle: (item) => _show(context, cart.toggleSelected(item)),
+        onDecrease: (item) => _show(context, cart.changeQuantity(item, -1)),
+        onIncrease: (item) => _show(context, cart.changeQuantity(item, 1)),
+        onSetQuantity: (item, value) =>
+            _show(context, cart.setQuantity(item, value)),
+        onRemove: (item) => _remove(context, item),
+        onOpen: () => _openProduct(context, group.first.productId),
+      ),
     );
   }
 
@@ -155,9 +165,23 @@ class _CartList extends StatelessWidget {
     return firstError;
   }
 
-  Future<void> _remove(BuildContext context, CartItem item) async {
+  Future<void> _remove(BuildContext context, CartItem item) =>
+      _removeLines(context, [item], 'Đã xóa "${item.name}"');
+
+  Future<void> _removeGroup(BuildContext context, List<CartItem> group) =>
+      _removeLines(
+        context,
+        group,
+        'Đã xóa "${group.first.name}" (${group.length} size)',
+      );
+
+  Future<void> _removeLines(
+    BuildContext context,
+    List<CartItem> items,
+    String message,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
-    final error = await cart.remove(item);
+    final error = await cart.removeMany(items);
     if (error != null) {
       messenger.showSnackBar(SnackBar(content: Text(error)));
       return;
@@ -166,7 +190,7 @@ class _CartList extends StatelessWidget {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: _UndoContent(message: 'Đã xóa "${item.name}"'),
+          content: _UndoContent(message: message),
           persist: false,
           duration: _undoDuration,
           action: SnackBarAction(

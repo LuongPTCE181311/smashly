@@ -36,6 +36,8 @@ class CartProductGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final first = items.first;
+    // Kho tính theo sản phẩm nên mọi size cùng hết hàng một lúc.
+    final soldOut = cartIsSoldOut(first);
     final selectedCount = items.where((i) => i.isSelected).length;
     final groupValue = selectedCount == items.length
         ? true
@@ -67,34 +69,40 @@ class CartProductGroup extends StatelessWidget {
                 ),
                 CartOpenArea(
                   onOpen: onOpen,
-                  child: CartThumbnail(path: first.imagePath),
+                  child: cartDimmed(
+                    dim: soldOut,
+                    child: CartThumbnail(path: first.imagePath),
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: CartOpenArea(
                     onOpen: onOpen,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            first.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.subtitle,
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            '${items.length} size trong giỏ',
-                            style: AppTextStyles.caption,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            CurrencyFormatter.format(first.price),
-                            style: AppTextStyles.priceSmall,
-                          ),
-                        ],
+                    child: cartDimmed(
+                      dim: soldOut,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              first.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.subtitle,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              '${items.length} size trong giỏ',
+                              style: AppTextStyles.caption,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              CurrencyFormatter.format(first.price),
+                              style: AppTextStyles.priceSmall,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -173,7 +181,13 @@ class _VariantRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Size: ${item.size}', style: AppTextStyles.subtitle),
+                  cartDimmed(
+                    dim: cartIsSoldOut(item),
+                    child: Text(
+                      'Size: ${item.size}',
+                      style: AppTextStyles.subtitle,
+                    ),
+                  ),
                   if (warning != null)
                     Row(
                       children: [
@@ -196,12 +210,15 @@ class _VariantRow extends StatelessWidget {
                 ],
               ),
             ),
-            QuantityStepper(
-              quantity: item.quantity,
-              onDecrease: item.quantity > 1 ? onDecrease : null,
-              onIncrease: item.quantity < maxQuantity ? onIncrease : null,
-              max: maxQuantity,
-              onQuantityChanged: onSetQuantity,
+            cartDimmed(
+              dim: cartIsSoldOut(item),
+              child: QuantityStepper(
+                quantity: item.quantity,
+                onDecrease: item.quantity > 1 ? onDecrease : null,
+                onIncrease: item.quantity < maxQuantity ? onIncrease : null,
+                max: maxQuantity,
+                onQuantityChanged: onSetQuantity,
+              ),
             ),
           ],
         ),
