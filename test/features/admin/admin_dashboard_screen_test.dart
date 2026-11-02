@@ -12,6 +12,8 @@ import 'package:smashly/data/models/user.dart';
 import 'package:smashly/data/repositories/admin_dashboard_repository.dart';
 import 'package:smashly/data/repositories/auth_repository.dart';
 import 'package:smashly/features/admin/admin_dashboard_screen.dart';
+import 'package:smashly/features/admin/widgets/order_status_sheet.dart';
+import 'package:smashly/features/admin/widgets/recent_order_tile.dart';
 import 'package:smashly/providers/admin_dashboard_provider.dart';
 import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
@@ -122,6 +124,155 @@ void main() {
     await tester.pumpAndSettle();
     expect(pushed.single.name, AppRoutes.adminProductForm);
     expect(pushed.single.arguments, 3);
+  });
+
+  group('đổi trạng thái đơn (UC19)', () {
+    // Mã đơn seed có ngày tương đối nên tìm theo đuôi id.
+    Finder orderTile(int id) =>
+        find.textContaining(RegExp('-${id.toString().padLeft(4, '0')}\$'));
+
+    Future<void> openSheet(WidgetTester tester, int id) async {
+      await tester.tap(orderTile(id));
+      await tester.pumpAndSettle();
+    }
+
+    /// Transaction thật cần nhiều vòng: mỗi vòng cho SQLite chạy (runAsync) rồi
+    /// pump để code phía sau await chạy tiếp. Không dùng pumpAndSettle khi
+    /// spinner còn quay.
+    Future<void> tapAndWait(WidgetTester tester, Finder button) async {
+      await tester.tap(button);
+      for (var i = 0; i < 40; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)),
+        );
+        await tester.pump();
+      }
+      await tester.pump(const Duration(seconds: 1));
+    }
+
+    testWidgets('đơn CONFIRMED: chỉ hiện đúng 2 nút hợp lệ', (tester) async {
+      await pumpDashboard(tester);
+      await openSheet(tester, 3);
+
+      expect(find.byType(OrderStatusSheet), findsOneWidget);
+      expect(find.text('Bắt đầu giao hàng'), findsOneWidget);
+      expect(find.text('Hủy đơn'), findsOneWidget);
+      expect(find.text('Xác nhận đơn'), findsNothing);
+      expect(find.text('Xác nhận đã giao'), findsNothing);
+    });
+
+    testWidgets('đơn SHIPPING không có nút hủy', (tester) async {
+      await pumpDashboard(tester);
+      await openSheet(tester, 2);
+
+      expect(find.text('Xác nhận đã giao'), findsOneWidget);
+      expect(find.text('Hủy đơn'), findsNothing);
+    });
+
+    for (final (id, note) in [
+      (1, 'Đơn đã hoàn tất, không thể đổi trạng thái'),
+      (4, 'Đơn đã hủy, không thể đổi trạng thái'),
+    ]) {
+      testWidgets('đơn $id ở trạng thái cuối: chỉ có dòng chữ', (tester) async {
+        await pumpDashboard(tester);
+        await openSheet(tester, id);
+
+        expect(find.text(note), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(OrderStatusSheet),
+            matching: find.byWidgetPredicate(
+              (w) => w is FilledButton || w is OutlinedButton,
+            ),
+          ),
+          findsNothing,
+        );
+      });
+    }
+
+    testWidgets('đổi thành công: đóng sheet, SnackBar, danh sách cập nhật', (
+      tester,
+    ) async {
+      await pumpDashboard(tester);
+      await openSheet(tester, 3);
+      await tapAndWait(tester, find.text('Bắt đầu giao hàng'));
+
+      expect(find.byType(OrderStatusSheet), findsNothing);
+      expect(find.textContaining('sang Đang giao'), findsOneWidget);
+      // Đơn 2 (seed) và đơn 3 (vừa đổi) đều đang giao.
+      expect(
+        find.descendant(
+          of: find.byType(RecentOrderTile),
+          matching: find.text('Đang giao'),
+        ),
+        findsNWidgets(2),
+      );
+
+      final rows = await tester.runAsync(
+        () => db.query(DbSchema.orders, where: 'id = 3'),
+      );
+      expect(rows!.single['status'], 'SHIPPING');
+      expect(rows.single['shipped_at'], isNotNull);
+    });
+
+    testWidgets('hủy đơn: Giữ đơn thì không đổi, đồng ý thì hủy + hoàn kho', (
+      tester,
+    ) async {
+      Future<int> stock() async {
+        final rows = await tester.runAsync(
+          () => db.query(DbSchema.products, where: 'id = 13'),
+        );
+        return rows!.single['stock'] as int;
+      }
+
+      await pumpDashboard(tester);
+      final before = await stock();
+      await openSheet(tester, 3);
+
+      await tester.tap(find.text('Hủy đơn'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Tồn kho của các sản phẩm trong đơn sẽ được hoàn lại.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Giữ đơn'));
+      await tester.pumpAndSettle();
+      expect(find.byType(OrderStatusSheet), findsOneWidget);
+      expect(await stock(), before);
+
+      await tester.tap(find.text('Hủy đơn'));
+      await tester.pumpAndSettle();
+      // Nút trong dialog, không phải nút cùng tên trong sheet.
+      await tapAndWait(
+        tester,
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Hủy đơn'),
+        ),
+      );
+
+      expect(find.byType(OrderStatusSheet), findsNothing);
+      expect(find.textContaining('sang Đã hủy'), findsOneWidget);
+      expect(await stock(), before + 1);
+    });
+
+    testWidgets('lỗi: sheet vẫn mở và hiện câu thông báo', (tester) async {
+      await pumpDashboard(tester);
+      await openSheet(tester, 3);
+      // Đơn đổi ở nơi khác trong lúc sheet đang mở.
+      await tester.runAsync(
+        () =>
+            db.update(DbSchema.orders, {'status': 'SHIPPING'}, where: 'id = 3'),
+      );
+
+      await tapAndWait(tester, find.text('Bắt đầu giao hàng'));
+
+      expect(find.byType(OrderStatusSheet), findsOneWidget);
+      expect(
+        find.text('Đơn đã được cập nhật ở nơi khác, vui lòng tải lại'),
+        findsOneWidget,
+      );
+    });
   });
 
   testWidgets('bấm avatar hiện đủ 4 mục menu', (tester) async {

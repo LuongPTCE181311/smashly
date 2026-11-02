@@ -31,6 +31,24 @@ enum OrderStatus {
     orElse: () =>
         throw ArgumentError.value(value, 'value', 'Unknown order status'),
   );
+
+  /// Luật chuyển trạng thái (UC19), chỗ DUY NHẤT định nghĩa: UI dựa vào đây để
+  /// hiện nút, Repository dựa vào đây để chặn. Luồng một chiều, không nhảy bước;
+  /// chỉ hủy được từ PENDING hoặc CONFIRMED.
+  List<OrderStatus> get allowedNextStatuses => switch (this) {
+    OrderStatus.pending => const [OrderStatus.confirmed, OrderStatus.cancelled],
+    OrderStatus.confirmed => const [
+      OrderStatus.shipping,
+      OrderStatus.cancelled,
+    ],
+    OrderStatus.shipping => const [OrderStatus.delivered],
+    OrderStatus.delivered || OrderStatus.cancelled => const [],
+  };
+
+  bool canTransitionTo(OrderStatus next) => allowedNextStatuses.contains(next);
+
+  /// Trạng thái cuối: không đổi được nữa.
+  bool get isFinal => allowedNextStatuses.isEmpty;
 }
 
 enum PaymentMethod {

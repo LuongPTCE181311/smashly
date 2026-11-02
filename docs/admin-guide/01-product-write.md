@@ -52,7 +52,7 @@ Screen ◄── SnackBar "Đã ngừng bán" + nút Undo ──► ProductRepos
 | ---- | ------- | ------ |
 | [lib/data/daos/product_dao.dart](../../lib/data/daos/product_dao.dart#L97) | Khối `// ===== WRITE (Trọng) =====` với 8 hàm ghi/đếm + 1 helper private; thêm import `db_time.dart`, `racket_spec.dart` | DAO là nơi **duy nhất** được chạy SQL. Mỗi hàm một câu SQL, không có logic nghiệp vụ |
 | [lib/data/repositories/product_repository.dart](../../lib/data/repositories/product_repository.dart#L69) | 5 hàm public + 1 helper private; import `debugPrint`, `enums.dart`, `racket_spec.dart` | Repository ghép nhiều lệnh DAO thành một nghiệp vụ, bọc trong transaction, đổi lỗi DB thành `AppException` tiếng Việt |
-| [lib/core/constants/enums.dart](../../lib/core/constants/enums.dart#L20) | `enum ProductDeleteOutcome { deleted, deactivated }` | Cho UI biết thao tác xóa đã thực sự làm gì để hiện thông báo đúng |
+| [lib/core/constants/enums.dart](../../lib/core/constants/enums.dart#L74) | `enum ProductDeleteOutcome { deleted, deactivated }` | Cho UI biết thao tác xóa đã thực sự làm gì để hiện thông báo đúng |
 | [test/product_repository_write_test.dart](../../test/product_repository_write_test.dart#L12) | File test mới, 6 ca | Chứng minh transaction, cascade và soft delete chạy đúng trên SQLite thật (in-memory) |
 
 Không sửa schema, model, provider hay màn hình nào.
@@ -250,7 +250,7 @@ Chỉ một lệnh ghi một bảng nên không cần transaction.
 - **Làm gì:** tạo lại `RacketSpec` với `productId` đúng.
 - **Vì sao cần:** khi thêm mới, form chưa biết id sản phẩm (phải insert xong mới có). `RacketSpec` không có `copyWith` và các trường là `final`, nên tạo object mới.
 
-### 4.3. Enum — [ProductDeleteOutcome](../../lib/core/constants/enums.dart#L20)
+### 4.3. Enum — [ProductDeleteOutcome](../../lib/core/constants/enums.dart#L74)
 
 ```dart
 enum ProductDeleteOutcome { deleted, deactivated }
