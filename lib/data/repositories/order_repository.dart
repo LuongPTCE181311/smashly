@@ -9,6 +9,7 @@ import '../daos/cart_dao.dart';
 import 'cart_repository.dart';
 import '../daos/order_dao.dart';
 import '../models/order.dart';
+import '../models/order_item.dart';
 import '../models/order_summary.dart';
 
 class OrderRepository {
@@ -187,16 +188,68 @@ class OrderRepository {
             );
           }
 
-          for (final item in order.items) {
-            final productId = item.productId;
-            if (productId == null) continue;
-            await _orderDao.increaseStock(txn, productId, item.quantity, stamp);
-          }
+          await _restoreStock(txn, order.items, stamp);
 
           return (await _orderDao.findById(txn, orderId))!;
         });
       },
     );
+  }
+
+  /// Admin đổi trạng thái đơn (UC19). Luật chuyển nằm ở
+  /// [OrderStatus.allowedNextStatuses]. Chạy trong MỘT transaction vì nhánh hủy
+  /// ghi 2 bảng: hoàn kho lỗi thì trạng thái đơn cũng được rollback.
+  Future<Order> updateStatus(
+    int orderId, {
+    required OrderStatus from,
+    required OrderStatus to,
+  }) async {
+    if (!from.canTransitionTo(to)) {
+      throw const AppException('Không thể chuyển đơn sang trạng thái này');
+    }
+
+    return _guard(
+      'updateStatus',
+      'Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.',
+      () async {
+        final db = await _database();
+        return db.transaction((txn) async {
+          final stamp = dbTime(DateTime.now());
+          final updated = await _orderDao.updateStatus(
+            txn,
+            orderId,
+            from: from,
+            to: to,
+            changedAt: stamp,
+          );
+          if (!updated) {
+            throw const AppException(
+              'Đơn đã được cập nhật ở nơi khác, vui lòng tải lại',
+            );
+          }
+
+          final order = (await _orderDao.findById(txn, orderId))!;
+          if (to == OrderStatus.cancelled) {
+            await _restoreStock(txn, order.items, stamp);
+          }
+          return order;
+        });
+      },
+    );
+  }
+
+  /// Cộng lại kho cho từng dòng đơn. Sản phẩm đã bị xóa (product_id null) thì
+  /// bỏ qua.
+  Future<void> _restoreStock(
+    DatabaseExecutor txn,
+    List<OrderItem> items,
+    String stamp,
+  ) async {
+    for (final item in items) {
+      final productId = item.productId;
+      if (productId == null) continue;
+      await _orderDao.increaseStock(txn, productId, item.quantity, stamp);
+    }
   }
 
   Future<T> _guard<T>(

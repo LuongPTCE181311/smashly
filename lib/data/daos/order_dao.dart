@@ -161,6 +161,31 @@ class OrderDao {
     return changed == 1;
   }
 
+  /// Đổi trạng thái đơn và ghi thời điểm vào cột tương ứng (UC19).
+  /// `AND status = from` chống ghi đè: đơn đã đổi ở nơi khác thì không có dòng
+  /// nào khớp, hàm trả false.
+  Future<bool> updateStatus(
+    DatabaseExecutor db,
+    int orderId, {
+    required OrderStatus from,
+    required OrderStatus to,
+    required String changedAt,
+  }) async {
+    final timeColumn = switch (to) {
+      OrderStatus.confirmed => 'confirmed_at',
+      OrderStatus.shipping => 'shipped_at',
+      OrderStatus.delivered => 'delivered_at',
+      OrderStatus.cancelled => 'cancelled_at',
+      OrderStatus.pending => throw ArgumentError.value(to, 'to'),
+    };
+    final changed = await db.rawUpdate(
+      'UPDATE ${DbSchema.orders} SET status = ?, $timeColumn = ? '
+      'WHERE id = ? AND status = ?',
+      [to.dbValue, changedAt, orderId, from.dbValue],
+    );
+    return changed == 1;
+  }
+
   Future<void> increaseStock(
     DatabaseExecutor db,
     int productId,

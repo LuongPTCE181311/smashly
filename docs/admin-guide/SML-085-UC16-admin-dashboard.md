@@ -16,15 +16,15 @@
 - **Kéo xuống để làm mới**; quay lại từ Form / Products / Hồ sơ thì số liệu tự làm mới.
 - Trạng thái: loading, error (nút Thử lại), success; **empty theo từng mục** (không có sản phẩm sắp hết / chưa có đơn hàng).
 
-**Ngoài phạm vi:** Form S15 (ID backlog khác), tap thẻ số liệu mở danh sách lọc, bottom sheet đổi trạng thái đơn (SHOULD). Xem mục 9.
+**Ngoài phạm vi:** Form S15 (ID backlog khác), tap thẻ số liệu mở danh sách lọc, bottom sheet đổi trạng thái đơn (SHOULD, đã làm ở [SML-087 — UC19](../UC19-order-status.md)). Xem mục 9.
 
 **Tiêu chí chấp nhận**
 
 | Tiêu chí | Đáp ứng ở đâu |
 | --- | --- |
 | Số liệu đúng với seed | Truy vấn trong [`AdminDashboardDao`](../../lib/data/daos/admin_dashboard_dao.dart#L13); đối chiếu bằng test DAO và widget test của màn hình (mục 6) |
-| Tap sản phẩm sắp hết mở Form | [`_openForm`](../../lib/features/admin/admin_dashboard_screen.dart#L139): `pushNamed(adminProductForm, arguments: product.id)` rồi `refresh()`. Hiện route Form vẫn là placeholder S15 (mục 9) |
-| Dashboard có lối sang Products / Form / Profile admin và Đăng xuất (yêu cầu từ ghi chú admin guard của Hào) | Menu avatar admin, [`_onMenuSelected`](../../lib/features/admin/admin_dashboard_screen.dart#L175) — xem mục 3 |
+| Tap sản phẩm sắp hết mở Form | [`_openForm`](../../lib/features/admin/admin_dashboard_screen.dart#L143): `pushNamed(adminProductForm, arguments: product.id)` rồi `refresh()`. Hiện route Form vẫn là placeholder S15 (mục 9) |
+| Dashboard có lối sang Products / Form / Profile admin và Đăng xuất (yêu cầu từ ghi chú admin guard của Hào) | Menu avatar admin, [`_onMenuSelected`](../../lib/features/admin/admin_dashboard_screen.dart#L192) — xem mục 3 |
 
 ### Quyết định về thẻ "Sắp hết hàng": 3 chứ không phải 2
 
@@ -41,12 +41,12 @@ Mockup `example/s13_admin_dashboard` ghi thẻ **2** nhưng danh sách ngay bên
 | --- | --- |
 | [lib/data/models/admin_dashboard.dart](../../lib/data/models/admin_dashboard.dart#L5) | `AdminDashboardStats` (4 số), `AdminRecentOrder` (bọc `Order` có sẵn + tên khách), `AdminDashboard` (gom cả 3 phần) |
 | [lib/data/daos/admin_dashboard_dao.dart](../../lib/data/daos/admin_dashboard_dao.dart#L13) | 3 truy vấn chỉ đọc: `getStats` (COUNT/SUM), `getLowStockProducts`, `getRecentOrders` (ORDER BY … LIMIT 5) |
-| [lib/data/repositories/admin_dashboard_repository.dart](../../lib/data/repositories/admin_dashboard_repository.dart#L9) | `getDashboard()`: chạy 3 truy vấn trong một transaction, đổi lỗi DB thành `AppException` |
-| [lib/providers/admin_dashboard_provider.dart](../../lib/providers/admin_dashboard_provider.dart#L13) | `AdminDashboardProvider`: `ViewStatus`, `load` / `refresh` / `retry`, chống kết quả cũ ghi đè |
-| [lib/features/admin/admin_dashboard_screen.dart](../../lib/features/admin/admin_dashboard_screen.dart#L23) | Màn S13: header Midnight có menu avatar admin, lưới 2×2 thẻ, 2 mục danh sách, nút Quản lý sản phẩm, điều hướng + làm mới |
+| [lib/data/repositories/admin_dashboard_repository.dart](../../lib/data/repositories/admin_dashboard_repository.dart#L13) | `getDashboard()`: chạy 3 truy vấn trong một transaction, đổi lỗi DB thành `AppException` |
+| [lib/providers/admin_dashboard_provider.dart](../../lib/providers/admin_dashboard_provider.dart#L14) | `AdminDashboardProvider`: `ViewStatus`, `load` / `refresh` / `retry`, chống kết quả cũ ghi đè |
+| [lib/features/admin/admin_dashboard_screen.dart](../../lib/features/admin/admin_dashboard_screen.dart#L26) | Màn S13: header Midnight có menu avatar admin, lưới 2×2 thẻ, 2 mục danh sách, nút Quản lý sản phẩm, điều hướng + làm mới |
 | [lib/features/admin/widgets/dashboard_stat_card.dart](../../lib/features/admin/widgets/dashboard_stat_card.dart#L12) | Một thẻ số liệu: nhãn, icon nền nhạt, số đếm từ 0 lên (`TweenAnimationBuilder`, `AppMotion.emphasis` = 600 ms) |
 | [lib/features/admin/widgets/low_stock_tile.dart](../../lib/features/admin/widgets/low_stock_tile.dart#L10) | Một hàng "Sắp hết hàng": ảnh 48, tên, `AdminStockLabel`, mũi tên; tap gọi `onTap` |
-| [lib/features/admin/widgets/recent_order_tile.dart](../../lib/features/admin/widgets/recent_order_tile.dart#L11) | Một hàng "Đơn gần đây": mã đơn, khách, ngày giờ, tổng tiền, `OrderStatusBadge` |
+| [lib/features/admin/widgets/recent_order_tile.dart](../../lib/features/admin/widgets/recent_order_tile.dart#L13) | Một hàng "Đơn gần đây": mã đơn, khách, ngày giờ, tổng tiền, `OrderStatusBadge` |
 | [test/data/daos/admin_dashboard_dao_test.dart](../../test/data/daos/admin_dashboard_dao_test.dart) | 5 ca test đối chiếu số liệu với seed (SQLite in-memory) |
 | [test/providers/admin_dashboard_provider_test.dart](../../test/providers/admin_dashboard_provider_test.dart) | 3 ca test Provider: load, refresh sau khi đổi tồn kho, lỗi + retry |
 | [test/features/admin/admin_dashboard_screen_test.dart](../../test/features/admin/admin_dashboard_screen_test.dart) | 6 widget test trên DB seed: chữ hiển thị (thẻ, tồn kho, đơn) + tap Nanoflare 800 Pro mở Form với `productId = 3`; menu avatar hiện đủ 4 mục; 3 mục điều hướng push đúng route; Đăng xuất (Hủy / đồng ý). Chi tiết ở mục 3 |
@@ -141,22 +141,22 @@ sequenceDiagram
     P-->>S: thẻ + danh sách cập nhật, không nháy loading
 ```
 
-Nút "Quản lý sản phẩm" đi theo cùng mẫu (`_openProducts`), vì ở S14 admin có thể xóa / ngừng bán sản phẩm làm đổi số liệu. Cả `_openForm`, `_openProducts` và 3 mục điều hướng của menu avatar đều gọi chung một hàm [`_pushAndRefresh`](../../lib/features/admin/admin_dashboard_screen.dart#L147): `await pushNamed(route)` → nếu màn còn mounted thì `refresh()`.
+Nút "Quản lý sản phẩm" đi theo cùng mẫu (`_openProducts`), vì ở S14 admin có thể xóa / ngừng bán sản phẩm làm đổi số liệu. Cả `_openForm`, `_openProducts` và 3 mục điều hướng của menu avatar đều gọi chung một hàm [`_pushAndRefresh`](../../lib/features/admin/admin_dashboard_screen.dart#L164): `await pushNamed(route)` → nếu màn còn mounted thì `refresh()`.
 
 ### Menu avatar admin
 
 Ghi chú admin guard (`docs/updates/2026-10-27-admin-guard.md`) yêu cầu Dashboard có lối sang Products / Form / Profile admin. Comment ở `app_routes.dart` (hằng `adminProfile`) ghi "mở từ menu avatar admin" — đây chính là menu đó.
 
-Avatar trên header được bọc trong [`PopupMenuButton`](../../lib/features/admin/admin_dashboard_screen.dart#L252) (tooltip "Menu quản trị", nền `AppColors.navy` hợp với header Midnight). Các mục khai báo bằng enum [`_AdminMenuItem`](../../lib/features/admin/admin_dashboard_screen.dart#L160), mỗi mục có sẵn chữ + icon:
+Avatar trên header được bọc trong [`PopupMenuButton`](../../lib/features/admin/admin_dashboard_screen.dart#L269) (tooltip "Menu quản trị", nền `AppColors.navy` hợp với header Midnight). Các mục khai báo bằng enum [`_AdminMenuItem`](../../lib/features/admin/admin_dashboard_screen.dart#L177), mỗi mục có sẵn chữ + icon:
 
 | Mục | Làm gì |
 | --- | --- |
 | Quản lý sản phẩm | `_pushAndRefresh(adminProducts)` → S14 |
 | Thêm sản phẩm | `_pushAndRefresh(adminProductForm)`, **không truyền id** = Form ở chế độ thêm mới |
 | Hồ sơ | `_pushAndRefresh(adminProfile)` → dùng chung `ProfileScreen` (có Menu dev ở bản debug) |
-| Đăng xuất | [`_logout`](../../lib/features/admin/admin_dashboard_screen.dart#L190): hỏi xác nhận → `AuthProvider.logout()` → về Login, xóa stack |
+| Đăng xuất | [`_logout`](../../lib/features/admin/admin_dashboard_screen.dart#L207): hỏi xác nhận → `AuthProvider.logout()` → về Login, xóa stack |
 
-Chọn một mục → [`_onMenuSelected`](../../lib/features/admin/admin_dashboard_screen.dart#L175) `switch` theo enum để quyết định việc làm.
+Chọn một mục → [`_onMenuSelected`](../../lib/features/admin/admin_dashboard_screen.dart#L192) `switch` theo enum để quyết định việc làm.
 
 **Đăng xuất** làm giống `ProfileScreen._logout`, không thêm logic mới vào Repository / Service:
 
@@ -213,33 +213,33 @@ Hàm `pumpDashboard` gom phần dựng màn dùng chung; `onGenerateRoute` giả
 
 | Hàm | Tham số → Trả về | Làm gì / khi nào |
 | --- | --- | --- |
-| [`getDashboard`](../../lib/data/repositories/admin_dashboard_repository.dart#L20) | — → `Future<AdminDashboard>` | Mở DB, `db.transaction` gọi `getStats` → `getLowStockProducts` → `getRecentOrders`. Lỗi bất kỳ → `debugPrint` + ném `AppException('Không thể tải bảng điều khiển…')`. Gọi bởi `Provider.load` |
+| [`getDashboard`](../../lib/data/repositories/admin_dashboard_repository.dart#L36) | — → `Future<AdminDashboard>` | Mở DB, `db.transaction` gọi `getStats` → `getLowStockProducts` → `getRecentOrders`. Lỗi bất kỳ → `debugPrint` + ném `AppException('Không thể tải bảng điều khiển…')`. Gọi bởi `Provider.load` |
 
 ### Provider — [admin_dashboard_provider.dart](../../lib/providers/admin_dashboard_provider.dart)
 
 | Hàm / getter | Tham số → Trả về | Làm gì / khi nào |
 | --- | --- | --- |
-| `status`, `dashboard`, `errorMessage` ([#L29](../../lib/providers/admin_dashboard_provider.dart#L29)) | getter | Màn hình đọc qua `context.watch` |
-| `hasLowStock`, `hasRecentOrders` ([#L33](../../lib/providers/admin_dashboard_provider.dart#L33)) | getter `bool` | Quyết định hiện danh sách hay ô trống của từng mục |
-| [`load`](../../lib/providers/admin_dashboard_provider.dart#L40) | `{bool showLoading = true}` → `Future<void>` | Tăng `_requestId`; nếu `showLoading` thì đặt `loading`; gọi `getDashboard`; bỏ kết quả nếu đã dispose hoặc có lần tải mới hơn; đặt `success` hoặc `error`; `notifyListeners`. Gọi khi tạo route |
-| [`refresh`](../../lib/providers/admin_dashboard_provider.dart#L69) | — → `Future<void>` | `load(showLoading: false)`. Gọi bởi `RefreshIndicator` và sau khi quay về từ Form / Products |
-| [`retry`](../../lib/providers/admin_dashboard_provider.dart#L72) | — → `Future<void>` | `load()`. Gọi bởi nút "Thử lại" của `ErrorState` |
+| `status`, `dashboard`, `errorMessage` ([#L34](../../lib/providers/admin_dashboard_provider.dart#L34)) | getter | Màn hình đọc qua `context.watch` |
+| `hasLowStock`, `hasRecentOrders` ([#L38](../../lib/providers/admin_dashboard_provider.dart#L38)) | getter `bool` | Quyết định hiện danh sách hay ô trống của từng mục |
+| [`load`](../../lib/providers/admin_dashboard_provider.dart#L49) | `{bool showLoading = true}` → `Future<void>` | Tăng `_requestId`; nếu `showLoading` thì đặt `loading`; gọi `getDashboard`; bỏ kết quả nếu đã dispose hoặc có lần tải mới hơn; đặt `success` hoặc `error`; `notifyListeners`. Gọi khi tạo route |
+| [`refresh`](../../lib/providers/admin_dashboard_provider.dart#L78) | — → `Future<void>` | `load(showLoading: false)`. Gọi bởi `RefreshIndicator` và sau khi quay về từ Form / Products |
+| [`retry`](../../lib/providers/admin_dashboard_provider.dart#L81) | — → `Future<void>` | `load()`. Gọi bởi nút "Thử lại" của `ErrorState` |
 | `dispose` | — | Đánh dấu `_disposed`, tăng `_requestId` để bỏ kết quả đang chờ |
 
 ### Màn hình — [admin_dashboard_screen.dart](../../lib/features/admin/admin_dashboard_screen.dart)
 
 | Hàm / widget | Làm gì |
 | --- | --- |
-| [`_buildBody`](../../lib/features/admin/admin_dashboard_screen.dart#L43) | `switch (status)`: initial/loading → `LoadingState`; error → `ErrorState(onRetry: retry)`; success → `_buildContent` |
-| [`_buildContent`](../../lib/features/admin/admin_dashboard_screen.dart#L61) | `RefreshIndicator(onRefresh: refresh)` + `ListView` (luôn kéo được): Tổng quan → `_StatGrid` → Sắp hết hàng → Đơn gần đây → nút Quản lý sản phẩm. Mục rỗng dùng `_SectionEmpty` |
-| [`_openForm`](../../lib/features/admin/admin_dashboard_screen.dart#L139) | `(context, productId)`: `_pushAndRefresh(adminProductForm, productId)` |
-| [`_openProducts`](../../lib/features/admin/admin_dashboard_screen.dart#L142) | `_pushAndRefresh(adminProducts)` |
-| [`_pushAndRefresh`](../../lib/features/admin/admin_dashboard_screen.dart#L147) | Hàm top-level `(context, route, [arguments])`: `await pushNamed` → nếu còn mounted thì `refresh()`. Dùng chung cho tap sản phẩm, nút và menu avatar |
-| [`_AdminMenuItem`](../../lib/features/admin/admin_dashboard_screen.dart#L160) | Enum 4 mục menu avatar (`label`, `icon`) |
-| [`_Header`](../../lib/features/admin/admin_dashboard_screen.dart#L172) | Dải `AppColors.darkGradient`: "SMASHLY Admin" + avatar chữ cái đầu tên admin (`AuthProvider.currentUser`) bọc trong `PopupMenuButton` = menu avatar admin |
-| [`_onMenuSelected`](../../lib/features/admin/admin_dashboard_screen.dart#L175) | `switch (item)`: 3 mục điều hướng gọi `_pushAndRefresh`, Đăng xuất gọi `_logout` |
-| [`_logout`](../../lib/features/admin/admin_dashboard_screen.dart#L190) | `AppDialog.confirm` → `AuthProvider.logout()` → `status == empty` thì về Login (xóa stack), lỗi thì SnackBar |
-| [`_StatGrid`](../../lib/features/admin/admin_dashboard_screen.dart#L308) | 2 hàng × 2 `DashboardStatCard` cao 128; thẻ doanh thu truyền `format: CurrencyFormatter.format` |
+| [`_buildBody`](../../lib/features/admin/admin_dashboard_screen.dart#L46) | `switch (status)`: initial/loading → `LoadingState`; error → `ErrorState(onRetry: retry)`; success → `_buildContent` |
+| [`_buildContent`](../../lib/features/admin/admin_dashboard_screen.dart#L64) | `RefreshIndicator(onRefresh: refresh)` + `ListView` (luôn kéo được): Tổng quan → `_StatGrid` → Sắp hết hàng → Đơn gần đây → nút Quản lý sản phẩm. Mục rỗng dùng `_SectionEmpty` |
+| [`_openForm`](../../lib/features/admin/admin_dashboard_screen.dart#L143) | `(context, productId)`: `_pushAndRefresh(adminProductForm, productId)` |
+| [`_openProducts`](../../lib/features/admin/admin_dashboard_screen.dart#L146) | `_pushAndRefresh(adminProducts)` |
+| [`_pushAndRefresh`](../../lib/features/admin/admin_dashboard_screen.dart#L164) | Hàm top-level `(context, route, [arguments])`: `await pushNamed` → nếu còn mounted thì `refresh()`. Dùng chung cho tap sản phẩm, nút và menu avatar |
+| [`_AdminMenuItem`](../../lib/features/admin/admin_dashboard_screen.dart#L177) | Enum 4 mục menu avatar (`label`, `icon`) |
+| [`_Header`](../../lib/features/admin/admin_dashboard_screen.dart#L189) | Dải `AppColors.darkGradient`: "SMASHLY Admin" + avatar chữ cái đầu tên admin (`AuthProvider.currentUser`) bọc trong `PopupMenuButton` = menu avatar admin |
+| [`_onMenuSelected`](../../lib/features/admin/admin_dashboard_screen.dart#L192) | `switch (item)`: 3 mục điều hướng gọi `_pushAndRefresh`, Đăng xuất gọi `_logout` |
+| [`_logout`](../../lib/features/admin/admin_dashboard_screen.dart#L207) | `AppDialog.confirm` → `AuthProvider.logout()` → `status == empty` thì về Login (xóa stack), lỗi thì SnackBar |
+| [`_StatGrid`](../../lib/features/admin/admin_dashboard_screen.dart#L325) | 2 hàng × 2 `DashboardStatCard` cao 128; thẻ doanh thu truyền `format: CurrencyFormatter.format` |
 | `_SectionTitle`, `_SectionCard`, `_SectionEmpty` | Tiêu đề mục (icon + chữ + phụ đề), card chứa hàng có kẻ ngăn, ô trống gọn cho từng mục (`EmptyState` chiếm cả màn nên không nhét vào `ListView` được) |
 
 ### Widget
@@ -248,7 +248,7 @@ Hàm `pumpDashboard` gom phần dựng màn dùng chung; `onGenerateRoute` giả
 | --- | --- | --- |
 | [`DashboardStatCard`](../../lib/features/admin/widgets/dashboard_stat_card.dart#L12) | `label`, `value`, `icon`, `color`, `softColor`, `caption?`, `format` | `TweenAnimationBuilder<double>` 0 → value trong 600 ms; giá trị không đổi khi refresh thì không chạy lại. `Semantics` đọc "Nhãn: giá trị" |
 | [`LowStockTile`](../../lib/features/admin/widgets/low_stock_tile.dart#L10) | `product`, `onTap` | Dùng lại `AdminStockLabel` của S14: `0 · Hết` (đỏ), `3 · Sắp hết` (cam) |
-| [`RecentOrderTile`](../../lib/features/admin/widgets/recent_order_tile.dart#L11) | `recentOrder` | Dùng lại `CurrencyFormatter`, `DateFormatter.dateTime`, `OrderStatusBadge` |
+| [`RecentOrderTile`](../../lib/features/admin/widgets/recent_order_tile.dart#L13) | `recentOrder` | Dùng lại `CurrencyFormatter`, `DateFormatter.dateTime`, `OrderStatusBadge` |
 
 ## 5. Các thay đổi so với code cũ
 

@@ -8,15 +8,18 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/daos/admin_dashboard_dao.dart';
 import '../../data/models/admin_dashboard.dart';
+import '../../data/models/order.dart';
 import '../../providers/admin_dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/buttons/primary_button.dart';
+import '../../shared/widgets/order_status_badge.dart';
 import '../../shared/widgets/states/error_state.dart';
 import '../../shared/widgets/states/loading_state.dart';
 import 'widgets/dashboard_stat_card.dart';
 import 'widgets/low_stock_tile.dart';
+import 'widgets/order_status_sheet.dart';
 import 'widgets/recent_order_tile.dart';
 
 /// S13 — Admin Dashboard (UC16): 4 thẻ số liệu, sắp hết hàng, 5 đơn gần đây.
@@ -115,6 +118,7 @@ class AdminDashboardScreen extends StatelessWidget {
                       RecentOrderTile(
                         key: ValueKey(recent.order.id),
                         recentOrder: recent,
+                        onTap: () => _openOrderSheet(context, recent.order),
                       ),
                   ],
                 )
@@ -141,6 +145,19 @@ class AdminDashboardScreen extends StatelessWidget {
 
   Future<void> _openProducts(BuildContext context) =>
       _pushAndRefresh(context, AppRoutes.adminProducts);
+
+  /// UC19: mở sheet đổi trạng thái; đổi thành công thì báo bằng SnackBar.
+  Future<void> _openOrderSheet(BuildContext context, Order order) async {
+    final newStatus = await OrderStatusSheet.show(context, order);
+    if (newStatus == null || !context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Đã chuyển đơn ${order.orderCode} sang ${newStatus.label}',
+        ),
+      ),
+    );
+  }
 }
 
 /// Mở [route]; quay về Dashboard thì tải lại số liệu (có thể đã đổi kho/đơn).

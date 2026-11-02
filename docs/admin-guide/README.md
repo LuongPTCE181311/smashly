@@ -6,3 +6,4 @@ Tài liệu đọc lại để hiểu code và chuẩn bị thuyết trình/vấ
 - [SML-084 — UC17 Admin Products](SML-084-UC17-admin-products.md): màn S14 — tìm, lọc danh mục / đang ẩn, xóa có dialog nêu hậu quả, tồn kho màu + chữ.
 - [SML-083 — UC18 Admin Product Form](SML-083-UC18-product-form.md): màn S15 — một form cho cả thêm và sửa, chọn ảnh asset, thông số vợt chỉ hiện khi là vợt, validate (giá > 0, tồn kho ≥ 0), hỏi lại khi rời màn chưa lưu.
 - [SML-085 — UC16 Admin Dashboard](SML-085-UC16-admin-dashboard.md): màn S13 — 4 thẻ số liệu (COUNT/SUM), sắp hết hàng (tap → Form), 5 đơn gần đây, kéo để làm mới; menu avatar admin (Products / Thêm sản phẩm / Hồ sơ / Đăng xuất).
+- [SML-087 — UC19 Cập nhật trạng thái đơn](../UC19-order-status.md): bottom sheet trong S13 — đổi trạng thái theo luồng một chiều, ghi thời điểm vào đúng cột, hủy đơn hoàn kho trong transaction, chống ghi đè bằng `WHERE status = trạng thái cũ`.
