@@ -16,7 +16,7 @@ Task SML-047 (UC02), nhánh `feature/SML-047-uc02-login`, từ `develop` tại `
 - Không đổi DB/schema/version, không cần xóa app.
 - Chạy `flutter test` như thường lệ.
 - Menu dev và `START_ROUTE` mở màn thuộc `_adminOnly` khi chưa đăng nhập sẽ về Login; không có cờ tắt guard ở debug.
-- Muốn test admin: đăng nhập `admin@smashly.com` / `Admin@123` → Dashboard → Profile admin → Menu dev. Cần Dashboard của Trọng có lối sang Products/Form/Profile admin; Dashboard hiện tại vẫn là placeholder nên luồng này chờ Trọng hoàn thiện.
+- Muốn test admin: đăng nhập `admin@smashly.com` / `Admin@123` → Dashboard → menu avatar → Hồ sơ → Menu dev. Cập nhật theo `develop` tại `5869476`: Dashboard của Trọng đã có lối sang Products/Form/Profile admin trong `lib/features/admin/admin_dashboard_screen.dart`; các route đã nối tới màn thật trong `lib/routes/app_routes.dart`.
 
 ## 3. Quy ước mới
 

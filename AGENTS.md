@@ -95,6 +95,11 @@ Luồng: Screen → Provider → Repository → DAO → SQLite. Mỗi lớp ch�
 - Provider/model dùng chung: state private + getter, collection trả về dạng chỉ-đọc.
 - Repository chỉ bắt `on DatabaseException`, không `catch (e)` chung (nuốt mất AppException ném từ trong transaction).
 - `Navigator.push`/`pushNamed` gán vào biến có kiểu: ghi rõ type argument (`push<dynamic>(...)`), không để Dart suy ra `T` từ biến nhận (lỗi `Route<Object>`/TypeError khi route là `<dynamic>`).
+- Test chặn Back: kiểm `ModalRoute.popDisposition == RoutePopDisposition.doNotPop`.
+- `LengthLimitingTextInputFormatter` giữ giá trị cũ khi ô đã đầy; xóa trống ô trước khi nhập lại trong test.
+- Đổi `home` của `MaterialApp` đã pump không dựng lại route `/`; cần cây mới thì tách thành test riêng.
+- Không assert State/element của route vừa bị `pushNamedAndRemoveUntil` trong lúc chuyển màn; thời điểm Navigator gỡ route có thể làm kết quả phụ thuộc chuyển cảnh.
+- Đếm "widget đã dựng" trong `initState` của widget con, không đếm lúc tạo đối tượng widget.
 
 ## Checklist trước khi coi là xong
 
