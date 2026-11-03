@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:smashly/core/constants/enums.dart';
+import 'package:smashly/core/database/database_helper.dart';
 import 'package:smashly/core/theme/app_theme.dart';
 import 'package:smashly/core/utils/app_exception.dart';
+import 'package:smashly/data/daos/product_dao.dart';
+import 'package:smashly/data/daos/wishlist_dao.dart';
 import 'package:smashly/data/models/user.dart';
 import 'package:smashly/data/repositories/auth_repository.dart';
+import 'package:smashly/data/repositories/wishlist_repository.dart';
 import 'package:smashly/features/auth/widgets/auth_error_banner.dart';
 import 'package:smashly/features/profile/profile_screen.dart';
 import 'package:smashly/providers/auth_provider.dart';
+import 'package:smashly/providers/wishlist_provider.dart';
 import 'package:smashly/routes/app_page_route.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:smashly/shared/widgets/app_dialog.dart';
@@ -91,10 +96,28 @@ Future<void> _pump(
   AuthProvider auth, {
   String initialRoute = AppRoutes.profile,
   bool showDevTools = true,
+  Size? screenSize = const Size(800, 1200),
 }) async {
+  if (screenSize != null) {
+    tester.view.physicalSize = screenSize;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
+
   await tester.pumpWidget(
-    ChangeNotifierProvider.value(
-      value: auth,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthProvider>.value(value: auth),
+        ChangeNotifierProvider<WishlistProvider>(
+          create: (_) => WishlistProvider(
+            WishlistRepository(
+              database: () => DatabaseHelper.instance.database,
+              wishlistDao: const WishlistDao(),
+              productDao: const ProductDao(),
+            ),
+          ),
+        ),
+      ],
       child: MaterialApp(
         theme: AppTheme.light,
         onGenerateRoute: (settings) =>
@@ -429,7 +452,7 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     final auth = await _signedIn(_newRepo(), _customer);
-    await _pump(tester, auth);
+    await _pump(tester, auth, screenSize: null);
     expect(tester.takeException(), isNull);
 
     await tester.ensureVisible(_editButton);
