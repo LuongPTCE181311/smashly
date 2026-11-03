@@ -47,6 +47,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
+        Provider<AuthRepository>.value(value: authRepository),
         ChangeNotifierProvider(create: (_) => AuthProvider(authRepository)),
         ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
           create: (_) => CartProvider(cartRepository),

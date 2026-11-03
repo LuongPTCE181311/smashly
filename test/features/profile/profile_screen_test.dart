@@ -97,6 +97,7 @@ Future<void> _pump(
   String initialRoute = AppRoutes.profile,
   bool showDevTools = true,
   Size? screenSize = const Size(800, 1200),
+  AuthRepository? repository,
 }) async {
   if (screenSize != null) {
     tester.view.physicalSize = screenSize;
@@ -107,6 +108,9 @@ Future<void> _pump(
   await tester.pumpWidget(
     MultiProvider(
       providers: [
+        Provider<AuthRepository>.value(
+          value: repository ?? FakeAuthRepository(),
+        ),
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider<WishlistProvider>(
           create: (_) => WishlistProvider(
@@ -626,6 +630,55 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(AuthErrorBanner), findsNothing);
+  });
+
+  testWidgets('UC04.3: đổi mật khẩu thành công hiện SnackBar, vẫn ở Hồ sơ', (
+    tester,
+  ) async {
+    final repo = _newRepo();
+    final auth = await _signedIn(repo, _customer);
+    await _pump(tester, auth, repository: repo);
+
+    await _tapVisible(tester, find.widgetWithText(ListTile, 'Đổi mật khẩu'));
+    await tester.enterText(_field('Mật khẩu hiện tại'), 'Password123');
+    await tester.enterText(_field('Mật khẩu mới'), 'NewPass123');
+    await tester.enterText(_field('Nhập lại mật khẩu mới'), 'NewPass123');
+    await _tapVisible(
+      tester,
+      find.widgetWithText(PrimaryButton, 'Cập nhật mật khẩu'),
+    );
+
+    expect(repo.changePasswordCalls, 1);
+    expect(find.text('Đã đổi mật khẩu'), findsOneWidget);
+    expect(find.text('Nguyễn Văn An'), findsOneWidget);
+    expect(auth.isLoggedIn, isTrue);
+    await _flushSnackBars(tester);
+  });
+
+  testWidgets('UC04.3: tài khoản không còn thì đăng xuất và về Login', (
+    tester,
+  ) async {
+    final repo = _newRepo();
+    final auth = await _signedIn(repo, _customer);
+    repo.changePasswordError = const AppException(
+      AuthRepository.accountGoneMessage,
+      field: AuthRepository.accountGoneField,
+    );
+    await _pump(tester, auth, repository: repo);
+
+    await _tapVisible(tester, find.widgetWithText(ListTile, 'Đổi mật khẩu'));
+    await tester.enterText(_field('Mật khẩu hiện tại'), 'Password123');
+    await tester.enterText(_field('Mật khẩu mới'), 'NewPass123');
+    await tester.enterText(_field('Nhập lại mật khẩu mới'), 'NewPass123');
+    await _tapVisible(
+      tester,
+      find.widgetWithText(PrimaryButton, 'Cập nhật mật khẩu'),
+    );
+
+    expect(repo.logoutCalls, 1);
+    expect(auth.isLoggedIn, isFalse);
+    expect(find.text(_loginMarker), findsOneWidget);
+    await _flushSnackBars(tester);
   });
 }
 

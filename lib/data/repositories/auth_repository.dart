@@ -147,8 +147,9 @@ class AuthRepository {
     final normalizedFullName = fullName.trim();
     final normalizedPhone = phone.trim();
     final trimmedAddress = address?.trim();
-    final normalizedAddress =
-        trimmedAddress == null || trimmedAddress.isEmpty ? null : trimmedAddress;
+    final normalizedAddress = trimmedAddress == null || trimmedAddress.isEmpty
+        ? null
+        : trimmedAddress;
 
     final validations = <String, String?>{
       'fullName': validateFullName(normalizedFullName),
@@ -170,23 +171,74 @@ class AuthRepository {
         address: normalizedAddress,
       );
       if (rowsAffected == 0) {
-        throw const AppException(
-          accountGoneMessage,
-          field: accountGoneField,
-        );
+        throw const AppException(accountGoneMessage, field: accountGoneField);
       }
 
       final user = await _userDao.findById(db, userId);
       if (user == null) {
-        throw const AppException(
-          accountGoneMessage,
-          field: accountGoneField,
-        );
+        throw const AppException(accountGoneMessage, field: accountGoneField);
       }
       return user;
     } on DatabaseException catch (error) {
       debugPrint('AuthRepository.updateProfile: $error');
       throw const AppException('Không thể lưu lúc này');
+    }
+  }
+
+  /// Đổi mật khẩu của [userId] sau khi kiểm tra đúng mật khẩu hiện tại.
+  ///
+  /// Lỗi theo ô dùng field `currentPassword`, `newPassword`, `confirmPassword`;
+  /// user không còn tồn tại thì field là [accountGoneField].
+  Future<void> changePassword({
+    required int userId,
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final validations = <String, String?>{
+      'currentPassword': validateRequired(
+        currentPassword,
+        'Vui lòng nhập mật khẩu hiện tại',
+      ),
+      'newPassword': validatePassword(newPassword),
+      'confirmPassword': validateConfirmPassword(newPassword, confirmPassword),
+    };
+    for (final entry in validations.entries) {
+      final message = entry.value;
+      if (message != null) throw AppException(message, field: entry.key);
+    }
+    if (newPassword == currentPassword) {
+      throw const AppException(
+        'Mật khẩu mới phải khác mật khẩu hiện tại',
+        field: 'newPassword',
+      );
+    }
+
+    try {
+      final db = await _database();
+      await db.transaction((txn) async {
+        final auth = await _userDao.findAuthById(txn, userId);
+        if (auth == null) {
+          throw const AppException(accountGoneMessage, field: accountGoneField);
+        }
+
+        // Email là "muối" của hash nên phải lấy đúng email đang lưu trong DB.
+        final email = auth.user.email;
+        if (!PasswordHasher.verify(email, currentPassword, auth.passwordHash)) {
+          throw const AppException(
+            'Mật khẩu hiện tại chưa đúng',
+            field: 'currentPassword',
+          );
+        }
+        await _userDao.updatePasswordHash(
+          txn,
+          userId,
+          PasswordHasher.hash(email, newPassword),
+        );
+      });
+    } on DatabaseException catch (error) {
+      debugPrint('AuthRepository.changePassword: $error');
+      throw const AppException('Không thể đổi mật khẩu lúc này');
     }
   }
 

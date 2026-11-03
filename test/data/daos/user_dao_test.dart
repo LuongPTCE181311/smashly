@@ -69,6 +69,33 @@ void main() {
     expect(await dao.existsByEmail(db, 'missing@smashly.com'), isFalse);
   });
 
+  test('findAuthById returns the hash and null for a missing id', () async {
+    final result = await dao.findAuthById(db, 2);
+
+    expect(result, isNotNull);
+    expect(result!.user.email, 'customer@smashly.com');
+    expect(
+      result.passwordHash,
+      PasswordHasher.hash('customer@smashly.com', 'Customer@123'),
+    );
+    expect(await dao.findAuthById(db, 9999), isNull);
+  });
+
+  test('updatePasswordHash changes only password_hash', () async {
+    final before = await dao.findById(db, 2);
+    final newHash = PasswordHasher.hash('customer@smashly.com', 'NewPass123');
+
+    final changed = await dao.updatePasswordHash(db, 2, newHash);
+    final after = await dao.findAuthById(db, 2);
+
+    expect(changed, 1);
+    expect(after!.passwordHash, newHash);
+    expect(after.user.fullName, before!.fullName);
+    expect(after.user.phone, before.phone);
+    expect(after.user.address, before.address);
+    expect(await dao.updatePasswordHash(db, 9999, newHash), 0);
+  });
+
   test(
     'insert rejects a duplicate email through the UNIQUE constraint',
     () async {

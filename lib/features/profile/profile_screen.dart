@@ -9,11 +9,14 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../data/models/user.dart';
+import '../../data/repositories/auth_repository.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/change_password_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/buttons/primary_button.dart';
 import '../../shared/widgets/states/loading_state.dart';
+import 'widgets/change_password_sheet.dart';
 import 'widgets/edit_profile_sheet.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -62,6 +65,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else if (saved == true) {
       messenger.showSnackBar(const SnackBar(content: Text('Đã lưu')));
     }
+  });
+
+  Future<void> _changePassword(User user) => _runAction(() async {
+    final auth = context.read<AuthProvider>();
+    final repository = context.read<AuthRepository>();
+    final outcome = await showModalBottomSheet<ChangePasswordOutcome>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (_) => ChangeNotifierProvider(
+        create: (_) => ChangePasswordProvider(repository, userId: user.id!),
+        child: const ChangePasswordSheet(),
+      ),
+    );
+    if (!mounted || outcome == null) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    if (outcome == ChangePasswordOutcome.changed) {
+      messenger.showSnackBar(const SnackBar(content: Text('Đã đổi mật khẩu')));
+      return;
+    }
+
+    // Tài khoản đã bị xóa ở nơi khác nên phiên hiện tại không còn hợp lệ.
+    final navigator = Navigator.of(context);
+    await auth.logout();
+    messenger.showSnackBar(
+      const SnackBar(content: Text(AuthRepository.accountGoneMessage)),
+    );
+    navigator.pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
   });
 
   Future<void> _logout() => _runAction(() async {
@@ -203,6 +237,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           leading: const Icon(Icons.location_on_outlined),
           title: const Text('Địa chỉ'),
           subtitle: Text(user.address ?? 'Chưa có địa chỉ'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.lock_reset_outlined),
+          title: const Text('Đổi mật khẩu'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          enabled: !disabled,
+          onTap: () => _changePassword(user),
         ),
         const Divider(),
 

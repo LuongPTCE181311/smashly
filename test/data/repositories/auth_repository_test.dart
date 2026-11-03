@@ -266,27 +266,24 @@ void main() {
       whereArgs: [customerId],
     )).single;
 
-    test(
-      '14. trim dữ liệu và trả user đọc lại từ DB',
-      () async {
-        final user = await repository.updateProfile(
-          userId: customerId,
-          fullName: '  Trần Thị Bích  ',
-          phone: ' 0912345678 ',
-          address: '  12 Lê Lợi, Quận 1  ',
-        );
+    test('14. trim dữ liệu và trả user đọc lại từ DB', () async {
+      final user = await repository.updateProfile(
+        userId: customerId,
+        fullName: '  Trần Thị Bích  ',
+        phone: ' 0912345678 ',
+        address: '  12 Lê Lợi, Quận 1  ',
+      );
 
-        expect(user.id, customerId);
-        expect(user.fullName, 'Trần Thị Bích');
-        expect(user.phone, '0912345678');
-        expect(user.address, '12 Lê Lợi, Quận 1');
-        expect(user.email, 'customer@smashly.com');
-        final saved = await row();
-        expect(saved['full_name'], 'Trần Thị Bích');
-        expect(saved['phone'], '0912345678');
-        expect(saved['address'], '12 Lê Lợi, Quận 1');
-      },
-    );
+      expect(user.id, customerId);
+      expect(user.fullName, 'Trần Thị Bích');
+      expect(user.phone, '0912345678');
+      expect(user.address, '12 Lê Lợi, Quận 1');
+      expect(user.email, 'customer@smashly.com');
+      final saved = await row();
+      expect(saved['full_name'], 'Trần Thị Bích');
+      expect(saved['phone'], '0912345678');
+      expect(saved['address'], '12 Lê Lợi, Quận 1');
+    });
 
     test('15. địa chỉ chỉ dấu cách được lưu thành NULL', () async {
       final user = await repository.updateProfile(
@@ -356,6 +353,134 @@ void main() {
     });
   });
 
+  group('changePassword', () {
+    late int customerId;
+
+    setUp(() async {
+      final customer = await const UserDao().findByEmail(
+        db,
+        'customer@smashly.com',
+      );
+      customerId = customer!.id!;
+    });
+
+    Future<String> savedHash() async =>
+        (await db.query(
+              DbSchema.users,
+              columns: ['password_hash'],
+              where: 'id = ?',
+              whereArgs: [customerId],
+            )).single['password_hash']
+            as String;
+
+    test(
+      'đổi thành công: mật khẩu mới đăng nhập được, mật khẩu cũ bị từ chối',
+      () async {
+        await repository.changePassword(
+          userId: customerId,
+          currentPassword: 'Customer@123',
+          newPassword: 'NewPass123',
+          confirmPassword: 'NewPass123',
+        );
+
+        final user = await repository.login(
+          'customer@smashly.com',
+          'NewPass123',
+        );
+        final oldError = await _captureAppException(
+          () => repository.login('customer@smashly.com', 'Customer@123'),
+        );
+
+        expect(user.id, customerId);
+        expect(oldError.message, 'Email hoặc mật khẩu chưa đúng');
+      },
+    );
+
+    for (final (name, field, current, next, confirm) in [
+      (
+        'mật khẩu hiện tại sai',
+        'currentPassword',
+        'Wrong@123',
+        'NewPass123',
+        'NewPass123',
+      ),
+      (
+        'mật khẩu hiện tại trống',
+        'currentPassword',
+        '  ',
+        'NewPass123',
+        'NewPass123',
+      ),
+      (
+        'mật khẩu mới yếu',
+        'newPassword',
+        'Customer@123',
+        'abcdefgh',
+        'abcdefgh',
+      ),
+      (
+        'mật khẩu mới trùng mật khẩu cũ',
+        'newPassword',
+        'Customer@123',
+        'Customer@123',
+        'Customer@123',
+      ),
+      (
+        'nhập lại không khớp',
+        'confirmPassword',
+        'Customer@123',
+        'NewPass123',
+        'NewPass124',
+      ),
+    ]) {
+      test('$name ném AppException ở $field và không đổi hash', () async {
+        final before = await savedHash();
+
+        final error = await _captureAppException(
+          () => repository.changePassword(
+            userId: customerId,
+            currentPassword: current,
+            newPassword: next,
+            confirmPassword: confirm,
+          ),
+        );
+
+        expect(error.field, field);
+        expect(await savedHash(), before);
+      });
+    }
+
+    test('user không tồn tại ném AppException với field account', () async {
+      final error = await _captureAppException(
+        () => repository.changePassword(
+          userId: 999999,
+          currentPassword: 'Customer@123',
+          newPassword: 'NewPass123',
+          confirmPassword: 'NewPass123',
+        ),
+      );
+
+      expect(error.message, AuthRepository.accountGoneMessage);
+      expect(error.field, AuthRepository.accountGoneField);
+    });
+
+    test('DB đã đóng được chuyển thành AppException chung', () async {
+      await db.close();
+
+      final error = await _captureAppException(
+        () => repository.changePassword(
+          userId: customerId,
+          currentPassword: 'Customer@123',
+          newPassword: 'NewPass123',
+          confirmPassword: 'NewPass123',
+        ),
+      );
+
+      expect(error.message, 'Không thể đổi mật khẩu lúc này');
+      expect(error.field, isNull);
+    });
+  });
+
   test('21. resetDemoData xóa session trước khi reset DB', () async {
     var resets = 0;
     int? sessionAtReset = 1;
@@ -378,25 +503,30 @@ void main() {
     expect(await sessionService.getLoggedInUserId(), isNull);
   });
 
-  test('22. lỗi SQLite trong callback reset ném AppException không field', () async {
-    final resettingRepository = AuthRepository(
-      database: () async => db,
-      userDao: const UserDao(),
-      cartDao: const CartDao(),
-      sessionService: sessionService,
-      resetDatabase: () async {
-        await db.close();
-        await db.query(DbSchema.users);
-      },
-    );
-    await sessionService.saveSession(1);
+  test(
+    '22. lỗi SQLite trong callback reset ném AppException không field',
+    () async {
+      final resettingRepository = AuthRepository(
+        database: () async => db,
+        userDao: const UserDao(),
+        cartDao: const CartDao(),
+        sessionService: sessionService,
+        resetDatabase: () async {
+          await db.close();
+          await db.query(DbSchema.users);
+        },
+      );
+      await sessionService.saveSession(1);
 
-    final error = await _captureAppException(resettingRepository.resetDemoData);
+      final error = await _captureAppException(
+        resettingRepository.resetDemoData,
+      );
 
-    expect(error.message, 'Không thể đặt lại dữ liệu demo lúc này');
-    expect(error.field, isNull);
-    expect(await sessionService.getLoggedInUserId(), isNull);
-  });
+      expect(error.message, 'Không thể đặt lại dữ liệu demo lúc này');
+      expect(error.field, isNull);
+      expect(await sessionService.getLoggedInUserId(), isNull);
+    },
+  );
 
   test('getCurrentUser opens the database even without a session', () async {
     // Splash dựa vào getCurrentUser để mở DB: người dùng mới (chưa có session)
