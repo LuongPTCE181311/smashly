@@ -6,7 +6,7 @@ import '../models/user.dart';
 class UserDao {
   const UserDao();
 
-  /// Mọi cột trừ `password_hash`; chỉ [findAuthByEmail] được đọc hash.
+  /// Mọi cột trừ `password_hash`; chỉ các hàm `findAuth…` được đọc hash.
   static const _publicColumns = [
     'id',
     'full_name',
@@ -39,15 +39,28 @@ class UserDao {
     return rows.isEmpty ? null : User.fromMap(rows.first);
   }
 
+  /// Người dùng theo email kèm hash mật khẩu, dùng khi đăng nhập.
   Future<({User user, String passwordHash})?> findAuthByEmail(
     DatabaseExecutor db,
     String email,
+  ) => _findAuth(db, 'email = ?', email);
+
+  /// Người dùng theo id kèm hash mật khẩu, dùng khi đổi mật khẩu.
+  Future<({User user, String passwordHash})?> findAuthById(
+    DatabaseExecutor db,
+    int id,
+  ) => _findAuth(db, 'id = ?', id);
+
+  Future<({User user, String passwordHash})?> _findAuth(
+    DatabaseExecutor db,
+    String where,
+    Object value,
   ) async {
     final rows = await db.query(
       DbSchema.users,
       columns: [..._publicColumns, 'password_hash'],
-      where: 'email = ?',
-      whereArgs: [email],
+      where: where,
+      whereArgs: [value],
       limit: 1,
     );
     if (rows.isEmpty) return null;
@@ -91,6 +104,20 @@ class UserDao {
     return db.update(
       DbSchema.users,
       {'full_name': fullName, 'phone': phone, 'address': address},
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  /// Ghi hash mật khẩu mới. Trả về số dòng đã sửa (0 = không có user này).
+  Future<int> updatePasswordHash(
+    DatabaseExecutor db,
+    int userId,
+    String passwordHash,
+  ) {
+    return db.update(
+      DbSchema.users,
+      {'password_hash': passwordHash},
       where: 'id = ?',
       whereArgs: [userId],
     );
