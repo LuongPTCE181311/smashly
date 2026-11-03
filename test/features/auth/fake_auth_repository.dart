@@ -167,6 +167,23 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> resetDemoData() async => resetCalls++;
 
+  int changePasswordCalls = 0;
+
+  /// Lỗi mà `changePassword` sẽ ném; null = đổi thành công.
+  Object? changePasswordError;
+
+  @override
+  Future<void> changePassword({
+    required int userId,
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    changePasswordCalls++;
+    final error = changePasswordError;
+    if (error != null) throw error;
+  }
+
   int logoutCalls = 0;
 
   /// Lỗi `logout` sẽ ném (vd. PlatformException của SharedPreferences).

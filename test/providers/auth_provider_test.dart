@@ -134,4 +134,12 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<void> resetDemoData() =>
       throw UnimplementedError('Không dùng trong file test này');
+
+  @override
+  Future<void> changePassword({
+    required int userId,
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) => throw UnimplementedError('Không dùng trong file test này');
 }
