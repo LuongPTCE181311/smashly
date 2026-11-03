@@ -26,6 +26,7 @@ class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key});
 
   static const addedFeedback = Duration(milliseconds: 800);
+  static const addedSnackBarDuration = Duration(seconds: 4);
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -66,6 +67,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: const Text('Đã thêm vào giỏ hàng'),
+        // BUG-01: Có action thì SDK mặc định persist = true.
+        persist: false,
+        duration: ProductDetailScreen.addedSnackBarDuration,
         action: SnackBarAction(
           label: 'Xem giỏ',
           onPressed: () => AppShell.goToTab(context, AppTab.cart),
