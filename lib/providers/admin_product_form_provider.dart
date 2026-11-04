@@ -36,11 +36,10 @@ class AdminProductFormProvider extends BaseProvider {
   String? get errorMessage => _errorMessage;
   bool get isSaving => _isSaving;
 
-  /// Danh mục [categoryId] có phải "Rackets" không → quyết định hiện nhóm
-  /// thông số vợt.
+  /// Danh mục [categoryId] có phải vợt không, để hiện nhóm thông số vợt.
   bool isRacketCategory(int? categoryId) {
     for (final category in _categories) {
-      if (category.id == categoryId) return category.name == 'Rackets';
+      if (category.id == categoryId) return category.isRacket;
     }
     return false;
   }
