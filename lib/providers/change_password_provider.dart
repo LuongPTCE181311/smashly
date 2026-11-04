@@ -4,9 +4,10 @@ import 'package:flutter/foundation.dart';
 
 import '../core/utils/app_exception.dart';
 import '../data/repositories/auth_repository.dart';
+import 'base_provider.dart';
 
 /// State của sheet Đổi mật khẩu (UC04.3): đang lưu và lỗi của lần lưu gần nhất.
-class ChangePasswordProvider extends ChangeNotifier {
+class ChangePasswordProvider extends BaseProvider {
   ChangePasswordProvider(this._repository, {required this.userId});
 
   final AuthRepository _repository;
@@ -16,7 +17,6 @@ class ChangePasswordProvider extends ChangeNotifier {
   String? _errorMessage;
   final Map<String, String> _fieldErrors = {};
   bool _accountGone = false;
-  bool _disposed = false;
 
   bool get isSaving => _isSaving;
   String? get errorMessage => _errorMessage;
@@ -36,7 +36,7 @@ class ChangePasswordProvider extends ChangeNotifier {
     _isSaving = true;
     _errorMessage = null;
     _fieldErrors.clear();
-    _notify();
+    notify();
 
     try {
       await _repository.changePassword(
@@ -63,23 +63,12 @@ class ChangePasswordProvider extends ChangeNotifier {
       return false;
     } finally {
       _isSaving = false;
-      _notify();
+      notify();
     }
   }
 
   /// Xóa lỗi của [field] khi người dùng gõ lại ô đó.
   void clearFieldError(String field) {
-    if (_fieldErrors.remove(field) != null) _notify();
-  }
-
-  // Sheet có thể bị đóng khi đang lưu; không notify sau khi đã dispose.
-  void _notify() {
-    if (!_disposed) notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
+    if (_fieldErrors.remove(field) != null) notify();
   }
 }

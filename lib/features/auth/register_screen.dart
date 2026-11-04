@@ -13,7 +13,7 @@ import 'widgets/auth_error_banner.dart';
 import 'widgets/auth_header.dart';
 import 'widgets/password_strength_bar.dart';
 
-/// S03 — Tạo tài khoản, trả email về Login mà không tự đăng nhập.
+/// Màn tạo tài khoản, trả email về Login mà không tự đăng nhập.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 

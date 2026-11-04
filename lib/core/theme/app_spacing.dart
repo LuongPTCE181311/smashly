@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Khoảng cách theo lưới 4 (blueprint mục 21). OWNER: Lượng.
+/// Khoảng cách theo lưới 4.
 abstract final class AppSpacing {
   static const double xs = 4;
   static const double sm = 8;

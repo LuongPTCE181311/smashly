@@ -1,16 +1,16 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' hide Category;
-
+import '../core/constants/app_rules.dart';
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/admin_product_query.dart';
 import '../data/models/category.dart';
 import '../data/models/product.dart';
 import '../data/repositories/product_repository.dart';
+import 'base_provider.dart';
 
-/// State của màn Admin Products (S14 · UC17): tải, tìm, lọc, xóa sản phẩm.
-class AdminProductProvider extends ChangeNotifier {
+/// State của màn Admin Products (UC17): tải, tìm, lọc, xóa sản phẩm.
+class AdminProductProvider extends BaseProvider {
   AdminProductProvider(this._repository);
 
   final ProductRepository _repository;
@@ -26,10 +26,8 @@ class AdminProductProvider extends ChangeNotifier {
 
   Timer? _debounceTimer;
 
-  // Số thứ tự truy vấn, tránh kết quả cũ ghi đè kết quả mới.
-  int _requestId = 0;
-
-  bool _disposed = false;
+  // Tăng mỗi lần tải mới; kết quả mang số cũ thì bỏ qua.
+  int _loadId = 0;
 
   // ===== GETTERS =====
 
@@ -55,15 +53,15 @@ class AdminProductProvider extends ChangeNotifier {
   Future<void> loadInitial() async {
     _status = ViewStatus.loading;
     _errorMessage = null;
-    notifyListeners();
+    notify();
 
     try {
       _categories = await _repository.getCategories();
     } on AppException catch (e) {
-      if (_disposed) return;
+      if (isDisposed) return;
       _status = ViewStatus.error;
       _errorMessage = e.message;
-      notifyListeners();
+      notify();
       return;
     }
 
@@ -73,32 +71,32 @@ class AdminProductProvider extends ChangeNotifier {
   /// Chạy lại truy vấn với [_query] hiện tại. [showLoading] = false khi tải lại
   /// sau xóa/khôi phục để danh sách không nháy sang spinner.
   Future<void> loadProducts({bool showLoading = true}) async {
-    if (_disposed) return;
+    if (isDisposed) return;
 
-    final requestId = ++_requestId;
+    final loadId = ++_loadId;
     final currentQuery = _query;
 
     if (showLoading) {
       _status = ViewStatus.loading;
       _errorMessage = null;
-      notifyListeners();
+      notify();
     }
 
     try {
       final result = await _repository.getAdminProducts(currentQuery);
-      if (_disposed || requestId != _requestId) return;
+      if (isDisposed || loadId != _loadId) return;
 
       _products = result;
       _status = result.isEmpty ? ViewStatus.empty : ViewStatus.success;
       _errorMessage = null;
     } on AppException catch (e) {
-      if (_disposed || requestId != _requestId) return;
+      if (isDisposed || loadId != _loadId) return;
 
       _status = ViewStatus.error;
       _errorMessage = e.message;
     }
 
-    notifyListeners();
+    notify();
   }
 
   /// Nút "Thử lại" ở trạng thái lỗi: chưa có danh mục thì tải lại từ đầu.
@@ -118,8 +116,8 @@ class AdminProductProvider extends ChangeNotifier {
   void setKeyword(String value) {
     _query = _query.copyWith(keyword: value);
     _debounceTimer?.cancel();
-    _requestId++;
-    _debounceTimer = Timer(const Duration(milliseconds: 300), loadProducts);
+    _loadId++;
+    _debounceTimer = Timer(AppRules.searchDebounce, loadProducts);
   }
 
   Future<void> selectCategory(int? categoryId) {
@@ -178,16 +176,14 @@ class AdminProductProvider extends ChangeNotifier {
   }
 
   void _setBusy(int productId, bool busy) {
-    if (_disposed) return;
+    if (isDisposed) return;
     busy ? _busyIds.add(productId) : _busyIds.remove(productId);
-    notifyListeners();
+    notify();
   }
 
   @override
   void dispose() {
-    _disposed = true;
     _debounceTimer?.cancel();
-    _requestId++;
     super.dispose();
   }
 }

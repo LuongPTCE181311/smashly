@@ -9,9 +9,10 @@ import 'package:smashly/data/models/user.dart';
 import 'package:smashly/features/auth/login_screen.dart';
 import 'package:smashly/features/auth/splash_screen.dart';
 import 'package:smashly/providers/auth_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_page_route.dart';
 import 'package:smashly/routes/app_routes.dart';
-import 'package:smashly/routes/dev_menu_screen.dart';
+import 'package:smashly/dev/dev_menu_screen.dart';
 import 'package:smashly/shared/widgets/app_logo.dart';
 
 import 'fake_auth_repository.dart';
@@ -81,18 +82,22 @@ Future<void> _pumpSplash(
   return tester.pumpWidget(
     ChangeNotifierProvider(
       create: (_) => AuthProvider(repo),
-      child: MaterialApp(
-        theme: AppTheme.light,
-        builder: disableAnimations
-            ? (context, child) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(disableAnimations: true),
-                child: child!,
-              )
-            : null,
-        onGenerateRoute: _testRoute,
-        onGenerateInitialRoutes: (_) => [
-          _testRoute(const RouteSettings(name: AppRoutes.splash)),
-        ],
+      child: ChangeNotifierProvider<ShellTabProvider>(
+        create: (_) => ShellTabProvider(),
+        child: MaterialApp(
+          theme: AppTheme.light,
+          builder: disableAnimations
+              ? (context, child) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(disableAnimations: true),
+                  child: child!,
+                )
+              : null,
+          onGenerateRoute: _testRoute,
+          onGenerateInitialRoutes: (_) => [
+            _testRoute(const RouteSettings(name: AppRoutes.splash)),
+          ],
+        ),
       ),
     ),
   );
@@ -281,13 +286,16 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider(
           create: (_) => AuthProvider(repo),
-          child: MaterialApp(
-            onGenerateRoute: AppRoutes.onGenerateRoute,
-            onGenerateInitialRoutes: (_) => [
-              AppRoutes.onGenerateRoute(
-                const RouteSettings(name: AppRoutes.splash),
-              ),
-            ],
+          child: ChangeNotifierProvider<ShellTabProvider>(
+            create: (_) => ShellTabProvider(),
+            child: MaterialApp(
+              onGenerateRoute: AppRoutes.onGenerateRoute,
+              onGenerateInitialRoutes: (_) => [
+                AppRoutes.onGenerateRoute(
+                  const RouteSettings(name: AppRoutes.splash),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -306,7 +314,10 @@ void main() {
         await tester.pumpWidget(
           ChangeNotifierProvider(
             create: (_) => AuthProvider(repo),
-            child: const SmashlyApp(startRoute: AppRoutes.devMenu),
+            child: ChangeNotifierProvider<ShellTabProvider>(
+              create: (_) => ShellTabProvider(),
+              child: const SmashlyApp(startRoute: AppRoutes.devMenu),
+            ),
           ),
         );
         await tester.pumpAndSettle();

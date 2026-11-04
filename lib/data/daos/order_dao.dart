@@ -13,6 +13,7 @@ class OrderDao {
     DatabaseExecutor db,
     int userId,
   ) async {
+    // Ghép dòng đầu tiên (MIN(id)) của mỗi đơn để thẻ đơn có ảnh và tên sản phẩm.
     final rows = await db.rawQuery(
       '''
       SELECT

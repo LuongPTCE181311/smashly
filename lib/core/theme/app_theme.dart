@@ -4,8 +4,7 @@ import 'app_colors.dart';
 import 'app_spacing.dart';
 import 'app_text_styles.dart';
 
-/// ThemeData của SMASHLY: light làm chủ đạo, nền tối chỉ dùng làm điểm nhấn
-/// (blueprint mục 8). OWNER: Lượng.
+/// ThemeData của SMASHLY: light làm chủ đạo, nền tối chỉ dùng làm điểm nhấn.
 ///
 /// Widget Material mặc định (FilledButton, TextField, Card, Chip, SnackBar...)
 /// đã mang sẵn style ở đây, nên màn hình hiếm khi phải tự set màu/cỡ chữ.

@@ -2,6 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Lưu phiên đăng nhập trên máy bằng id người dùng.
 class SessionService {
+  const SessionService();
+
   static const _kLegacyIsLoggedIn = 'isLoggedIn';
   static const _kUserId = 'userId';
 

@@ -4,8 +4,6 @@ import '../../utils/db_time.dart';
 import '../../utils/password_hasher.dart';
 import '../db_schema.dart';
 
-/// OWNER: TV1.
-///
 /// | id | Email                 | Mật khẩu     | Role     |
 /// |----|-----------------------|--------------|----------|
 /// | 1  | admin@smashly.com     | Admin@123    | ADMIN    |

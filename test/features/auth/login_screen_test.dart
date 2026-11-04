@@ -10,6 +10,7 @@ import 'package:smashly/data/models/user.dart';
 import 'package:smashly/features/auth/login_screen.dart';
 import 'package:smashly/features/auth/widgets/auth_error_banner.dart';
 import 'package:smashly/providers/auth_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_page_route.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:smashly/shared/widgets/buttons/primary_button.dart';
@@ -83,16 +84,19 @@ Widget _app(
 }) {
   return ChangeNotifierProvider(
     create: (_) => AuthProvider(repo),
-    child: MaterialApp(
-      theme: AppTheme.light,
-      builder: disableAnimations
-          ? (context, child) => MediaQuery(
-              data: MediaQuery.of(context).copyWith(disableAnimations: true),
-              child: child!,
-            )
-          : null,
-      onGenerateRoute: onGenerateRoute,
-      onGenerateInitialRoutes: (_) => [initialRoute],
+    child: ChangeNotifierProvider<ShellTabProvider>(
+      create: (_) => ShellTabProvider(),
+      child: MaterialApp(
+        theme: AppTheme.light,
+        builder: disableAnimations
+            ? (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
+                child: child!,
+              )
+            : null,
+        onGenerateRoute: onGenerateRoute,
+        onGenerateInitialRoutes: (_) => [initialRoute],
+      ),
     ),
   );
 }

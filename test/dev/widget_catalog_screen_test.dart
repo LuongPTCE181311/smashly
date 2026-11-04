@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:smashly/core/constants/enums.dart';
 import 'package:smashly/core/theme/app_theme.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
-import 'package:smashly/routes/dev_menu_screen.dart';
-import 'package:smashly/routes/widget_catalog_screen.dart';
+import 'package:smashly/dev/dev_menu_screen.dart';
+import 'package:smashly/dev/widget_catalog_screen.dart';
 import 'package:smashly/shared/widgets/app_logo.dart';
 import 'package:smashly/shared/widgets/order_status_badge.dart';
 import 'package:smashly/shared/widgets/states/error_state.dart';
 
-Widget _app(Widget home) => MaterialApp(
-  theme: AppTheme.light,
-  home: home,
-  onGenerateRoute: AppRoutes.onGenerateRoute,
+Widget _app(Widget home) => ChangeNotifierProvider<ShellTabProvider>(
+  create: (_) => ShellTabProvider(),
+  child: MaterialApp(
+    theme: AppTheme.light,
+    home: home,
+    onGenerateRoute: AppRoutes.onGenerateRoute,
+  ),
 );
 
 final _list = find.byType(Scrollable).first;

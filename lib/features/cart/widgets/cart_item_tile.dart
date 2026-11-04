@@ -2,17 +2,17 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_rules.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/cart_item.dart';
-import '../../../data/repositories/cart_repository.dart';
 import 'cart_open_area.dart';
 import 'quantity_stepper.dart';
 
 int cartMaxQuantity(CartItem item) =>
-    math.min(item.stock, CartRepository.maxQuantityPerLine);
+    math.min(item.stock, AppRules.maxQuantityPerLine);
 
 String? cartStockWarning(CartItem item) {
   if (item.stock <= 0) return 'Đã hết hàng';

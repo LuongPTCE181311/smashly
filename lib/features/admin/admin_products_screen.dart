@@ -9,14 +9,14 @@ import '../../core/utils/app_exception.dart';
 import '../../data/models/product.dart';
 import '../../providers/admin_product_provider.dart';
 import '../../routes/app_routes.dart';
+import '../../shared/category_label.dart';
 import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/states/empty_state.dart';
 import '../../shared/widgets/states/error_state.dart';
 import '../../shared/widgets/states/loading_state.dart';
-import 'admin_category_label.dart';
 import 'widgets/admin_product_tile.dart';
 
-/// S14 — Admin Products (UC17): tìm, lọc, xóa sản phẩm.
+/// Admin Products (UC17): tìm, lọc, xóa sản phẩm.
 class AdminProductsScreen extends StatefulWidget {
   const AdminProductsScreen({super.key});
 
@@ -179,7 +179,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
           for (final category in admin.categories)
             _categoryChip(
               admin,
-              label: adminCategoryLabel(category.name),
+              label: categoryLabel(category.name),
               categoryId: category.id,
             ),
         ],
@@ -263,7 +263,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
           return AdminProductTile(
             key: ValueKey(product.id),
             product: product,
-            categoryName: adminCategoryLabel(
+            categoryName: categoryLabel(
               admin.categoryNameOf(product.categoryId),
             ),
             busy: admin.isBusy(product.id),
@@ -277,7 +277,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 
   // ===== ĐIỀU HƯỚNG =====
 
-  /// Mở S15: [productId] null = thêm mới. Quay về thì tải lại danh sách.
+  /// Mở form sản phẩm: [productId] null = thêm mới. Quay về thì tải lại danh sách.
   Future<void> _openForm(int? productId) async {
     await Navigator.pushNamed(
       context,

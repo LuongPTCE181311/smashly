@@ -9,6 +9,7 @@ import 'package:smashly/data/models/cart_item.dart';
 import 'package:smashly/features/cart/cart_screen.dart';
 import 'package:smashly/features/cart/widgets/cart_item_tile.dart';
 import 'package:smashly/providers/cart_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 
 import 'cart_screen_test.dart' show FakeCartRepository, item;
@@ -51,13 +52,16 @@ Future<({CartProvider cart, _NavSpy spy})> _pump(
     ChangeNotifierProvider.value(
       key: UniqueKey(), // a fresh Navigator per pump, no old routes kept
       value: cart,
-      child: MaterialApp(
-        theme: AppTheme.light,
-        navigatorObservers: [spy],
-        home: const CartScreen(),
-        onGenerateRoute: (settings) => MaterialPageRoute<void>(
-          settings: settings,
-          builder: (_) => _DetailStub(settings.arguments),
+      child: ChangeNotifierProvider<ShellTabProvider>(
+        create: (_) => ShellTabProvider(),
+        child: MaterialApp(
+          theme: AppTheme.light,
+          navigatorObservers: [spy],
+          home: const CartScreen(),
+          onGenerateRoute: (settings) => MaterialPageRoute<void>(
+            settings: settings,
+            builder: (_) => _DetailStub(settings.arguments),
+          ),
         ),
       ),
     ),
@@ -186,15 +190,18 @@ void main() {
     ) async {
       final spy = _NavSpy();
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          navigatorObservers: [spy],
-          home: Scaffold(
-            body: CartItemTile(
-              item: item(1),
-              onToggle: () {},
-              onDecrease: () {},
-              onIncrease: () {},
+        ChangeNotifierProvider<ShellTabProvider>(
+          create: (_) => ShellTabProvider(),
+          child: MaterialApp(
+            theme: AppTheme.light,
+            navigatorObservers: [spy],
+            home: Scaffold(
+              body: CartItemTile(
+                item: item(1),
+                onToggle: () {},
+                onDecrease: () {},
+                onIncrease: () {},
+              ),
             ),
           ),
         ),

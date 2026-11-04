@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show debugPrint;
-import 'package:sqflite/sqflite.dart';
 
 import '../../core/constants/enums.dart';
+import '../../core/database/database_helper.dart';
 import '../../core/utils/app_exception.dart';
 import '../daos/admin_dashboard_dao.dart';
 import '../daos/order_dao.dart';
@@ -9,15 +9,15 @@ import '../models/admin_dashboard.dart';
 import '../models/order.dart';
 import 'order_repository.dart';
 
-/// Dữ liệu Admin Dashboard (S13 · UC16). OWNER: Trọng.
+/// Dữ liệu Admin Dashboard (UC16).
 class AdminDashboardRepository {
   const AdminDashboardRepository({
-    required this._database,
-    required this._dashboardDao,
+    this._database = DatabaseHelper.open,
+    this._dashboardDao = const AdminDashboardDao(),
     this._orderDao = const OrderDao(),
   });
 
-  final Future<Database> Function() _database;
+  final DatabaseOpener _database;
   final AdminDashboardDao _dashboardDao;
   final OrderDao _orderDao;
 

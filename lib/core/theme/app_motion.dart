@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Thời lượng + curve chuẩn cho animation (blueprint mục 22). OWNER: Lượng.
+/// Thời lượng + curve chuẩn cho animation.
 ///
 /// Luật: không quá 1 animation `emphasis` trên một màn cùng lúc; danh sách
 /// dài chỉ animate lần tải đầu; luôn qua [AppMotion.of] để tôn trọng cài đặt

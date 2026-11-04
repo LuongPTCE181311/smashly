@@ -1,61 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:smashly/core/database/database_helper.dart';
-import 'package:smashly/data/daos/admin_dashboard_dao.dart';
-import 'package:smashly/data/daos/order_dao.dart';
-import 'package:smashly/data/daos/product_dao.dart';
-import 'package:smashly/data/repositories/admin_dashboard_repository.dart';
-import 'package:smashly/data/repositories/order_repository.dart';
-import 'package:smashly/data/repositories/product_repository.dart';
-import 'package:smashly/features/admin/admin_dashboard_screen.dart';
-import 'package:smashly/features/admin/admin_product_form_screen.dart';
-import 'package:smashly/features/admin/admin_products_screen.dart';
-import 'package:smashly/features/checkout/checkout_screen.dart';
-import 'package:smashly/features/checkout/order_success_screen.dart';
-import 'package:smashly/features/home/home_screen.dart';
-import 'package:smashly/features/orders/my_orders_screen.dart';
-import 'package:smashly/features/orders/order_detail_screen.dart';
-import 'package:smashly/features/profile/wishlist_screen.dart';
-import 'package:smashly/features/shop/shop_screen.dart';
-import 'package:smashly/features/product/product_detail_screen.dart';
-import 'package:smashly/providers/admin_dashboard_provider.dart';
-import 'package:smashly/providers/admin_product_form_provider.dart';
-import 'package:smashly/providers/admin_product_provider.dart';
-import 'package:smashly/providers/auth_provider.dart';
-import 'package:smashly/providers/checkout_provider.dart';
-import 'package:smashly/providers/home_provider.dart';
-import 'package:smashly/providers/order_detail_provider.dart';
-import 'package:smashly/providers/order_provider.dart';
-import 'package:smashly/providers/product_detail_provider.dart';
-import 'package:smashly/providers/shop_provider.dart';
 
-import '../core/database/db_check_screen.dart';
+import '../data/repositories/admin_dashboard_repository.dart';
+import '../data/repositories/order_repository.dart';
+import '../data/repositories/product_repository.dart';
+import '../dev/db_check_screen.dart';
+import '../dev/dev_menu_screen.dart';
+import '../dev/widget_catalog_screen.dart';
+import '../features/admin/admin_dashboard_screen.dart';
+import '../features/admin/admin_product_form_screen.dart';
+import '../features/admin/admin_products_screen.dart';
 import '../features/auth/admin_guard.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/cart/cart_screen.dart';
+import '../features/checkout/checkout_screen.dart';
+import '../features/checkout/order_success_screen.dart';
+import '../features/home/home_screen.dart';
+import '../features/orders/my_orders_screen.dart';
+import '../features/orders/order_detail_screen.dart';
+import '../features/product/product_detail_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/app_tab.dart';
+import '../features/shop/shop_screen.dart';
+import '../features/wishlist/wishlist_screen.dart';
+import '../providers/admin_dashboard_provider.dart';
+import '../providers/admin_product_form_provider.dart';
+import '../providers/admin_product_provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/checkout_provider.dart';
+import '../providers/home_provider.dart';
+import '../providers/order_detail_provider.dart';
+import '../providers/product_detail_provider.dart';
+import '../providers/shop_provider.dart';
 import 'app_page_route.dart';
-import 'dev_menu_screen.dart';
-import 'placeholder_screen.dart';
-import 'widget_catalog_screen.dart';
+import 'not_found_screen.dart';
 
-/// Tên route + bảng "tên route → màn hình" của cả app. OWNER: Lượng.
-///
-/// Đủ 15 màn ngay từ đầu, màn chưa làm trỏ tới [PlaceholderScreen].
-/// Làm xong màn của mình → **chỉ thay đúng dòng placeholder của mình** trong
-/// [screen], không thêm/xóa route khác (tránh conflict).
+/// Tên route và bảng route → màn hình của cả app.
 ///
 /// Điều hướng luôn dùng hằng số, không gõ chuỗi:
 /// ```dart
 /// Navigator.pushNamed(context, AppRoutes.productDetail, arguments: product.id);
-/// Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (_) => false);
 /// ```
 abstract final class AppRoutes {
-  // Auth (Hào)
+  // Auth
   static const splash = '/';
   static const login = '/login';
   static const register = '/register';
@@ -77,7 +67,7 @@ abstract final class AppRoutes {
   static const orderSuccess = '/order-success'; // arguments: int orderId
   static const orderDetail = '/order-detail'; // arguments: int orderId
 
-  // Admin (Trọng) — không có bottom nav.
+  // Admin, không có bottom nav.
   static const adminDashboard = '/admin';
   static const adminProducts = '/admin/products';
   static const adminProductForm =
@@ -118,106 +108,45 @@ abstract final class AppRoutes {
       register => const RegisterScreen(),
 
       home => ChangeNotifierProvider<HomeProvider>(
-        create: (context) {
-          // Bước 1: Tạo DAO
-          const productDao = ProductDao();
-          // Bước 2: Tạo Repository
-          final repository = ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: productDao,
-          );
-          // Bước 3: Tạo Provider
-          final provider = HomeProvider(repository);
-          // Bước 4: Bắt đầu tải dữ liệu
-          provider.loadHome();
-          // Bước 5: Trả Provider cho ChangeNotifierProvider
-          return provider;
-        },
-        // Bước 6: Hiển thị HomeScreen
+        create: (_) => HomeProvider(ProductRepository())..loadHome(),
         child: const HomeScreen(),
       ),
 
       shop => ChangeNotifierProvider<ShopProvider>(
-        create: (_) {
-          // DAO làm việc trực tiếp với SQLite.
-          const productDao = ProductDao();
-
-          // Repository kết nối DAO và DatabaseHelper.
-          final repository = ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: productDao,
-          );
-
-          // Provider giữ state của Shop.
-          final provider = ShopProvider(repository);
-
-          // Tải dữ liệu ban đầu.
-          provider.loadInitial();
-
-          return provider;
-        },
+        create: (_) => ShopProvider(ProductRepository())..loadInitial(),
         child: const ShopScreen(),
       ),
 
       cart => const CartScreen(),
-      myOrders => ChangeNotifierProxyProvider<AuthProvider, OrderProvider>(
-        create: (_) => OrderProvider(
-          OrderRepository(
-            database: () => DatabaseHelper.instance.database,
-            orderDao: const OrderDao(),
-          ),
-        ),
-        update: (_, auth, orders) => orders!..updateUser(auth.currentUser?.id),
-        child: const MyOrdersScreen(),
-      ),
+      myOrders => const MyOrdersScreen(),
       profile || adminProfile => const ProfileScreen(),
       wishlist => const WishlistScreen(),
       productDetail => ChangeNotifierProvider<ProductDetailProvider>(
         create: (_) => ProductDetailProvider(
-          ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: const ProductDao(),
-          ),
+          ProductRepository(),
           arguments is int ? arguments : null,
         )..load(),
         child: const ProductDetailScreen(),
       ),
       checkout => ChangeNotifierProvider<CheckoutProvider>(
-        create: (_) => CheckoutProvider(
-          OrderRepository(
-            database: () => DatabaseHelper.instance.database,
-            orderDao: const OrderDao(),
-          ),
-        ),
+        create: (_) => CheckoutProvider(OrderRepository()),
         child: const CheckoutScreen(),
       ),
       orderSuccess => _withOrder(arguments, const OrderSuccessScreen()),
       orderDetail => _withOrder(arguments, const OrderDetailScreen()),
 
       adminDashboard => ChangeNotifierProvider<AdminDashboardProvider>(
-        create: (_) => AdminDashboardProvider(
-          AdminDashboardRepository(
-            database: () => DatabaseHelper.instance.database,
-            dashboardDao: const AdminDashboardDao(),
-          ),
-        )..load(),
+        create: (_) =>
+            AdminDashboardProvider(AdminDashboardRepository())..load(),
         child: const AdminDashboardScreen(),
       ),
       adminProducts => ChangeNotifierProvider<AdminProductProvider>(
-        create: (_) => AdminProductProvider(
-          ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: const ProductDao(),
-          ),
-        )..loadInitial(),
+        create: (_) => AdminProductProvider(ProductRepository())..loadInitial(),
         child: const AdminProductsScreen(),
       ),
       adminProductForm => ChangeNotifierProvider<AdminProductFormProvider>(
         create: (_) => AdminProductFormProvider(
-          ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: const ProductDao(),
-          ),
+          ProductRepository(),
           productId: arguments is int ? arguments : null,
         ),
         child: const AdminProductFormScreen(),
@@ -226,11 +155,7 @@ abstract final class AppRoutes {
       devMenu => const DevMenuScreen(),
       dbCheck => const DbCheckScreen(),
       widgetCatalog => const WidgetCatalogScreen(),
-      _ => PlaceholderScreen(
-        code: '404',
-        title: 'Không tìm thấy màn "$name"',
-        owner: '—',
-      ),
+      _ => NotFoundScreen(routeName: name),
     };
   }
 
@@ -238,10 +163,7 @@ abstract final class AppRoutes {
   static Widget _withOrder(Object? arguments, Widget child) {
     return ChangeNotifierProvider<OrderDetailProvider>(
       create: (context) => OrderDetailProvider(
-        OrderRepository(
-          database: () => DatabaseHelper.instance.database,
-          orderDao: const OrderDao(),
-        ),
+        OrderRepository(),
         orderId: arguments is int ? arguments : null,
         userId: context.read<AuthProvider>().currentUser?.id,
       )..load(),

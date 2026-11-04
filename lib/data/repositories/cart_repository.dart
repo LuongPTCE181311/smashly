@@ -1,13 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../core/constants/app_rules.dart';
+import '../../core/database/database_helper.dart';
 import '../../core/utils/app_exception.dart';
+import '../../core/utils/db_guard.dart';
 import '../daos/cart_dao.dart';
 import '../models/cart_item.dart';
 
 class CartRepository {
-  static const maxQuantityPerLine = 99;
-
   /// Error for [size] against the sellable [sizes]; null = valid.
   /// Shared by add-to-cart and checkout (a size may be removed after the item
   /// is already in the cart).
@@ -20,17 +20,24 @@ class CartRepository {
     return null;
   }
 
-  const CartRepository({required this._database, required this._cartDao});
+  const CartRepository({
+    this._database = DatabaseHelper.open,
+    this._cartDao = const CartDao(),
+  });
 
-  final Future<Database> Function() _database;
+  final DatabaseOpener _database;
   final CartDao _cartDao;
 
   Future<List<CartItem>> loadItems(int userId) {
-    return _guard('loadItems', 'Không thể tải giỏ hàng', () async {
-      final db = await _database();
-      final cartId = await _cartDao.getOrCreateCartId(db, userId);
-      return _cartDao.findItems(db, cartId);
-    });
+    return runDb(
+      'CartRepository.loadItems',
+      'Không thể tải giỏ hàng',
+      () async {
+        final db = await _database();
+        final cartId = await _cartDao.getOrCreateCartId(db, userId);
+        return _cartDao.findItems(db, cartId);
+      },
+    );
   }
 
   /// Adds to the cart; same product + size accumulates, never above stock.
@@ -43,73 +50,93 @@ class CartRepository {
     String size = '',
   }) async {
     if (quantity < 1) throw const AppException('Số lượng phải từ 1 trở lên');
-    return _guard('addToCart', 'Không thể thêm vào giỏ hàng', () async {
-      final db = await _database();
-      await db.transaction((txn) async {
-        final stock = await _requireStock(txn, productId);
-        final sizeError = sizeProblem(
-          await _cartDao.findSizes(txn, productId),
-          size,
-        );
-        if (sizeError != null) throw AppException(sizeError);
-        final cartId = await _cartDao.getOrCreateCartId(txn, userId);
-        final line = await _cartDao.findLine(txn, cartId, productId, size);
-        final total = (line?.quantity ?? 0) + quantity;
-        _checkStock(stock, total);
-
-        if (line == null) {
-          await _cartDao.insertLine(
-            txn,
-            cartId: cartId,
-            productId: productId,
-            quantity: quantity,
-            size: size,
+    return runDb(
+      'CartRepository.addToCart',
+      'Không thể thêm vào giỏ hàng',
+      () async {
+        final db = await _database();
+        await db.transaction((txn) async {
+          final stock = await _requireStock(txn, productId);
+          final sizeError = sizeProblem(
+            await _cartDao.findSizes(txn, productId),
+            size,
           );
-        } else {
-          await _cartDao.updateQuantity(txn, line.id, total);
-        }
-      });
-    });
+          if (sizeError != null) throw AppException(sizeError);
+          final cartId = await _cartDao.getOrCreateCartId(txn, userId);
+          final line = await _cartDao.findLine(txn, cartId, productId, size);
+          final total = (line?.quantity ?? 0) + quantity;
+          _checkStock(stock, total);
+
+          if (line == null) {
+            await _cartDao.insertLine(
+              txn,
+              cartId: cartId,
+              productId: productId,
+              quantity: quantity,
+              size: size,
+            );
+          } else {
+            await _cartDao.updateQuantity(txn, line.id, total);
+          }
+        });
+      },
+    );
   }
 
   Future<void> setQuantity(CartItem item, int quantity) async {
     if (quantity < 1) throw const AppException('Số lượng phải từ 1 trở lên');
-    return _guard('setQuantity', 'Không thể đổi số lượng', () async {
-      final db = await _database();
-      await db.transaction((txn) async {
-        _checkStock(await _requireStock(txn, item.productId), quantity);
-        await _cartDao.updateQuantity(txn, item.id, quantity);
-      });
-    });
+    return runDb(
+      'CartRepository.setQuantity',
+      'Không thể đổi số lượng',
+      () async {
+        final db = await _database();
+        await db.transaction((txn) async {
+          _checkStock(await _requireStock(txn, item.productId), quantity);
+          await _cartDao.updateQuantity(txn, item.id, quantity);
+        });
+      },
+    );
   }
 
   Future<void> setSelected(CartItem item, bool selected) {
-    return _guard('setSelected', 'Không thể cập nhật lựa chọn', () async {
-      await _cartDao.setSelected(await _database(), item.id, selected);
-    });
+    return runDb(
+      'CartRepository.setSelected',
+      'Không thể cập nhật lựa chọn',
+      () async {
+        await _cartDao.setSelected(await _database(), item.id, selected);
+      },
+    );
   }
 
   Future<void> setAllSelected(int userId, bool selected) {
-    return _guard('setAllSelected', 'Không thể cập nhật lựa chọn', () async {
-      final db = await _database();
-      final cartId = await _cartDao.getOrCreateCartId(db, userId);
-      await _cartDao.setAllSelected(db, cartId, selected);
-    });
+    return runDb(
+      'CartRepository.setAllSelected',
+      'Không thể cập nhật lựa chọn',
+      () async {
+        final db = await _database();
+        final cartId = await _cartDao.getOrCreateCartId(db, userId);
+        await _cartDao.setAllSelected(db, cartId, selected);
+      },
+    );
   }
 
   /// Removes one or many cart lines at once (a single DELETE, all or nothing).
   Future<void> removeMany(List<CartItem> items) {
-    return _guard('removeMany', 'Không thể xóa sản phẩm', () async {
-      await _cartDao.deleteLines(await _database(), [
-        for (final item in items) item.id,
-      ]);
-    });
+    return runDb(
+      'CartRepository.removeMany',
+      'Không thể xóa sản phẩm',
+      () async {
+        await _cartDao.deleteLines(await _database(), [
+          for (final item in items) item.id,
+        ]);
+      },
+    );
   }
 
   /// Undo for a removal: re-inserts every line with its quantity, size and
   /// selection in one transaction (restores everything or inserts nothing).
   Future<void> restoreMany(int userId, List<CartItem> items) {
-    return _guard('restoreMany', 'Không thể hoàn tác', () async {
+    return runDb('CartRepository.restoreMany', 'Không thể hoàn tác', () async {
       final db = await _database();
       await db.transaction((txn) async {
         final cartId = await _cartDao.getOrCreateCartId(txn, userId);
@@ -140,21 +167,10 @@ class CartRepository {
     if (wanted > stock) {
       throw AppException('Chỉ còn $stock sản phẩm trong kho');
     }
-    if (wanted > maxQuantityPerLine) {
-      throw const AppException('Tối đa $maxQuantityPerLine sản phẩm mỗi dòng');
-    }
-  }
-
-  Future<T> _guard<T>(
-    String action,
-    String fallback,
-    Future<T> Function() body,
-  ) async {
-    try {
-      return await body();
-    } on DatabaseException catch (error) {
-      debugPrint('CartRepository.$action: $error');
-      throw AppException(fallback);
+    if (wanted > AppRules.maxQuantityPerLine) {
+      throw const AppException(
+        'Tối đa ${AppRules.maxQuantityPerLine} sản phẩm mỗi dòng',
+      );
     }
   }
 }

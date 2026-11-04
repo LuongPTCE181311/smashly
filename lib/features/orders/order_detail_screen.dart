@@ -10,6 +10,7 @@ import '../../core/utils/date_formatter.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../data/models/order.dart';
 import '../../providers/order_detail_provider.dart';
+import '../../providers/order_provider.dart';
 import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/order_status_badge.dart';
 import '../../shared/widgets/states/empty_state.dart';
@@ -61,6 +62,7 @@ class OrderDetailScreen extends StatelessWidget {
     final order = provider.order;
     if (order == null) return;
     final messenger = ScaffoldMessenger.of(context);
+    final orders = context.read<OrderProvider>();
 
     final confirmed = await AppDialog.confirm(
       context,
@@ -76,6 +78,7 @@ class OrderDetailScreen extends StatelessWidget {
     if (!confirmed) return;
 
     final error = await provider.cancelOrder();
+    if (error == null) orders.refresh();
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(

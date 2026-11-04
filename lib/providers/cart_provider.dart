@@ -6,6 +6,7 @@ import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/cart_item.dart';
 import '../data/repositories/cart_repository.dart';
+import 'base_provider.dart';
 
 /// Cart of the signed-in user. It lives for the whole app, so it MUST be told
 /// when the user changes: main.dart wires it to AuthProvider with a
@@ -13,7 +14,7 @@ import '../data/repositories/cart_repository.dart';
 ///
 /// Action methods return `String?`: `null` means success, otherwise a
 /// Vietnamese message the screen shows in a SnackBar.
-class CartProvider extends ChangeNotifier {
+class CartProvider extends BaseProvider {
   CartProvider(this._repository);
 
   final CartRepository _repository;
@@ -24,9 +25,8 @@ class CartProvider extends ChangeNotifier {
   List<CartItem> _items = [];
   String? _errorMessage;
 
-  /// Bumped on every user change to discard a late result of an older load.
-  int _generation = 0;
-  bool _disposed = false;
+  // Tăng mỗi lần tải mới; kết quả mang số cũ thì bỏ qua.
+  int _loadId = 0;
 
   List<CartItem> _lastRemoved = const [];
 
@@ -49,20 +49,21 @@ class CartProvider extends ChangeNotifier {
   bool get hasUnavailableSelected =>
       selectedItems.any((i) => i.stock <= 0 || i.quantity > i.stock);
 
-  /// Called when the user changes or signs out: clears the old cart from memory
-  /// and loads the new user's cart. Runs during build, so it never notifies sync.
+  /// Đổi người dùng: xóa dữ liệu cũ rồi tải lại cho [userId] (null = đã đăng xuất).
   void updateUser(int? userId) {
     if (userId == _userId) return;
     _userId = userId;
-    _generation++;
+    _loadId++;
     _items = [];
     _lastRemoved = const [];
     _errorMessage = null;
     _status = userId == null ? ViewStatus.empty : ViewStatus.initial;
+    // Hàm này chạy trong lúc ProxyProvider build nên không được notify ngay.
     Future.microtask(() {
+      if (userId != _userId) return;
       if (userId == null) {
-        _notify();
-      } else if (userId == _userId) {
+        notify();
+      } else {
         load();
       }
     });
@@ -71,21 +72,21 @@ class CartProvider extends ChangeNotifier {
   Future<void> load() async {
     final userId = _userId;
     if (userId == null) return;
-    final generation = _generation;
+    final loadId = _loadId;
     _status = ViewStatus.loading;
     _errorMessage = null;
-    _notify();
+    notify();
     try {
       final items = await _repository.loadItems(userId);
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       _items = items;
       _status = items.isEmpty ? ViewStatus.empty : ViewStatus.success;
     } catch (error) {
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       _status = ViewStatus.error;
-      _errorMessage = _messageOf(error, 'Không thể tải giỏ hàng');
+      _errorMessage = errorMessageOf(error, 'Không thể tải giỏ hàng');
     }
-    _notify();
+    notify();
   }
 
   /// Called by Product Detail. `size = ''` when the product has no size.
@@ -104,7 +105,7 @@ class CartProvider extends ChangeNotifier {
         size: size,
       );
     } catch (error) {
-      return _messageOf(error, 'Không thể thêm vào giỏ hàng');
+      return errorMessageOf(error, 'Không thể thêm vào giỏ hàng');
     }
     await _reload(userId);
     return null;
@@ -123,7 +124,7 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.setQuantity(item, quantity);
     } catch (error) {
-      return _messageOf(error, 'Không thể đổi số lượng');
+      return errorMessageOf(error, 'Không thể đổi số lượng');
     }
     _replace(item.id, (i) => i.copyWith(quantity: quantity));
     return null;
@@ -134,7 +135,7 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.setSelected(item, selected);
     } catch (error) {
-      return _messageOf(error, 'Không thể cập nhật lựa chọn');
+      return errorMessageOf(error, 'Không thể cập nhật lựa chọn');
     }
     _replace(item.id, (i) => i.copyWith(isSelected: selected));
     return null;
@@ -146,10 +147,10 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.setAllSelected(userId, selected);
     } catch (error) {
-      return _messageOf(error, 'Không thể cập nhật lựa chọn');
+      return errorMessageOf(error, 'Không thể cập nhật lựa chọn');
     }
     _items = [for (final i in _items) i.copyWith(isSelected: selected)];
-    _notify();
+    notify();
     return null;
   }
 
@@ -170,7 +171,7 @@ class CartProvider extends ChangeNotifier {
         if (!ids.contains(item.id)) item,
     ];
     _refreshStatus();
-    _notify();
+    notify();
     try {
       await _repository.removeMany([for (final (_, item) in removed) item]);
     } catch (error) {
@@ -181,8 +182,8 @@ class CartProvider extends ChangeNotifier {
       }
       _items = restored;
       _refreshStatus();
-      _notify();
-      return _messageOf(error, 'Không thể xóa sản phẩm');
+      notify();
+      return errorMessageOf(error, 'Không thể xóa sản phẩm');
     }
     _lastRemoved = [for (final (_, item) in removed) item];
     return null;
@@ -196,7 +197,7 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.restoreMany(userId, removed);
     } catch (error) {
-      return _messageOf(error, 'Không thể hoàn tác');
+      return errorMessageOf(error, 'Không thể hoàn tác');
     }
     await _reload(userId);
     return null;
@@ -204,46 +205,27 @@ class CartProvider extends ChangeNotifier {
 
   /// Reloads without flashing the loading screen (after add / undo).
   Future<void> _reload(int userId) async {
-    final generation = _generation;
+    final loadId = _loadId;
     try {
       final items = await _repository.loadItems(userId);
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       _items = items;
       _refreshStatus();
     } catch (error) {
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       debugPrint('CartProvider._reload: $error');
     }
-    _notify();
+    notify();
   }
 
   void _replace(int id, CartItem Function(CartItem) change) {
     final index = _items.indexWhere((i) => i.id == id);
     if (index < 0) return;
     _items = [..._items]..[index] = change(_items[index]);
-    _notify();
+    notify();
   }
 
   void _refreshStatus() {
     _status = _items.isEmpty ? ViewStatus.empty : ViewStatus.success;
-  }
-
-  /// Catches Error too (see AuthProvider._handleError): unknown errors are generic.
-  String _messageOf(Object error, String fallback) {
-    if (error is AppException && error.message.isNotEmpty) {
-      return error.message;
-    }
-    debugPrint('CartProvider: $error');
-    return fallback;
-  }
-
-  void _notify() {
-    if (!_disposed) notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
   }
 }

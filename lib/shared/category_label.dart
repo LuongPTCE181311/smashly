@@ -1,5 +1,5 @@
-/// Tên danh mục tiếng Việt (DB lưu tiếng Anh, giống màn Shop). Dùng ở S14, S15.
-String adminCategoryLabel(String name) {
+/// Tên tiếng Việt của danh mục; DB lưu tên tiếng Anh, tên lạ giữ nguyên.
+String categoryLabel(String name) {
   return switch (name) {
     'Rackets' => 'Vợt',
     'Shoes' => 'Giày',

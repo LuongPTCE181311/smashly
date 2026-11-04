@@ -1,4 +1,4 @@
-/// Điều kiện lọc danh sách sản phẩm ở màn Admin Products (S14).
+/// Điều kiện lọc danh sách sản phẩm ở màn Admin Products.
 ///
 /// Khác [ProductQuery] của Shop: lấy cả sản phẩm đang ẩn (`is_active = 0`)
 /// và có thêm cờ [onlyHidden] cho chip "Đang ẩn".

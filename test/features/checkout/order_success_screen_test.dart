@@ -7,6 +7,7 @@ import 'package:smashly/data/models/order.dart';
 import 'package:smashly/data/repositories/order_repository.dart';
 import 'package:smashly/features/checkout/order_success_screen.dart';
 import 'package:smashly/providers/order_detail_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 
 final _order = Order(
@@ -46,24 +47,27 @@ Future<List<String>> _pump(
 ) async {
   final routes = <String>[];
   await tester.pumpWidget(
-    MaterialApp(
-      theme: AppTheme.light,
-      home: const Scaffold(body: Text('shell')),
-      onGenerateRoute: (settings) {
-        routes.add('${settings.name}:${settings.arguments}');
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (_) => switch (settings.name) {
-            '/checkout' => const Scaffold(body: Text('checkout screen')),
-            AppRoutes.orderSuccess => ChangeNotifierProvider(
-              create: (_) =>
-                  OrderDetailProvider(repo, orderId: 42, userId: 2)..load(),
-              child: const OrderSuccessScreen(),
-            ),
-            _ => Scaffold(body: Text('route ${settings.name}')),
-          },
-        );
-      },
+    ChangeNotifierProvider<ShellTabProvider>(
+      create: (_) => ShellTabProvider(),
+      child: MaterialApp(
+        theme: AppTheme.light,
+        home: const Scaffold(body: Text('shell')),
+        onGenerateRoute: (settings) {
+          routes.add('${settings.name}:${settings.arguments}');
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (_) => switch (settings.name) {
+              '/checkout' => const Scaffold(body: Text('checkout screen')),
+              AppRoutes.orderSuccess => ChangeNotifierProvider(
+                create: (_) =>
+                    OrderDetailProvider(repo, orderId: 42, userId: 2)..load(),
+                child: const OrderSuccessScreen(),
+              ),
+              _ => Scaffold(body: Text('route ${settings.name}')),
+            },
+          );
+        },
+      ),
     ),
   );
   final navigator = tester.state<NavigatorState>(find.byType(Navigator));

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/constants/enums.dart';
+import '../../core/database/database_helper.dart';
 import '../../core/services/session_service.dart';
 import '../../core/utils/app_exception.dart';
 import '../../core/utils/password_hasher.dart';
@@ -12,17 +13,17 @@ import '../models/user.dart';
 
 class AuthRepository {
   const AuthRepository({
-    required this._database,
-    required this._userDao,
-    required this._cartDao,
-    required this._sessionService,
-    required this._resetDatabase,
+    this._database = DatabaseHelper.open,
+    this._userDao = const UserDao(),
+    this._cartDao = const CartDao(),
+    this._sessionService = const SessionService(),
+    this._resetDatabase = DatabaseHelper.reset,
   });
 
   static const String accountGoneField = 'account';
   static const String accountGoneMessage = 'Tài khoản không còn tồn tại';
 
-  final Future<Database> Function() _database;
+  final DatabaseOpener _database;
   final UserDao _userDao;
   final CartDao _cartDao;
   final SessionService _sessionService;

@@ -41,6 +41,21 @@ void main() {
     }
   }
 
+  test('updateUser không notify đồng bộ, tải ở microtask', () async {
+    var calls = 0;
+    provider.addListener(() => calls++);
+
+    provider.updateUser(SeedUserIds.customer);
+
+    expect(calls, 0);
+    expect(provider.status, ViewStatus.initial);
+
+    await settle();
+
+    expect(provider.status, ViewStatus.success);
+    expect(calls, greaterThan(0));
+  });
+
   test('đăng nhập customer: tải 4 đơn, lọc đúng theo trạng thái', () async {
     provider.updateUser(SeedUserIds.customer);
     await settle();

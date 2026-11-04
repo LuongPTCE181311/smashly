@@ -12,7 +12,7 @@ import '../../routes/app_routes.dart';
 import '../../shared/widgets/app_logo.dart';
 import '../../shared/widgets/buttons/primary_button.dart';
 
-/// S01 — mở DB + khôi phục phiên (qua [AuthProvider.restoreSession]) rồi
+/// Màn khởi động: mở DB + khôi phục phiên (qua [AuthProvider.restoreSession]) rồi
 /// chuyển đúng màn theo role. Lỗi khởi tạo → thông báo + nút Thử lại.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -138,8 +138,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         'Elevate Your Game.',
                         style: AppTextStyles.body.copyWith(
-                          // TODO(theme): xin Lượng token onDarkMuted thay cho alpha tự chọn.
-                          color: AppColors.onDark.withValues(alpha: 0.72),
+                          color: AppColors.onDarkMuted,
                         ),
                       ),
                     ],
@@ -160,8 +159,7 @@ class _SplashScreenState extends State<SplashScreen>
             minHeight: AppSpacing.xs,
             borderRadius: AppRadius.smAll,
             color: AppColors.primary,
-            // TODO(theme): xin Lượng token cho nền thanh tiến trình trên nền tối.
-            backgroundColor: AppColors.onDark.withValues(alpha: 0.12),
+            backgroundColor: AppColors.onDarkSubtle,
             semanticsLabel: 'Đang khởi động',
           ),
         ),
@@ -170,7 +168,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   /// Bố cục lỗi riêng: ErrorState/EmptyState dùng chữ màu ink, không đọc được
-  /// trên nền tối (S10).
+  /// trên nền tối.
   Widget _buildError() {
     return Center(
       child: SingleChildScrollView(
@@ -193,10 +191,7 @@ class _SplashScreenState extends State<SplashScreen>
             Text(
               'Kiểm tra bộ nhớ trống của máy rồi thử lại.',
               textAlign: TextAlign.center,
-              style: AppTextStyles.body.copyWith(
-                // TODO(theme): xin Lượng token onDarkMuted thay cho alpha tự chọn.
-                color: AppColors.onDark.withValues(alpha: 0.72),
-              ),
+              style: AppTextStyles.body.copyWith(color: AppColors.onDarkMuted),
             ),
             const SizedBox(height: AppSpacing.xl),
             PrimaryButton(label: 'Thử lại', onPressed: _start, expanded: false),

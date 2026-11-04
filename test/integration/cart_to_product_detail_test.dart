@@ -21,6 +21,7 @@ import 'package:smashly/features/product/widgets/add_to_cart_bar.dart';
 import 'package:smashly/features/shell/app_tab.dart';
 import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/cart_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -78,6 +79,7 @@ Future<CartProvider> _pumpApp(WidgetTester tester, AuthProvider auth) async {
   await tester.pumpWidget(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ShellTabProvider()),
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
           create: (_) => cart = CartProvider(cartRepository),

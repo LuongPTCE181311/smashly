@@ -7,12 +7,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 
-import '../../data/models/category.dart';
 import '../../data/models/product_query.dart';
 
 import '../../providers/shop_provider.dart';
 import '../../routes/app_routes.dart';
 
+import '../../shared/category_label.dart';
 import '../../shared/widgets/product_card.dart';
 import '../../shared/widgets/states/empty_state.dart';
 import '../../shared/widgets/states/error_state.dart';
@@ -169,7 +169,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
           for (final category in shop.categories)
             _categoryChip(
-              label: _categoryName(category),
+              label: categoryLabel(category.name),
               categoryId: category.id,
               selected: shop.query.categoryId == category.id,
             ),
@@ -214,22 +214,6 @@ class _ShopScreenState extends State<ShopScreen> {
         shape: RoundedRectangleBorder(borderRadius: AppRadius.smAll),
       ),
     );
-  }
-
-  String _categoryName(Category category) {
-    return switch (category.name) {
-      'Rackets' => 'Vợt',
-      'Shoes' => 'Giày',
-      'Shirts' => 'Áo',
-      'Shorts' => 'Quần',
-      'Socks' => 'Tất',
-      'Bags' => 'Túi',
-      'Grips' => 'Quấn cán',
-      'Strings' => 'Cước',
-      'Nets' => 'Lưới',
-      'Accessories' => 'Phụ kiện',
-      _ => category.name,
-    };
   }
 
   // ==============================

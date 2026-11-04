@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:smashly/core/database/database_helper.dart';
 import 'package:smashly/core/database/db_schema.dart';
+import 'package:smashly/data/repositories/product_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -26,6 +27,20 @@ void main() {
     await databaseFactory.setDatabasesPath(originalDatabasesPath);
     await tempDir.delete(recursive: true);
   });
+
+  test('open trả cùng Future với instance.database', () async {
+    final opening = DatabaseHelper.open();
+    expect(identical(opening, DatabaseHelper.instance.database), isTrue);
+    await opening;
+  });
+
+  test(
+    'Repository dùng DB của DatabaseHelper khi không truyền database',
+    () async {
+      final categories = await const ProductRepository().getCategories();
+      expect(categories, hasLength(10));
+    },
+  );
 
   test('mở DB lỗi thật → gọi lại mở được (không giữ Future đã lỗi)', () async {
     // Một THƯ MỤC trùng tên file DB: SQLite không mở được → lỗi thật, không tự tạo.

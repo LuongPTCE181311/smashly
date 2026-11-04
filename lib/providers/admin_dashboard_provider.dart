@@ -5,13 +5,14 @@ import '../core/utils/app_exception.dart';
 import '../data/models/admin_dashboard.dart';
 import '../data/models/order.dart';
 import '../data/repositories/admin_dashboard_repository.dart';
+import 'base_provider.dart';
 
-/// State của màn Admin Dashboard (S13 · UC16): 4 thẻ số liệu, sắp hết hàng,
+/// State của màn Admin Dashboard (UC16): 4 thẻ số liệu, sắp hết hàng,
 /// 5 đơn gần đây.
 ///
 /// Dashboard luôn có 4 thẻ nên không có [ViewStatus.empty] toàn màn; "trống"
 /// chỉ xảy ra ở từng mục (xem [hasLowStock], [hasRecentOrders]).
-class AdminDashboardProvider extends ChangeNotifier {
+class AdminDashboardProvider extends BaseProvider {
   AdminDashboardProvider(this._repository);
 
   final AdminDashboardRepository _repository;
@@ -24,10 +25,8 @@ class AdminDashboardProvider extends ChangeNotifier {
   OrderStatus? _updatingStatus;
   String? _statusError;
 
-  // Số thứ tự lần tải, tránh kết quả cũ ghi đè kết quả mới.
-  int _requestId = 0;
-
-  bool _disposed = false;
+  // Tăng mỗi lần tải mới; kết quả mang số cũ thì bỏ qua.
+  int _loadId = 0;
 
   // ===== GETTERS =====
 
@@ -47,31 +46,31 @@ class AdminDashboardProvider extends ChangeNotifier {
   /// Tải toàn bộ dashboard. [showLoading] = false khi kéo để làm mới hoặc
   /// quay lại từ Form, để màn không nháy sang trạng thái loading.
   Future<void> load({bool showLoading = true}) async {
-    if (_disposed) return;
+    if (isDisposed) return;
 
-    final requestId = ++_requestId;
+    final loadId = ++_loadId;
 
     if (showLoading) {
       _status = ViewStatus.loading;
       _errorMessage = null;
-      notifyListeners();
+      notify();
     }
 
     try {
       final result = await _repository.getDashboard();
-      if (_disposed || requestId != _requestId) return;
+      if (isDisposed || loadId != _loadId) return;
 
       _dashboard = result;
       _status = ViewStatus.success;
       _errorMessage = null;
     } on AppException catch (e) {
-      if (_disposed || requestId != _requestId) return;
+      if (isDisposed || loadId != _loadId) return;
 
       _status = ViewStatus.error;
       _errorMessage = e.message;
     }
 
-    notifyListeners();
+    notify();
   }
 
   /// Pull to refresh và quay lại từ Form sản phẩm.
@@ -86,11 +85,11 @@ class AdminDashboardProvider extends ChangeNotifier {
   /// 4 thẻ số liệu. Trả về true nếu đổi được; lỗi nằm ở [statusError].
   /// Đang lưu mà bấm thêm thì bỏ qua (trả false).
   Future<bool> updateOrderStatus(Order order, OrderStatus to) async {
-    if (_disposed || isUpdatingStatus) return false;
+    if (isDisposed || isUpdatingStatus) return false;
 
     _updatingStatus = to;
     _statusError = null;
-    notifyListeners();
+    notify();
 
     try {
       await _repository.updateOrderStatus(order, to);
@@ -105,7 +104,7 @@ class AdminDashboardProvider extends ChangeNotifier {
       return false;
     } finally {
       _updatingStatus = null;
-      if (!_disposed) notifyListeners();
+      notify();
     }
   }
 
@@ -113,13 +112,6 @@ class AdminDashboardProvider extends ChangeNotifier {
   void clearStatusError() {
     if (_statusError == null) return;
     _statusError = null;
-    notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    _requestId++;
-    super.dispose();
+    notify();
   }
 }

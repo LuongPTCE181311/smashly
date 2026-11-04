@@ -10,12 +10,12 @@ import '../../core/utils/app_exception.dart';
 import '../../data/models/product.dart';
 import '../../data/models/racket_spec.dart';
 import '../../providers/admin_product_form_provider.dart';
+import '../../shared/category_label.dart';
 import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/buttons/primary_button.dart';
 import '../../shared/widgets/inputs/app_text_field.dart';
 import '../../shared/widgets/states/error_state.dart';
 import '../../shared/widgets/states/loading_state.dart';
-import 'admin_category_label.dart';
 import 'widgets/product_image_picker_sheet.dart';
 
 // Lựa chọn thông số vợt: giá trị lưu DB (khớp CHECK trong db_schema) → chữ hiển thị.
@@ -43,7 +43,7 @@ const _styleOptions = {
   'DEFENSE': 'Phòng thủ',
 };
 
-/// S15 — Admin Product Form (UC18): một màn dùng chung cho thêm và sửa
+/// Admin Product Form (UC18): một màn dùng chung cho thêm và sửa
 /// sản phẩm. Thêm hay sửa do [AdminProductFormProvider.isEditing] quyết định.
 class AdminProductFormScreen extends StatefulWidget {
   const AdminProductFormScreen({super.key});
@@ -345,7 +345,7 @@ class _AdminProductFormScreenState extends State<AdminProductFormScreen> {
             for (final category in form.categories)
               DropdownMenuItem(
                 value: category.id,
-                child: Text(adminCategoryLabel(category.name)),
+                child: Text(categoryLabel(category.name)),
               ),
           ],
           validator: (value) => value == null ? 'Vui lòng chọn danh mục' : null,
@@ -639,7 +639,7 @@ class _AdminProductFormScreenState extends State<AdminProductFormScreen> {
       return;
     }
 
-    // 4. Thành công → báo và quay về màn trước (S14 / Dashboard tự tải lại).
+    // 4. Thành công → báo và quay về màn trước (danh sách sản phẩm / Dashboard tự tải lại).
     messenger
       ..clearSnackBars()
       ..showSnackBar(const SnackBar(content: Text('Đã lưu sản phẩm')));

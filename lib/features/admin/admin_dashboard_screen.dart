@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/app_rules.dart';
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/currency_formatter.dart';
-import '../../data/daos/admin_dashboard_dao.dart';
 import '../../data/models/admin_dashboard.dart';
 import '../../data/models/order.dart';
 import '../../providers/admin_dashboard_provider.dart';
@@ -22,7 +22,7 @@ import 'widgets/low_stock_tile.dart';
 import 'widgets/order_status_sheet.dart';
 import 'widgets/recent_order_tile.dart';
 
-/// S13 — Admin Dashboard (UC16): 4 thẻ số liệu, sắp hết hàng, 5 đơn gần đây.
+/// Admin Dashboard (UC16): 4 thẻ số liệu, sắp hết hàng, 5 đơn gần đây.
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
@@ -102,7 +102,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   icon: Icons.inventory_2_outlined,
                   message:
                       'Kho đang ổn: không có sản phẩm nào còn '
-                      '≤ ${AdminDashboardDao.lowStockThreshold}.',
+                      '≤ ${AppRules.lowStockThreshold}.',
                 ),
           const SizedBox(height: AppSpacing.section),
           const _SectionTitle(
@@ -139,7 +139,7 @@ class AdminDashboardScreen extends StatelessWidget {
 
   // ===== ĐIỀU HƯỚNG: quay về thì làm mới số liệu =====
 
-  /// Mở S15 ở chế độ sửa [productId].
+  /// Mở form sản phẩm ở chế độ sửa [productId].
   Future<void> _openForm(BuildContext context, int productId) =>
       _pushAndRefresh(context, AppRoutes.adminProductForm, productId);
 
@@ -346,7 +346,7 @@ class _StatGrid extends StatelessWidget {
         icon: Icons.warning_amber_rounded,
         color: AppColors.warning,
         softColor: AppColors.warningSoft,
-        caption: 'Tồn kho ≤ ${AdminDashboardDao.lowStockThreshold}',
+        caption: 'Tồn kho ≤ ${AppRules.lowStockThreshold}',
       ),
       DashboardStatCard(
         label: 'Đơn chờ xác nhận',

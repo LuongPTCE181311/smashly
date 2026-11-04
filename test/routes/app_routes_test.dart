@@ -15,8 +15,9 @@ import 'package:smashly/features/shell/app_shell.dart';
 import 'package:smashly/features/shell/app_tab.dart';
 import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/cart_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
-import 'package:smashly/routes/placeholder_screen.dart';
+import 'package:smashly/routes/not_found_screen.dart';
 
 import '../features/auth/fake_auth_repository.dart';
 
@@ -25,6 +26,7 @@ import '../features/auth/fake_auth_repository.dart';
 // AppShell đọc CartProvider cho badge; chưa có user nên repository không bị gọi.
 Widget _app(String initialRoute, {AuthProvider? auth}) => MultiProvider(
   providers: [
+    ChangeNotifierProvider(create: (_) => ShellTabProvider()),
     ChangeNotifierProvider<AuthProvider>(
       create: (_) => auth ?? AuthProvider(_newRepo()),
     ),
@@ -82,7 +84,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.byType(PlaceholderScreen), findsOneWidget);
+      expect(find.byType(NotFoundScreen), findsOneWidget);
     });
   }
 
@@ -94,7 +96,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(RegisterScreen), findsOneWidget);
-    expect(find.byType(PlaceholderScreen), findsNothing);
+    expect(find.byType(NotFoundScreen), findsNothing);
   });
 
   testWidgets('route tab mở AppShell ở đúng tab', (tester) async {
@@ -117,12 +119,15 @@ void main() {
     navigator.pushNamed<dynamic>('/route-not-found-test');
     await tester.pumpAndSettle();
 
-    final placeholder = find.byType(PlaceholderScreen);
-    expect(tester.widget<PlaceholderScreen>(placeholder).code, '404');
+    final placeholder = find.byType(NotFoundScreen);
+    expect(
+      tester.widget<NotFoundScreen>(placeholder).routeName,
+      '/route-not-found-test',
+    );
     AppShell.goToTab(tester.element(placeholder), AppTab.cart);
     await tester.pumpAndSettle();
 
-    expect(find.byType(PlaceholderScreen), findsNothing);
+    expect(find.byType(NotFoundScreen), findsNothing);
     final bar = tester.widget<NavigationBar>(find.byType(NavigationBar));
     expect(bar.selectedIndex, AppTab.cart.index);
   });
@@ -155,12 +160,18 @@ void main() {
     navigator.pushNamed<dynamic>('/route-not-found-test');
     await tester.pumpAndSettle();
 
-    final placeholder = find.byType(PlaceholderScreen);
-    expect(tester.widget<PlaceholderScreen>(placeholder).code, '404');
+    final placeholder = find.byType(NotFoundScreen);
+    expect(
+      tester.widget<NotFoundScreen>(placeholder).routeName,
+      '/route-not-found-test',
+    );
     AppShell.goToTab(tester.element(placeholder), AppTab.cart);
     await tester.pumpAndSettle();
 
-    expect(tester.widget<PlaceholderScreen>(placeholder).code, '404');
+    expect(
+      tester.widget<NotFoundScreen>(placeholder).routeName,
+      '/route-not-found-test',
+    );
     expect(navigator.canPop(), isTrue);
     expect(find.byType(NavigationBar), findsNothing);
     expect(tester.takeException(), isNull);

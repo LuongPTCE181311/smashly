@@ -11,6 +11,7 @@ import '../../data/repositories/order_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/checkout_provider.dart';
+import '../../providers/order_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../shared/widgets/buttons/primary_button.dart';
 import '../../shared/widgets/inputs/app_text_field.dart';
@@ -21,7 +22,7 @@ import 'widgets/checkout_section.dart';
 import 'widgets/order_summary_card.dart';
 import 'widgets/payment_method_tile.dart';
 
-/// S08 · Thanh toán. OWNER: Danh.
+/// Màn thanh toán.
 ///
 /// Đặt các món đang chọn trong giỏ. Thông tin nhận hàng điền sẵn từ tài khoản,
 /// 3 phương thức thanh toán chỉ mô phỏng (không có cổng thanh toán thật).
@@ -68,6 +69,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     FocusScope.of(context).unfocus();
 
     final cart = context.read<CartProvider>();
+    final orders = context.read<OrderProvider>();
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
 
@@ -92,6 +94,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
       return;
     }
+    orders.refresh();
     // pushReplacement: Back từ màn thành công không quay lại Checkout.
     navigator.pushReplacementNamed(AppRoutes.orderSuccess, arguments: order.id);
   }

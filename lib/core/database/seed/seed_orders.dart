@@ -1,20 +1,17 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../../constants/app_rules.dart';
 import '../../utils/db_time.dart';
+import '../../utils/order_code.dart';
 import '../db_schema.dart';
 import 'seed_users.dart';
 
-/// OWNER: TV4.
-///
 /// 4 đơn mẫu cho customer@smashly.com, mỗi đơn một trạng thái, để
 /// My Orders và timeline Order Detail có dữ liệu ngay từ đầu.
 /// Ngày tính lùi từ lúc seed -> demo hôm nào cũng trông "mới".
 /// Đơn đặt trực tiếp khi demo sẽ là PENDING -> đủ cả 5 trạng thái.
 ///
 /// Lưu ý: đơn seed KHÔNG trừ tồn kho (chỉ checkout thật mới trừ).
-
-const int freeShippingFrom = 1000000;
-const int shippingFee = 30000;
 
 Future<void> seedOrders(DatabaseExecutor db, DateTime now) async {
   const user = SeedUserIds.customer;
@@ -84,7 +81,9 @@ Future<void> seedOrders(DatabaseExecutor db, DateTime now) async {
         'size': item.size,
       });
     }
-    final fee = subtotal >= freeShippingFrom ? 0 : shippingFee;
+    final fee = subtotal >= AppRules.freeShippingFrom
+        ? 0
+        : AppRules.shippingFee;
 
     DateTime? after(Duration? d) => d == null ? null : o.createdAt.add(d);
     String? time(DateTime? t) => t == null ? null : dbTime(t);
@@ -128,13 +127,6 @@ Future<void> seedOrders(DatabaseExecutor db, DateTime now) async {
     'is_selected': 1,
     'added_at': dbTime(now),
   });
-}
-
-/// Mã đơn dễ đọc: SML-20261005-0007. Checkout thật cũng dùng hàm này.
-String orderCode(DateTime date, int sequence) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  final day = '${date.year}${two(date.month)}${two(date.day)}';
-  return 'SML-$day-${sequence.toString().padLeft(4, '0')}';
 }
 
 class _SeedOrder {

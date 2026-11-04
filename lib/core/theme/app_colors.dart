@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Bảng màu SMASHLY (blueprint mục 21). OWNER: Lượng.
+/// Bảng màu SMASHLY.
 ///
 /// Màn hình chỉ dùng token ở đây, không viết `Color(0xFF...)` trực tiếp.
 /// Cần màu mới → đề xuất qua PR sửa file này.

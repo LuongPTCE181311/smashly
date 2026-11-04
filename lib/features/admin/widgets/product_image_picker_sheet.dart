@@ -5,7 +5,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../product_image_assets.dart';
 
-/// Bottom sheet chọn ảnh sản phẩm từ asset có sẵn (S15), chia nhóm theo
+/// Bottom sheet chọn ảnh sản phẩm từ asset có sẵn, chia nhóm theo
 /// thư mục. Trả về đường dẫn ảnh được chọn, hoặc null nếu đóng sheet.
 ///
 /// ```dart

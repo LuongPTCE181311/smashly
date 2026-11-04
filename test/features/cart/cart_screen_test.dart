@@ -12,6 +12,7 @@ import 'package:smashly/features/cart/widgets/cart_item_tile.dart';
 import 'package:smashly/features/cart/widgets/cart_product_group.dart';
 import 'package:smashly/features/cart/widgets/cart_skeleton.dart';
 import 'package:smashly/providers/cart_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 
 /// In-memory cart. It uses `implements`, so a new public method on
 /// CartRepository makes this file fail to compile (forcing the fake to be updated).
@@ -96,7 +97,10 @@ Future<CartProvider> pumpCart(
   await tester.pumpWidget(
     ChangeNotifierProvider.value(
       value: cart,
-      child: MaterialApp(theme: AppTheme.light, home: const CartScreen()),
+      child: ChangeNotifierProvider<ShellTabProvider>(
+        create: (_) => ShellTabProvider(),
+        child: MaterialApp(theme: AppTheme.light, home: const CartScreen()),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -110,7 +114,10 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
         value: cart,
-        child: MaterialApp(theme: AppTheme.light, home: const CartScreen()),
+        child: ChangeNotifierProvider<ShellTabProvider>(
+          create: (_) => ShellTabProvider(),
+          child: MaterialApp(theme: AppTheme.light, home: const CartScreen()),
+        ),
       ),
     );
     await tester.pump();

@@ -13,30 +13,12 @@ import '../shell/app_tab.dart';
 import 'widgets/my_orders_skeleton.dart';
 import 'widgets/order_card.dart';
 
-class MyOrdersScreen extends StatefulWidget {
+/// Tab Đơn hàng: danh sách đơn của khách, lọc theo trạng thái.
+class MyOrdersScreen extends StatelessWidget {
   const MyOrdersScreen({super.key});
 
+  /// Các tab lọc; null là tab "Tất cả".
   static const filters = <OrderStatus?>[null, ...OrderStatus.values];
-
-  @override
-  State<MyOrdersScreen> createState() => _MyOrdersScreenState();
-}
-
-class _MyOrdersScreenState extends State<MyOrdersScreen> {
-  AppTab? _lastTab;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final tab = AppShell.currentTabOf(context);
-    final reopened =
-        tab == AppTab.orders && _lastTab != null && _lastTab != AppTab.orders;
-    _lastTab = tab;
-    if (!reopened) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<OrderProvider>().refresh();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {

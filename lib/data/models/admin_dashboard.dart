@@ -1,7 +1,7 @@
 import 'order.dart';
 import 'product.dart';
 
-/// 4 thẻ số liệu của Admin Dashboard (S13 · UC16).
+/// 4 thẻ số liệu của Admin Dashboard (UC16).
 class AdminDashboardStats {
   const AdminDashboardStats({
     required this.totalProducts,

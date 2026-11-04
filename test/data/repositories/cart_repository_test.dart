@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smashly/core/constants/app_rules.dart';
 import 'package:smashly/core/database/database_helper.dart';
 import 'package:smashly/core/database/db_schema.dart';
 import 'package:smashly/core/utils/app_exception.dart';
@@ -148,9 +149,9 @@ void main() {
     await setStock(19, 500);
     final item = (await repo.loadItems(customer)).single;
 
-    await repo.setQuantity(item, CartRepository.maxQuantityPerLine);
+    await repo.setQuantity(item, AppRules.maxQuantityPerLine);
     await expectLater(
-      repo.setQuantity(item, CartRepository.maxQuantityPerLine + 1),
+      repo.setQuantity(item, AppRules.maxQuantityPerLine + 1),
       throwsA(
         isA<AppException>().having((e) => e.message, 'message', contains('99')),
       ),

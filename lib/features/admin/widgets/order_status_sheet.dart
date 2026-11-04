@@ -12,7 +12,7 @@ import '../../../shared/widgets/app_dialog.dart';
 import '../../../shared/widgets/buttons/primary_button.dart';
 import '../../../shared/widgets/order_status_badge.dart';
 
-/// Bottom sheet đổi trạng thái đơn (S13 · UC19). Chỉ hiện nút cho các trạng
+/// Bottom sheet đổi trạng thái đơn (UC19). Chỉ hiện nút cho các trạng
 /// thái hợp lệ ([OrderStatus.allowedNextStatuses]).
 ///
 /// Trả về trạng thái mới khi đổi thành công, null nếu đóng sheet.

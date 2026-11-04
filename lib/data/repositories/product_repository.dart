@@ -3,6 +3,7 @@ import 'package:smashly/data/models/product_query.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/constants/enums.dart';
+import '../../core/database/database_helper.dart';
 import '../../core/utils/app_exception.dart';
 import '../daos/product_dao.dart';
 import '../models/admin_product_query.dart';
@@ -12,9 +13,12 @@ import '../models/product_detail.dart';
 import '../models/racket_spec.dart';
 
 class ProductRepository {
-  const ProductRepository({required this._database, required this._productDao});
+  const ProductRepository({
+    this._database = DatabaseHelper.open,
+    this._productDao = const ProductDao(),
+  });
 
-  final Future<Database> Function() _database;
+  final DatabaseOpener _database;
   final ProductDao _productDao;
 
   Future<List<Category>> getCategories() async {

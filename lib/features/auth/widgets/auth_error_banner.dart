@@ -18,8 +18,7 @@ class AuthErrorBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          // TODO(theme): xin Lượng token errorSoft thay cho alpha tự chọn.
-          color: AppColors.error.withValues(alpha: 0.08),
+          color: AppColors.errorSoft,
           borderRadius: AppRadius.mdAll,
         ),
         child: Row(

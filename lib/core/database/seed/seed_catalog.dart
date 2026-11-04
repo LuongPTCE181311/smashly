@@ -3,8 +3,6 @@ import 'package:sqflite/sqflite.dart';
 import '../../utils/db_time.dart';
 import '../db_schema.dart';
 
-/// OWNER: TV5.
-///
 /// Giá là giá demo (VND). Thông số vợt là giá trị tham khảo —
 /// đối chiếu trang chính thức của hãng trước khi demo.
 /// Ảnh: đặt file đúng đường dẫn image_path trong assets/images/products/...

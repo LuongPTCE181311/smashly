@@ -6,6 +6,7 @@ import 'package:smashly/data/models/cart_item.dart';
 import 'package:smashly/features/cart/cart_screen.dart';
 import 'package:smashly/features/cart/widgets/cart_item_tile.dart';
 import 'package:smashly/providers/cart_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 
 import '../features/cart/cart_screen_test.dart' show FakeCartRepository, item;
 
@@ -23,13 +24,16 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
         value: cart,
-        child: MaterialApp(
-          theme: AppTheme.light,
-          home: const CartScreen(),
-          onGenerateRoute: (settings) => MaterialPageRoute<void>(
-            settings: settings,
-            builder: (_) =>
-                Scaffold(appBar: AppBar(), body: const Text('chi tiết')),
+        child: ChangeNotifierProvider<ShellTabProvider>(
+          create: (_) => ShellTabProvider(),
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: const CartScreen(),
+            onGenerateRoute: (settings) => MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) =>
+                  Scaffold(appBar: AppBar(), body: const Text('chi tiết')),
+            ),
           ),
         ),
       ),
@@ -86,12 +90,15 @@ void main() {
         ChangeNotifierProvider.value(
           key: UniqueKey(),
           value: cart,
-          child: MaterialApp(
-            theme: AppTheme.light,
-            home: const CartScreen(),
-            onGenerateRoute: (settings) => MaterialPageRoute<void>(
-              settings: settings,
-              builder: (_) => Scaffold(appBar: AppBar()),
+          child: ChangeNotifierProvider<ShellTabProvider>(
+            create: (_) => ShellTabProvider(),
+            child: MaterialApp(
+              theme: AppTheme.light,
+              home: const CartScreen(),
+              onGenerateRoute: (settings) => MaterialPageRoute<void>(
+                settings: settings,
+                builder: (_) => Scaffold(appBar: AppBar()),
+              ),
             ),
           ),
         ),

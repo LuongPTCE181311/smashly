@@ -19,7 +19,7 @@ import '../../shared/widgets/states/loading_state.dart';
 import '../shell/app_shell.dart';
 import '../shell/app_tab.dart';
 
-/// S09 · Đặt hàng thành công. OWNER: Danh.
+/// Màn đặt hàng thành công.
 ///
 /// Mở bằng `pushReplacementNamed` từ Checkout nên Back không quay lại Checkout
 /// (đơn đã đặt, giỏ đã trống). Nhận `orderId` qua arguments; đơn được nạp lại

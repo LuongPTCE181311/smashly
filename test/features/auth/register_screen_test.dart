@@ -8,6 +8,7 @@ import 'package:smashly/features/auth/register_screen.dart';
 import 'package:smashly/features/auth/widgets/auth_error_banner.dart';
 import 'package:smashly/features/auth/widgets/password_strength_bar.dart';
 import 'package:smashly/providers/auth_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:smashly/shared/widgets/buttons/primary_button.dart';
 import 'package:smashly/shared/widgets/inputs/app_text_field.dart';
@@ -90,25 +91,29 @@ Future<_RouteResult> _pumpRegister(
   await tester.pumpWidget(
     ChangeNotifierProvider(
       create: (_) => AuthProvider(repo),
-      child: MaterialApp(
-        theme: AppTheme.light,
-        home: root
-            ? const RegisterScreen()
-            : Builder(
-                builder: (context) => Scaffold(
-                  body: TextButton(
-                    onPressed: () async {
-                      result.value = await Navigator.of(context).push<dynamic>(
-                        MaterialPageRoute<dynamic>(
-                          builder: (_) => const RegisterScreen(),
-                        ),
-                      );
-                      result.returned = true;
-                    },
-                    child: const Text('Mở Register'),
+      child: ChangeNotifierProvider<ShellTabProvider>(
+        create: (_) => ShellTabProvider(),
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: root
+              ? const RegisterScreen()
+              : Builder(
+                  builder: (context) => Scaffold(
+                    body: TextButton(
+                      onPressed: () async {
+                        result.value = await Navigator.of(context)
+                            .push<dynamic>(
+                              MaterialPageRoute<dynamic>(
+                                builder: (_) => const RegisterScreen(),
+                              ),
+                            );
+                        result.returned = true;
+                      },
+                      child: const Text('Mở Register'),
+                    ),
                   ),
                 ),
-              ),
+        ),
       ),
     ),
   );
@@ -540,13 +545,16 @@ void main() {
         await tester.pumpWidget(
           ChangeNotifierProvider.value(
             value: auth,
-            child: MaterialApp(
-              theme: AppTheme.light,
-              home: ValueListenableBuilder<bool>(
-                valueListenable: visible,
-                builder: (_, show, _) => show
-                    ? const RegisterScreen()
-                    : const Scaffold(body: Text('Màn thay thế')),
+            child: ChangeNotifierProvider<ShellTabProvider>(
+              create: (_) => ShellTabProvider(),
+              child: MaterialApp(
+                theme: AppTheme.light,
+                home: ValueListenableBuilder<bool>(
+                  valueListenable: visible,
+                  builder: (_, show, _) => show
+                      ? const RegisterScreen()
+                      : const Scaffold(body: Text('Màn thay thế')),
+                ),
               ),
             ),
           ),
@@ -584,14 +592,17 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => AuthProvider(repo),
-        child: MaterialApp(
-          theme: AppTheme.light,
-          onGenerateInitialRoutes: (_) => [
-            AppRoutes.onGenerateRoute(
-              const RouteSettings(name: AppRoutes.login),
-            ),
-          ],
-          onGenerateRoute: AppRoutes.onGenerateRoute,
+        child: ChangeNotifierProvider<ShellTabProvider>(
+          create: (_) => ShellTabProvider(),
+          child: MaterialApp(
+            theme: AppTheme.light,
+            onGenerateInitialRoutes: (_) => [
+              AppRoutes.onGenerateRoute(
+                const RouteSettings(name: AppRoutes.login),
+              ),
+            ],
+            onGenerateRoute: AppRoutes.onGenerateRoute,
+          ),
         ),
       ),
     );

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_rules.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/widgets/stock_badge.dart';
 
-/// Tồn kho cho admin (blueprint mục 15): "Kho: 12" · "3 · Sắp hết" · "0 · Hết".
+/// Tồn kho cho admin: "Kho: 12" · "3 · Sắp hết" · "0 · Hết".
 ///
 /// Luôn có số + chữ + icon, màu chỉ để nhấn mạnh — không đọc được màu vẫn
 /// hiểu. Khác [StockBadge] (chữ cho khách: "Còn hàng", "Chỉ còn 3").
@@ -23,7 +24,7 @@ class AdminStockLabel extends StatelessWidget {
         AppColors.error,
         AppColors.errorSoft,
       ),
-      <= StockBadge.lowStockThreshold => (
+      <= AppRules.lowStockThreshold => (
         '$stock · Sắp hết',
         Icons.warning_amber_rounded,
         AppColors.warning,

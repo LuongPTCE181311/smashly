@@ -54,8 +54,7 @@ class AuthHeader extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: AppTextStyles.body.copyWith(
-                      // TODO(theme): xin Lượng token onDarkMuted thay cho alpha tự chọn.
-                      color: AppColors.onDark.withValues(alpha: 0.72),
+                      color: AppColors.onDarkMuted,
                     ),
                   ),
                 ],

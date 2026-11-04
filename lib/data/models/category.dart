@@ -1,3 +1,4 @@
+/// Danh mục sản phẩm.
 class Category {
   const Category({
     required this.id,
@@ -10,6 +11,9 @@ class Category {
   final String name;
   final String iconPath;
   final int sortOrder;
+
+  /// `true` nếu là danh mục vợt (có thông số vợt).
+  bool get isRacket => name == 'Rackets';
 
   factory Category.fromMap(Map<String, Object?> map) {
     return Category(
