@@ -7,6 +7,7 @@ import '../core/utils/app_exception.dart';
 import '../data/models/user.dart';
 import '../data/repositories/auth_repository.dart';
 
+/// Quản lý trạng thái xác thực, phiên đăng nhập và cập nhật hồ sơ.
 class AuthProvider extends ChangeNotifier {
   AuthProvider(this._authRepository);
 
@@ -31,7 +32,8 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isSaving => _isSaving;
   String? get saveErrorMessage => _saveErrorMessage;
-  Map<String, String> get saveFieldErrors => UnmodifiableMapView(_saveFieldErrors);
+  Map<String, String> get saveFieldErrors =>
+      UnmodifiableMapView(_saveFieldErrors);
 
   void clearSaveErrors() {
     if (_saveErrorMessage == null && _saveFieldErrors.isEmpty) return;
@@ -63,38 +65,34 @@ class AuthProvider extends ChangeNotifier {
       // Không hồi sinh phiên nếu user đã đăng xuất trong lúc chờ lưu.
       if (_currentUser?.id == userId) _currentUser = user;
       return true;
-    } on AppException catch (error) {
-      final message = error.message.isEmpty
-          ? 'Không thể lưu lúc này'
-          : error.message;
-      final field = error.field;
+    } catch (error) {
+      final field = error is AppException ? error.field : null;
+      final message = errorMessageOf(error, 'Không thể lưu lúc này');
       if (field == AuthRepository.accountGoneField) {
         if (_currentUser?.id != userId) return false;
         _saveErrorMessage = message;
-        try {
-          await _authRepository.logout();
-        } catch (logoutError) {
-          debugPrint('AuthProvider.updateProfile.logout: $logoutError');
-        } finally {
-          if (_currentUser?.id == userId) {
-            _currentUser = null;
-            _status = ViewStatus.empty;
-          }
-        }
+        await _endSessionQuietly();
       } else if (field == null) {
         _saveErrorMessage = message;
       } else {
         _saveFieldErrors[field] = message;
       }
       return false;
-    } catch (error) {
-      debugPrint('AuthProvider.updateProfile: $error');
-      _saveErrorMessage = 'Không thể lưu lúc này';
-      return false;
     } finally {
       _isSaving = false;
       notifyListeners();
     }
+  }
+
+  /// Tài khoản đã mất nên phiên phải kết thúc kể cả khi xóa phiên lưu trên máy lỗi.
+  Future<void> _endSessionQuietly() async {
+    try {
+      await _authRepository.logout();
+    } catch (error) {
+      debugPrint('AuthProvider._endSessionQuietly: $error');
+    }
+    _currentUser = null;
+    _status = ViewStatus.empty;
   }
 
   Future<void> resetDemoData() async {
@@ -201,17 +199,12 @@ class AuthProvider extends ChangeNotifier {
   /// kẹt ở loading và cờ chặn bấm 2 lần sẽ khóa form vĩnh viễn.
   void _handleError(Object error, String fallback) {
     _status = ViewStatus.error;
-    if (error is AppException) {
-      final message = error.message.isEmpty ? fallback : error.message;
-      final field = error.field;
-      if (field == null) {
-        _errorMessage = message;
-      } else {
-        _fieldErrors[field] = message;
-      }
-      return;
+    final field = error is AppException ? error.field : null;
+    final message = errorMessageOf(error, fallback);
+    if (field == null) {
+      _errorMessage = message;
+    } else {
+      _fieldErrors[field] = message;
     }
-    debugPrint('AuthProvider: $error');
-    _errorMessage = fallback;
   }
 }

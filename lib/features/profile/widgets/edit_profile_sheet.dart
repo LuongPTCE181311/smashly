@@ -27,7 +27,6 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
   late final _address = TextEditingController(text: widget.user.address ?? '');
   final _phoneFocus = FocusNode();
   final _addressFocus = FocusNode();
-  bool _submitting = false;
 
   bool get _hasChanges =>
       _name.text.trim() != widget.user.fullName.trim() ||
@@ -51,29 +50,29 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
 
   Future<void> _save() async {
     final auth = context.read<AuthProvider>();
-    if (_submitting || auth.isSaving || !_hasChanges) return;
+    if (auth.isSaving || !_hasChanges) return;
     if (_formKey.currentState?.validate() != true) return;
     FocusScope.of(context).unfocus();
-    setState(() => _submitting = true);
     final saved = await auth.updateProfile(
       fullName: _name.text,
       phone: _phone.text,
       address: _address.text,
     );
     if (!mounted) return;
-    setState(() => _submitting = false);
     if (!auth.isLoggedIn || saved) Navigator.of(context).pop(saved);
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final saving = auth.isSaving || _submitting;
+    final saving = auth.isSaving;
     final error = auth.saveErrorMessage;
     return PopScope(
       canPop: !saving,
       child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
@@ -138,7 +137,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                     onPressed: !saving && _hasChanges ? _save : null,
                   ),
                   TextButton(
-                    onPressed: saving ? null : () => Navigator.of(context).pop(),
+                    onPressed: saving
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     child: const Text('Hủy'),
                   ),
                 ],

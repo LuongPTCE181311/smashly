@@ -5,12 +5,14 @@ import '../../core/constants/enums.dart';
 import '../../core/database/database_helper.dart';
 import '../../core/services/session_service.dart';
 import '../../core/utils/app_exception.dart';
+import '../../core/utils/db_guard.dart';
 import '../../core/utils/password_hasher.dart';
 import '../../core/utils/validators.dart';
 import '../daos/cart_dao.dart';
 import '../daos/user_dao.dart';
 import '../models/user.dart';
 
+/// Xử lý nghiệp vụ xác thực, phiên đăng nhập và thông tin tài khoản.
 class AuthRepository {
   const AuthRepository({
     this._database = DatabaseHelper.open,
@@ -162,28 +164,29 @@ class AuthRepository {
       if (message != null) throw AppException(message, field: entry.key);
     }
 
-    try {
-      final db = await _database();
-      final rowsAffected = await _userDao.updateProfile(
-        db,
-        userId: userId,
-        fullName: normalizedFullName,
-        phone: normalizedPhone,
-        address: normalizedAddress,
-      );
-      if (rowsAffected == 0) {
-        throw const AppException(accountGoneMessage, field: accountGoneField);
-      }
+    return runDb(
+      'AuthRepository.updateProfile',
+      'Không thể lưu lúc này',
+      () async {
+        final db = await _database();
+        final rowsAffected = await _userDao.updateProfile(
+          db,
+          userId: userId,
+          fullName: normalizedFullName,
+          phone: normalizedPhone,
+          address: normalizedAddress,
+        );
+        if (rowsAffected == 0) {
+          throw const AppException(accountGoneMessage, field: accountGoneField);
+        }
 
-      final user = await _userDao.findById(db, userId);
-      if (user == null) {
-        throw const AppException(accountGoneMessage, field: accountGoneField);
-      }
-      return user;
-    } on DatabaseException catch (error) {
-      debugPrint('AuthRepository.updateProfile: $error');
-      throw const AppException('Không thể lưu lúc này');
-    }
+        final user = await _userDao.findById(db, userId);
+        if (user == null) {
+          throw const AppException(accountGoneMessage, field: accountGoneField);
+        }
+        return user;
+      },
+    );
   }
 
   /// Đổi mật khẩu của [userId] sau khi kiểm tra đúng mật khẩu hiện tại.

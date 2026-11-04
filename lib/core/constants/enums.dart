@@ -7,6 +7,12 @@ enum UserRole {
   /// Giá trị lưu trong cột `users.role`, khớp CHECK constraint trong db_schema.dart.
   final String dbValue;
 
+  /// Nhãn vai trò hiển thị trên giao diện.
+  String get label => switch (this) {
+    UserRole.customer => 'Khách hàng',
+    UserRole.admin => 'Admin',
+  };
+
   static UserRole fromDb(String value) => values.firstWhere(
     (role) => role.dbValue == value,
     orElse: () =>

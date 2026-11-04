@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart' show StringCharacters;
+
 import '../../core/constants/enums.dart';
 import '../../core/utils/db_time.dart';
 
@@ -23,6 +25,14 @@ class User {
   final DateTime? createdAt;
 
   bool get isAdmin => role == UserRole.admin;
+
+  /// Lấy chữ cái đầu của từ cuối vì tên gọi trong tên Việt nằm ở cuối.
+  String get initial {
+    final name = fullName.trim();
+    return name.isEmpty
+        ? '?'
+        : name.split(RegExp(r'\s+')).last.characters.first.toUpperCase();
+  }
 
   factory User.fromMap(Map<String, Object?> map) => User(
     id: map['id'] as int,
