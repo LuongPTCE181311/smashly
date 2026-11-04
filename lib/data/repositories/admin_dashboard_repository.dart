@@ -9,7 +9,7 @@ import '../models/admin_dashboard.dart';
 import '../models/order.dart';
 import 'order_repository.dart';
 
-/// Dữ liệu Admin Dashboard (S13 · UC16). OWNER: Trọng.
+/// Dữ liệu Admin Dashboard (UC16).
 class AdminDashboardRepository {
   const AdminDashboardRepository({
     this._database = DatabaseHelper.open,

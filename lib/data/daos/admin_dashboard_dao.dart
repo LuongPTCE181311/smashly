@@ -7,10 +7,9 @@ import '../models/admin_dashboard.dart';
 import '../models/order.dart';
 import '../models/product.dart';
 
-/// Truy vấn tổng hợp cho Admin Dashboard (S13 · UC16). OWNER: Trọng.
+/// Truy vấn tổng hợp cho Admin Dashboard (UC16).
 ///
-/// Chỉ đọc. Không dùng lại OrderDao (SML-064, Danh) để không phụ thuộc vào
-/// file đang được sửa; chỉ dùng chung model [Order].
+/// Chỉ đọc.
 class AdminDashboardDao {
   const AdminDashboardDao();
 

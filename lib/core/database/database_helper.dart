@@ -8,14 +8,10 @@ import 'seed/seed_demo_data.dart';
 /// Hàm trả về DB đang mở; Repository nhận kiểu này để test truyền DB riêng.
 typedef DatabaseOpener = Future<Database> Function();
 
-/// Cửa duy nhất để mở SQLite. OWNER: TV1.
+/// Cửa duy nhất để mở SQLite; Repository mở DB qua [DatabaseHelper.open].
 ///
-/// Cách dùng trong DAO:
-///   final db = await DatabaseHelper.instance.database;
-///   final rows = await db.query(DbSchema.products);
-///
-/// Mỗi máy tự tạo file smashly.db của riêng mình khi chạy app lần đầu:
-/// tạo 9 bảng -> chạy seedDemoData(). File .db KHÔNG được commit lên Git.
+/// Mỗi máy tự tạo file smashly.db khi chạy lần đầu: tạo bảng rồi seed dữ
+/// liệu demo. File .db không commit lên Git.
 class DatabaseHelper {
   DatabaseHelper._();
   static final DatabaseHelper instance = DatabaseHelper._();

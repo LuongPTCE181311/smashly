@@ -7,7 +7,7 @@ import '../data/models/order.dart';
 import '../data/repositories/admin_dashboard_repository.dart';
 import 'base_provider.dart';
 
-/// State của màn Admin Dashboard (S13 · UC16): 4 thẻ số liệu, sắp hết hàng,
+/// State của màn Admin Dashboard (UC16): 4 thẻ số liệu, sắp hết hàng,
 /// 5 đơn gần đây.
 ///
 /// Dashboard luôn có 4 thẻ nên không có [ViewStatus.empty] toàn màn; "trống"

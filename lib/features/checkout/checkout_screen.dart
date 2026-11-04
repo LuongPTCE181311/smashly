@@ -22,7 +22,7 @@ import 'widgets/checkout_section.dart';
 import 'widgets/order_summary_card.dart';
 import 'widgets/payment_method_tile.dart';
 
-/// S08 · Thanh toán. OWNER: Danh.
+/// Màn thanh toán.
 ///
 /// Đặt các món đang chọn trong giỏ. Thông tin nhận hàng điền sẵn từ tài khoản,
 /// 3 phương thức thanh toán chỉ mô phỏng (không có cổng thanh toán thật).

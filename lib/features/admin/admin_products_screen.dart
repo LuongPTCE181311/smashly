@@ -16,7 +16,7 @@ import '../../shared/widgets/states/error_state.dart';
 import '../../shared/widgets/states/loading_state.dart';
 import 'widgets/admin_product_tile.dart';
 
-/// S14 — Admin Products (UC17): tìm, lọc, xóa sản phẩm.
+/// Admin Products (UC17): tìm, lọc, xóa sản phẩm.
 class AdminProductsScreen extends StatefulWidget {
   const AdminProductsScreen({super.key});
 
@@ -277,7 +277,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
 
   // ===== ĐIỀU HƯỚNG =====
 
-  /// Mở S15: [productId] null = thêm mới. Quay về thì tải lại danh sách.
+  /// Mở form sản phẩm: [productId] null = thêm mới. Quay về thì tải lại danh sách.
   Future<void> _openForm(int? productId) async {
     await Navigator.pushNamed(
       context,

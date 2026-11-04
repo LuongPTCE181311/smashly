@@ -6,8 +6,6 @@ import '../../utils/order_code.dart';
 import '../db_schema.dart';
 import 'seed_users.dart';
 
-/// OWNER: TV4.
-///
 /// 4 đơn mẫu cho customer@smashly.com, mỗi đơn một trạng thái, để
 /// My Orders và timeline Order Detail có dữ liệu ngay từ đầu.
 /// Ngày tính lùi từ lúc seed -> demo hôm nào cũng trông "mới".

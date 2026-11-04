@@ -67,7 +67,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: const Text('Đã thêm vào giỏ hàng'),
-        // BUG-01: Có action thì SDK mặc định persist = true.
+        // SnackBar có action mặc định persist = true, phải tắt để tự đóng.
         persist: false,
         duration: ProductDetailScreen.addedSnackBarDuration,
         action: SnackBarAction(

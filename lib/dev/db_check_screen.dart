@@ -5,9 +5,7 @@ import '../core/theme/app_colors.dart';
 import '../core/database/database_helper.dart';
 import '../core/database/db_schema.dart';
 
-/// MÀN HÌNH TẠM (chỉ dùng tuần 1): hiển thị số dòng trong mỗi bảng để
-/// mỗi thành viên xác nhận SQLite trên máy mình đã tạo + seed đúng.
-/// Sẽ bị thay bằng Splash khi TV3 làm xong routes. Không đưa vào demo.
+/// Màn dev: số dòng mỗi bảng, để kiểm tra SQLite đã tạo và seed đúng.
 class DbCheckScreen extends StatefulWidget {
   const DbCheckScreen({super.key});
 

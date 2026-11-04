@@ -11,7 +11,7 @@ abstract final class AppFonts {
   static const inter = 'Inter';
 }
 
-/// Kiểu chữ (blueprint mục 21). OWNER: Lượng.
+/// Kiểu chữ.
 ///
 /// Màn hình không viết `fontSize: 17`; dùng style ở đây, cần đổi màu thì
 /// `AppTextStyles.body.copyWith(color: AppColors.inkMuted)`.

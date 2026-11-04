@@ -12,7 +12,7 @@ import '../../routes/app_routes.dart';
 import '../../shared/widgets/app_logo.dart';
 import '../../shared/widgets/buttons/primary_button.dart';
 
-/// S01 — mở DB + khôi phục phiên (qua [AuthProvider.restoreSession]) rồi
+/// Màn khởi động: mở DB + khôi phục phiên (qua [AuthProvider.restoreSession]) rồi
 /// chuyển đúng màn theo role. Lỗi khởi tạo → thông báo + nút Thử lại.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -168,7 +168,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   /// Bố cục lỗi riêng: ErrorState/EmptyState dùng chữ màu ink, không đọc được
-  /// trên nền tối (S10).
+  /// trên nền tối.
   Widget _buildError() {
     return Center(
       child: SingleChildScrollView(

@@ -1,6 +1,5 @@
 /// Toàn bộ cấu trúc database của SMASHLY.
 ///
-/// OWNER: TV1. Người khác KHÔNG tự sửa file này.
 /// Mỗi lần đổi schema: sửa SQL bên dưới + tăng [version] + báo cả nhóm.
 class DbSchema {
   DbSchema._();

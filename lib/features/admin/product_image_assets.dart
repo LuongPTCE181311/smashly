@@ -1,4 +1,4 @@
-/// Ảnh sản phẩm có sẵn trong `assets/images/products/` để admin chọn ở S15.
+/// Ảnh sản phẩm có sẵn trong `assets/images/products/` để admin chọn ở form sản phẩm.
 ///
 /// Ảnh đóng gói cùng app, DB chỉ lưu chuỗi đường dẫn. Thêm ảnh mới vào thư
 /// mục (đã khai báo trong pubspec theo thư mục) → thêm 1 dòng vào đây.

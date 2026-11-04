@@ -17,7 +17,7 @@ import '../../shared/widgets/inputs/app_text_field.dart';
 import 'widgets/auth_error_banner.dart';
 import 'widgets/auth_header.dart';
 
-/// S02 — Đăng nhập. [initialEmail] điền sẵn ô email (vd. mở từ lối vào khác).
+/// Màn đăng nhập. [initialEmail] điền sẵn ô email (vd. mở từ lối vào khác).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.initialEmail});
 
@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool _enterStarted = false;
 
-  /// Không áp luật độ mạnh mật khẩu ở Login (D2): chỉ cần không trống.
+  /// Không áp luật độ mạnh mật khẩu ở Login: chỉ cần không trống.
   /// Dùng chung validator với ô để nút và lỗi dưới ô không lệch luật.
   bool get _canSubmit =>
       validateEmail(_email.text) == null &&
@@ -284,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen>
                   style: AppTextStyles.body.copyWith(color: AppColors.inkMuted),
                 ),
                 TextButton(
-                  // Khóa khi loading (D3): login thành công sẽ xóa cả Register đang mở.
+                  // Khóa khi loading: login thành công sẽ xóa cả Register đang mở.
                   onPressed: isLoading ? null : _openRegister,
                   child: const Text('Đăng ký'),
                 ),

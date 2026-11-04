@@ -9,7 +9,7 @@ import '../data/models/product.dart';
 import '../data/repositories/product_repository.dart';
 import 'base_provider.dart';
 
-/// State của màn Admin Products (S14 · UC17): tải, tìm, lọc, xóa sản phẩm.
+/// State của màn Admin Products (UC17): tải, tìm, lọc, xóa sản phẩm.
 class AdminProductProvider extends BaseProvider {
   AdminProductProvider(this._repository);
 

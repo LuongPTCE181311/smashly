@@ -19,7 +19,7 @@ import 'widgets/cart_product_group.dart';
 import 'widgets/cart_skeleton.dart';
 import 'widgets/cart_summary_bar.dart';
 
-/// S07 · Cart screen. OWNER: Danh.
+/// Màn giỏ hàng.
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 

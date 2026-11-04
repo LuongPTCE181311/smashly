@@ -22,7 +22,7 @@ import 'widgets/low_stock_tile.dart';
 import 'widgets/order_status_sheet.dart';
 import 'widgets/recent_order_tile.dart';
 
-/// S13 — Admin Dashboard (UC16): 4 thẻ số liệu, sắp hết hàng, 5 đơn gần đây.
+/// Admin Dashboard (UC16): 4 thẻ số liệu, sắp hết hàng, 5 đơn gần đây.
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
@@ -139,7 +139,7 @@ class AdminDashboardScreen extends StatelessWidget {
 
   // ===== ĐIỀU HƯỚNG: quay về thì làm mới số liệu =====
 
-  /// Mở S15 ở chế độ sửa [productId].
+  /// Mở form sản phẩm ở chế độ sửa [productId].
   Future<void> _openForm(BuildContext context, int productId) =>
       _pushAndRefresh(context, AppRoutes.adminProductForm, productId);
 

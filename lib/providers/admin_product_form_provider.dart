@@ -6,7 +6,7 @@ import '../data/models/racket_spec.dart';
 import '../data/repositories/product_repository.dart';
 import 'base_provider.dart';
 
-/// State của màn Admin Product Form (S15 · UC18), dùng chung cho thêm và sửa.
+/// State của màn Admin Product Form (UC18), dùng chung cho thêm và sửa.
 ///
 /// [productId] null = thêm mới; có id = sửa sản phẩm đó.
 class AdminProductFormProvider extends BaseProvider {
