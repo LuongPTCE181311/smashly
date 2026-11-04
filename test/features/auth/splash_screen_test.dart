@@ -12,7 +12,7 @@ import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_page_route.dart';
 import 'package:smashly/routes/app_routes.dart';
-import 'package:smashly/routes/dev_menu_screen.dart';
+import 'package:smashly/dev/dev_menu_screen.dart';
 import 'package:smashly/shared/widgets/app_logo.dart';
 
 import 'fake_auth_repository.dart';

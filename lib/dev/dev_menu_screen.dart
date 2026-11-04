@@ -2,49 +2,47 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
+import '../routes/app_routes.dart';
 import '../shared/widgets/app_logo.dart';
-import 'app_routes.dart';
 
-/// MÀN DEV: mở nhanh mọi route để test khi chưa có luồng Splash → Login.
-/// Tạm đứng ở vị trí Splash; khi Hào làm xong Splash vẫn mở được qua
-/// `AppRoutes.devMenu`. Không đưa vào demo.
+/// Màn dev: mở nhanh mọi route để kiểm tay; mở bằng --dart-define=START_ROUTE=/dev.
 class DevMenuScreen extends StatelessWidget {
   const DevMenuScreen({super.key});
 
   static const _sections = <(String, List<(String, String, Object?)>)>[
     (
-      'Auth · Hào',
+      'Auth',
       [
-        ('S02 · Login', AppRoutes.login, null),
-        ('S03 · Register', AppRoutes.register, null),
+        ('Login', AppRoutes.login, null),
+        ('Register', AppRoutes.register, null),
       ],
     ),
     (
       'Customer (mở AppShell ở tab tương ứng)',
       [
-        ('S04 · Home', AppRoutes.home, null),
-        ('S05 · Shop', AppRoutes.shop, null),
-        ('S07 · Cart', AppRoutes.cart, null),
-        ('S10 · My Orders', AppRoutes.myOrders, null),
-        ('S12 · Profile', AppRoutes.profile, null),
+        ('Home', AppRoutes.home, null),
+        ('Shop', AppRoutes.shop, null),
+        ('Cart', AppRoutes.cart, null),
+        ('My Orders', AppRoutes.myOrders, null),
+        ('Profile', AppRoutes.profile, null),
       ],
     ),
     (
       'Màn đẩy lên trên AppShell',
       [
-        ('S06 · Product Detail (id 1)', AppRoutes.productDetail, 1),
-        ('S08 · Checkout', AppRoutes.checkout, null),
-        ('S09 · Order Success (id 1)', AppRoutes.orderSuccess, 1),
-        ('S11 · Order Detail (id 1)', AppRoutes.orderDetail, 1),
+        ('Product Detail (id 1)', AppRoutes.productDetail, 1),
+        ('Checkout', AppRoutes.checkout, null),
+        ('Order Success (id 1)', AppRoutes.orderSuccess, 1),
+        ('Order Detail (id 1)', AppRoutes.orderDetail, 1),
       ],
     ),
     (
-      'Admin · Trọng',
+      'Admin',
       [
-        ('S13 · Admin Dashboard', AppRoutes.adminDashboard, null),
-        ('S14 · Admin Products', AppRoutes.adminProducts, null),
-        ('S15 · Product Form (thêm mới)', AppRoutes.adminProductForm, null),
-        ('S15 · Product Form (sửa id 1)', AppRoutes.adminProductForm, 1),
+        ('Admin Dashboard', AppRoutes.adminDashboard, null),
+        ('Admin Products', AppRoutes.adminProducts, null),
+        ('Product Form (thêm mới)', AppRoutes.adminProductForm, null),
+        ('Product Form (sửa id 1)', AppRoutes.adminProductForm, 1),
       ],
     ),
     (

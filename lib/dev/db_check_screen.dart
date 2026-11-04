@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../core/theme/app_colors.dart';
 
-import 'database_helper.dart';
-import 'db_schema.dart';
+import '../core/database/database_helper.dart';
+import '../core/database/db_schema.dart';
 
 /// MÀN HÌNH TẠM (chỉ dùng tuần 1): hiển thị số dòng trong mỗi bảng để
 /// mỗi thành viên xác nhận SQLite trên máy mình đã tạo + seed đúng.
