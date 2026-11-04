@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart';
 
+import '../../core/database/database_helper.dart';
 import '../../core/utils/app_exception.dart';
 import '../daos/product_dao.dart';
 import '../daos/wishlist_dao.dart';
@@ -8,12 +8,12 @@ import '../models/product.dart';
 
 class WishlistRepository {
   const WishlistRepository({
-    required this._database,
-    required this._wishlistDao,
-    required this._productDao,
+    this._database = DatabaseHelper.open,
+    this._wishlistDao = const WishlistDao(),
+    this._productDao = const ProductDao(),
   });
 
-  final Future<Database> Function() _database;
+  final DatabaseOpener _database;
   final WishlistDao _wishlistDao;
   final ProductDao _productDao;
 

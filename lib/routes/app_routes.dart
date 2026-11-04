@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:smashly/core/database/database_helper.dart';
-import 'package:smashly/data/daos/admin_dashboard_dao.dart';
-import 'package:smashly/data/daos/order_dao.dart';
-import 'package:smashly/data/daos/product_dao.dart';
 import 'package:smashly/data/repositories/admin_dashboard_repository.dart';
 import 'package:smashly/data/repositories/order_repository.dart';
 import 'package:smashly/data/repositories/product_repository.dart';
@@ -118,55 +114,18 @@ abstract final class AppRoutes {
       register => const RegisterScreen(),
 
       home => ChangeNotifierProvider<HomeProvider>(
-        create: (context) {
-          // Bước 1: Tạo DAO
-          const productDao = ProductDao();
-          // Bước 2: Tạo Repository
-          final repository = ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: productDao,
-          );
-          // Bước 3: Tạo Provider
-          final provider = HomeProvider(repository);
-          // Bước 4: Bắt đầu tải dữ liệu
-          provider.loadHome();
-          // Bước 5: Trả Provider cho ChangeNotifierProvider
-          return provider;
-        },
-        // Bước 6: Hiển thị HomeScreen
+        create: (_) => HomeProvider(ProductRepository())..loadHome(),
         child: const HomeScreen(),
       ),
 
       shop => ChangeNotifierProvider<ShopProvider>(
-        create: (_) {
-          // DAO làm việc trực tiếp với SQLite.
-          const productDao = ProductDao();
-
-          // Repository kết nối DAO và DatabaseHelper.
-          final repository = ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: productDao,
-          );
-
-          // Provider giữ state của Shop.
-          final provider = ShopProvider(repository);
-
-          // Tải dữ liệu ban đầu.
-          provider.loadInitial();
-
-          return provider;
-        },
+        create: (_) => ShopProvider(ProductRepository())..loadInitial(),
         child: const ShopScreen(),
       ),
 
       cart => const CartScreen(),
       myOrders => ChangeNotifierProxyProvider<AuthProvider, OrderProvider>(
-        create: (_) => OrderProvider(
-          OrderRepository(
-            database: () => DatabaseHelper.instance.database,
-            orderDao: const OrderDao(),
-          ),
-        ),
+        create: (_) => OrderProvider(OrderRepository()),
         update: (_, auth, orders) => orders!..updateUser(auth.currentUser?.id),
         child: const MyOrdersScreen(),
       ),
@@ -174,50 +133,30 @@ abstract final class AppRoutes {
       wishlist => const WishlistScreen(),
       productDetail => ChangeNotifierProvider<ProductDetailProvider>(
         create: (_) => ProductDetailProvider(
-          ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: const ProductDao(),
-          ),
+          ProductRepository(),
           arguments is int ? arguments : null,
         )..load(),
         child: const ProductDetailScreen(),
       ),
       checkout => ChangeNotifierProvider<CheckoutProvider>(
-        create: (_) => CheckoutProvider(
-          OrderRepository(
-            database: () => DatabaseHelper.instance.database,
-            orderDao: const OrderDao(),
-          ),
-        ),
+        create: (_) => CheckoutProvider(OrderRepository()),
         child: const CheckoutScreen(),
       ),
       orderSuccess => _withOrder(arguments, const OrderSuccessScreen()),
       orderDetail => _withOrder(arguments, const OrderDetailScreen()),
 
       adminDashboard => ChangeNotifierProvider<AdminDashboardProvider>(
-        create: (_) => AdminDashboardProvider(
-          AdminDashboardRepository(
-            database: () => DatabaseHelper.instance.database,
-            dashboardDao: const AdminDashboardDao(),
-          ),
-        )..load(),
+        create: (_) =>
+            AdminDashboardProvider(AdminDashboardRepository())..load(),
         child: const AdminDashboardScreen(),
       ),
       adminProducts => ChangeNotifierProvider<AdminProductProvider>(
-        create: (_) => AdminProductProvider(
-          ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: const ProductDao(),
-          ),
-        )..loadInitial(),
+        create: (_) => AdminProductProvider(ProductRepository())..loadInitial(),
         child: const AdminProductsScreen(),
       ),
       adminProductForm => ChangeNotifierProvider<AdminProductFormProvider>(
         create: (_) => AdminProductFormProvider(
-          ProductRepository(
-            database: () => DatabaseHelper.instance.database,
-            productDao: const ProductDao(),
-          ),
+          ProductRepository(),
           productId: arguments is int ? arguments : null,
         ),
         child: const AdminProductFormScreen(),
@@ -238,10 +177,7 @@ abstract final class AppRoutes {
   static Widget _withOrder(Object? arguments, Widget child) {
     return ChangeNotifierProvider<OrderDetailProvider>(
       create: (context) => OrderDetailProvider(
-        OrderRepository(
-          database: () => DatabaseHelper.instance.database,
-          orderDao: const OrderDao(),
-        ),
+        OrderRepository(),
         orderId: arguments is int ? arguments : null,
         userId: context.read<AuthProvider>().currentUser?.id,
       )..load(),

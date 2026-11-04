@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../core/database/database_helper.dart';
 import '../../core/utils/app_exception.dart';
 import '../daos/cart_dao.dart';
 import '../models/cart_item.dart';
@@ -20,9 +21,12 @@ class CartRepository {
     return null;
   }
 
-  const CartRepository({required this._database, required this._cartDao});
+  const CartRepository({
+    this._database = DatabaseHelper.open,
+    this._cartDao = const CartDao(),
+  });
 
-  final Future<Database> Function() _database;
+  final DatabaseOpener _database;
   final CartDao _cartDao;
 
   Future<List<CartItem>> loadItems(int userId) {

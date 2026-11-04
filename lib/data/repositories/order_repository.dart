@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/constants/enums.dart';
+import '../../core/database/database_helper.dart';
 import '../../core/database/seed/seed_orders.dart' as seed;
 import '../../core/utils/app_exception.dart';
 import '../../core/utils/db_time.dart';
@@ -14,12 +15,12 @@ import '../models/order_summary.dart';
 
 class OrderRepository {
   const OrderRepository({
-    required this._database,
-    required this._orderDao,
+    this._database = DatabaseHelper.open,
+    this._orderDao = const OrderDao(),
     this._cartDao = const CartDao(),
   });
 
-  final Future<Database> Function() _database;
+  final DatabaseOpener _database;
   final OrderDao _orderDao;
   final CartDao _cartDao;
 

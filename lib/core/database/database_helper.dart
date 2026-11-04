@@ -5,6 +5,9 @@ import 'package:sqflite/sqflite.dart';
 import 'db_schema.dart';
 import 'seed/seed_demo_data.dart';
 
+/// Hàm trả về DB đang mở; Repository nhận kiểu này để test truyền DB riêng.
+typedef DatabaseOpener = Future<Database> Function();
+
 /// Cửa duy nhất để mở SQLite. OWNER: TV1.
 ///
 /// Cách dùng trong DAO:
@@ -16,6 +19,12 @@ import 'seed/seed_demo_data.dart';
 class DatabaseHelper {
   DatabaseHelper._();
   static final DatabaseHelper instance = DatabaseHelper._();
+
+  /// Mở (hoặc lấy lại) DB dùng chung của app.
+  static Future<Database> open() => instance.database;
+
+  /// Xóa DB trên máy rồi tạo lại và seed.
+  static Future<void> reset() => instance.resetDatabase();
 
   // Lưu Future (không lưu Database) để nhiều nơi gọi cùng lúc
   // vẫn chỉ mở DB đúng một lần.
@@ -39,7 +48,8 @@ class DatabaseHelper {
     return opening;
   }
 
-  Future<String> get _path async => join(await getDatabasesPath(), DbSchema.dbName);
+  Future<String> get _path async =>
+      join(await getDatabasesPath(), DbSchema.dbName);
 
   Future<Database> _open() async {
     return openDatabase(
