@@ -7,9 +7,11 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'app.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/cart_repository.dart';
+import 'data/repositories/order_repository.dart';
 import 'data/repositories/wishlist_repository.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
+import 'providers/order_provider.dart';
 import 'providers/wishlist_provider.dart';
 
 void main() {
@@ -36,6 +38,11 @@ void main() {
           create: (_) => WishlistProvider(WishlistRepository()),
           update: (_, auth, wishlist) =>
               wishlist!..updateUser(auth.currentUser?.id),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, OrderProvider>(
+          create: (_) => OrderProvider(OrderRepository()),
+          update: (_, auth, orders) =>
+              orders!..updateUser(auth.currentUser?.id),
         ),
       ],
       child: const SmashlyApp(),

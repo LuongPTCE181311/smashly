@@ -16,7 +16,7 @@ class WishlistProvider extends BaseProvider {
   Set<int> _favoriteIds = {};
   List<Product> _products = [];
 
-  ViewStatus _status = ViewStatus.initial;
+  ViewStatus _status = ViewStatus.empty;
   String? _errorMessage;
 
   final Set<int> _pendingIds = {};
@@ -32,24 +32,25 @@ class WishlistProvider extends BaseProvider {
 
   bool isPending(int productId) => _pendingIds.contains(productId);
 
-  // Gọi khi user đăng nhập, đăng xuất hoặc đổi tài khoản.
+  /// Đổi người dùng: xóa dữ liệu cũ rồi tải lại cho [userId] (null = đã đăng xuất).
   void updateUser(int? userId) {
-    if (_userId == userId) return;
-
+    if (userId == _userId) return;
     _userId = userId;
     _loadId++;
-
     _favoriteIds = {};
     _products = [];
     _pendingIds.clear();
     _errorMessage = null;
-    _status = ViewStatus.initial;
-
-    notify();
-
-    if (userId != null) {
-      load();
-    }
+    _status = userId == null ? ViewStatus.empty : ViewStatus.initial;
+    // Hàm này chạy trong lúc ProxyProvider build nên không được notify ngay.
+    Future.microtask(() {
+      if (userId != _userId) return;
+      if (userId == null) {
+        notify();
+      } else {
+        load();
+      }
+    });
   }
 
   Future<void> load() async {

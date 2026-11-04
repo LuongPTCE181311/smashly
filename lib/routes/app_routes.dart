@@ -21,7 +21,6 @@ import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/checkout_provider.dart';
 import 'package:smashly/providers/home_provider.dart';
 import 'package:smashly/providers/order_detail_provider.dart';
-import 'package:smashly/providers/order_provider.dart';
 import 'package:smashly/providers/product_detail_provider.dart';
 import 'package:smashly/providers/shop_provider.dart';
 
@@ -124,11 +123,7 @@ abstract final class AppRoutes {
       ),
 
       cart => const CartScreen(),
-      myOrders => ChangeNotifierProxyProvider<AuthProvider, OrderProvider>(
-        create: (_) => OrderProvider(OrderRepository()),
-        update: (_, auth, orders) => orders!..updateUser(auth.currentUser?.id),
-        child: const MyOrdersScreen(),
-      ),
+      myOrders => const MyOrdersScreen(),
       profile || adminProfile => const ProfileScreen(),
       wishlist => const WishlistScreen(),
       productDetail => ChangeNotifierProvider<ProductDetailProvider>(

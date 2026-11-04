@@ -49,8 +49,7 @@ class CartProvider extends BaseProvider {
   bool get hasUnavailableSelected =>
       selectedItems.any((i) => i.stock <= 0 || i.quantity > i.stock);
 
-  /// Called when the user changes or signs out: clears the old cart from memory
-  /// and loads the new user's cart. Runs during build, so it never notifies sync.
+  /// Đổi người dùng: xóa dữ liệu cũ rồi tải lại cho [userId] (null = đã đăng xuất).
   void updateUser(int? userId) {
     if (userId == _userId) return;
     _userId = userId;
@@ -59,10 +58,12 @@ class CartProvider extends BaseProvider {
     _lastRemoved = const [];
     _errorMessage = null;
     _status = userId == null ? ViewStatus.empty : ViewStatus.initial;
+    // Hàm này chạy trong lúc ProxyProvider build nên không được notify ngay.
     Future.microtask(() {
+      if (userId != _userId) return;
       if (userId == null) {
         notify();
-      } else if (userId == _userId) {
+      } else {
         load();
       }
     });

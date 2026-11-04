@@ -15,6 +15,7 @@ import 'package:smashly/features/checkout/checkout_screen.dart';
 import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/cart_provider.dart';
 import 'package:smashly/providers/checkout_provider.dart';
+import 'package:smashly/providers/order_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 
 import '../auth/fake_auth_repository.dart';
@@ -116,6 +117,7 @@ Future<_FakeOrderRepository> _pump(
         ChangeNotifierProvider<AuthProvider>(create: (_) => _SignedInAuth()),
         ChangeNotifierProvider<CartProvider>.value(value: cart),
         ChangeNotifierProvider(create: (_) => CheckoutProvider(orders)),
+        ChangeNotifierProvider(create: (_) => OrderProvider(orders)),
       ],
       child: MaterialApp(
         theme: AppTheme.light,

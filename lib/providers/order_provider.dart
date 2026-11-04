@@ -13,9 +13,8 @@ class OrderProvider extends BaseProvider {
 
   final OrderRepository _repository;
 
-  ViewStatus _status = ViewStatus.initial;
+  ViewStatus _status = ViewStatus.empty;
   int? _userId;
-  bool _userKnown = false;
   List<OrderSummary> _orders = [];
   String? _errorMessage;
   // Tăng mỗi lần tải mới; kết quả mang số cũ thì bỏ qua.
@@ -33,14 +32,15 @@ class OrderProvider extends BaseProvider {
 
   int countOf(OrderStatus? status) => ordersWith(status).length;
 
+  /// Đổi người dùng: xóa dữ liệu cũ rồi tải lại cho [userId] (null = đã đăng xuất).
   void updateUser(int? userId) {
-    if (_userKnown && userId == _userId) return;
-    _userKnown = true;
+    if (userId == _userId) return;
     _userId = userId;
     _loadId++;
     _orders = [];
     _errorMessage = null;
     _status = userId == null ? ViewStatus.empty : ViewStatus.initial;
+    // Hàm này chạy trong lúc ProxyProvider build nên không được notify ngay.
     Future.microtask(() {
       if (userId != _userId) return;
       if (userId == null) {
