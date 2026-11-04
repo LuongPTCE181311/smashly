@@ -83,7 +83,7 @@ class CartProvider extends ChangeNotifier {
     } catch (error) {
       if (generation != _generation) return;
       _status = ViewStatus.error;
-      _errorMessage = _messageOf(error, 'Không thể tải giỏ hàng');
+      _errorMessage = errorMessageOf(error, 'Không thể tải giỏ hàng');
     }
     _notify();
   }
@@ -104,7 +104,7 @@ class CartProvider extends ChangeNotifier {
         size: size,
       );
     } catch (error) {
-      return _messageOf(error, 'Không thể thêm vào giỏ hàng');
+      return errorMessageOf(error, 'Không thể thêm vào giỏ hàng');
     }
     await _reload(userId);
     return null;
@@ -123,7 +123,7 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.setQuantity(item, quantity);
     } catch (error) {
-      return _messageOf(error, 'Không thể đổi số lượng');
+      return errorMessageOf(error, 'Không thể đổi số lượng');
     }
     _replace(item.id, (i) => i.copyWith(quantity: quantity));
     return null;
@@ -134,7 +134,7 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.setSelected(item, selected);
     } catch (error) {
-      return _messageOf(error, 'Không thể cập nhật lựa chọn');
+      return errorMessageOf(error, 'Không thể cập nhật lựa chọn');
     }
     _replace(item.id, (i) => i.copyWith(isSelected: selected));
     return null;
@@ -146,7 +146,7 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.setAllSelected(userId, selected);
     } catch (error) {
-      return _messageOf(error, 'Không thể cập nhật lựa chọn');
+      return errorMessageOf(error, 'Không thể cập nhật lựa chọn');
     }
     _items = [for (final i in _items) i.copyWith(isSelected: selected)];
     _notify();
@@ -182,7 +182,7 @@ class CartProvider extends ChangeNotifier {
       _items = restored;
       _refreshStatus();
       _notify();
-      return _messageOf(error, 'Không thể xóa sản phẩm');
+      return errorMessageOf(error, 'Không thể xóa sản phẩm');
     }
     _lastRemoved = [for (final (_, item) in removed) item];
     return null;
@@ -196,7 +196,7 @@ class CartProvider extends ChangeNotifier {
     try {
       await _repository.restoreMany(userId, removed);
     } catch (error) {
-      return _messageOf(error, 'Không thể hoàn tác');
+      return errorMessageOf(error, 'Không thể hoàn tác');
     }
     await _reload(userId);
     return null;
@@ -226,15 +226,6 @@ class CartProvider extends ChangeNotifier {
 
   void _refreshStatus() {
     _status = _items.isEmpty ? ViewStatus.empty : ViewStatus.success;
-  }
-
-  /// Catches Error too (see AuthProvider._handleError): unknown errors are generic.
-  String _messageOf(Object error, String fallback) {
-    if (error is AppException && error.message.isNotEmpty) {
-      return error.message;
-    }
-    debugPrint('CartProvider: $error');
-    return fallback;
   }
 
   void _notify() {

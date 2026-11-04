@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/constants/enums.dart';
 import '../../core/database/database_helper.dart';
 import '../../core/database/seed/seed_orders.dart' as seed;
 import '../../core/utils/app_exception.dart';
+import '../../core/utils/db_guard.dart';
 import '../../core/utils/db_time.dart';
 import '../daos/cart_dao.dart';
 import 'cart_repository.dart';
@@ -48,8 +48,8 @@ class OrderRepository {
     }
     final trimmedNote = note?.trim();
 
-    return _guard(
-      'placeOrder',
+    return runDb(
+      'OrderRepository.placeOrder',
       'Không thể đặt hàng. Vui lòng thử lại.',
       () async {
         final db = await _database();
@@ -142,8 +142,8 @@ class OrderRepository {
   }
 
   Future<List<OrderSummary>> getOrderHistory(int userId) {
-    return _guard(
-      'getOrderHistory',
+    return runDb(
+      'OrderRepository.getOrderHistory',
       'Không thể tải danh sách đơn hàng. Vui lòng thử lại.',
       () async {
         final db = await _database();
@@ -153,8 +153,8 @@ class OrderRepository {
   }
 
   Future<Order?> getOrderDetail(int orderId, {required int userId}) {
-    return _guard(
-      'getOrderDetail',
+    return runDb(
+      'OrderRepository.getOrderDetail',
       'Không thể tải chi tiết đơn hàng. Vui lòng thử lại.',
       () async {
         final db = await _database();
@@ -166,8 +166,8 @@ class OrderRepository {
   }
 
   Future<Order> cancelOrder(int orderId, {required int userId}) {
-    return _guard(
-      'cancelOrder',
+    return runDb(
+      'OrderRepository.cancelOrder',
       'Không thể hủy đơn hàng. Vui lòng thử lại.',
       () async {
         final db = await _database();
@@ -209,8 +209,8 @@ class OrderRepository {
       throw const AppException('Không thể chuyển đơn sang trạng thái này');
     }
 
-    return _guard(
-      'updateStatus',
+    return runDb(
+      'OrderRepository.updateStatus',
       'Không thể cập nhật trạng thái đơn hàng. Vui lòng thử lại.',
       () async {
         final db = await _database();
@@ -250,19 +250,6 @@ class OrderRepository {
       final productId = item.productId;
       if (productId == null) continue;
       await _orderDao.increaseStock(txn, productId, item.quantity, stamp);
-    }
-  }
-
-  Future<T> _guard<T>(
-    String action,
-    String fallback,
-    Future<T> Function() body,
-  ) async {
-    try {
-      return await body();
-    } on DatabaseException catch (error) {
-      debugPrint('OrderRepository.$action: $error');
-      throw AppException(fallback);
     }
   }
 }

@@ -67,9 +67,10 @@ class ProductDetailProvider extends ChangeNotifier {
           : ViewStatus.success;
     } catch (error) {
       _status = ViewStatus.error;
-      _errorMessage = error is AppException && error.message.isNotEmpty
-          ? error.message
-          : 'Không thể tải thông tin sản phẩm. Vui lòng thử lại.';
+      _errorMessage = errorMessageOf(
+        error,
+        'Không thể tải thông tin sản phẩm. Vui lòng thử lại.',
+      );
     }
 
     _notify();

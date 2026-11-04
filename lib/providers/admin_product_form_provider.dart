@@ -74,9 +74,10 @@ class AdminProductFormProvider extends ChangeNotifier {
     } catch (error) {
       if (_disposed) return;
       _status = ViewStatus.error;
-      _errorMessage = error is AppException
-          ? error.message
-          : 'Không thể tải dữ liệu sản phẩm. Vui lòng thử lại.';
+      _errorMessage = errorMessageOf(
+        error,
+        'Không thể tải dữ liệu sản phẩm. Vui lòng thử lại.',
+      );
     }
     notifyListeners();
   }

@@ -43,12 +43,10 @@ class CheckoutProvider extends ChangeNotifier {
         note: note,
       );
     } catch (error) {
-      if (error is AppException && error.message.isNotEmpty) {
-        _errorMessage = error.message;
-      } else {
-        debugPrint('CheckoutProvider.placeOrder: $error');
-        _errorMessage = 'Không thể đặt hàng. Vui lòng thử lại.';
-      }
+      _errorMessage = errorMessageOf(
+        error,
+        'Không thể đặt hàng. Vui lòng thử lại.',
+      );
       _isPlacing = false;
       _notify();
       return null;

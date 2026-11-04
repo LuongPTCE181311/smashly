@@ -76,7 +76,7 @@ class WishlistProvider extends ChangeNotifier {
       if (_revision != revision) return;
 
       _status = ViewStatus.error;
-      _errorMessage = _message(error);
+      _errorMessage = errorMessageOf(error, 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
 
     notifyListeners();
@@ -130,7 +130,10 @@ class WishlistProvider extends ChangeNotifier {
       return true;
     } catch (error) {
       if (_revision == revision) {
-        _errorMessage = _message(error);
+        _errorMessage = errorMessageOf(
+          error,
+          'Có lỗi xảy ra. Vui lòng thử lại.',
+        );
       }
       return false;
     } finally {
@@ -140,11 +143,5 @@ class WishlistProvider extends ChangeNotifier {
         notifyListeners();
       }
     }
-  }
-
-  String _message(Object error) {
-    if (error is AppException) return error.message;
-    debugPrint('WishlistProvider: $error');
-    return 'Có lỗi xảy ra. Vui lòng thử lại.';
   }
 }

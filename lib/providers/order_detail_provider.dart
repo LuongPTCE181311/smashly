@@ -42,9 +42,10 @@ class OrderDetailProvider extends ChangeNotifier {
       _status = _order == null ? ViewStatus.empty : ViewStatus.success;
     } catch (error) {
       _status = ViewStatus.error;
-      _errorMessage = error is AppException && error.message.isNotEmpty
-          ? error.message
-          : 'Không thể tải chi tiết đơn hàng. Vui lòng thử lại.';
+      _errorMessage = errorMessageOf(
+        error,
+        'Không thể tải chi tiết đơn hàng. Vui lòng thử lại.',
+      );
     }
 
     _notify();
@@ -64,9 +65,10 @@ class OrderDetailProvider extends ChangeNotifier {
     try {
       _order = await _repository.cancelOrder(current.id, userId: user);
     } catch (caught) {
-      error = caught is AppException && caught.message.isNotEmpty
-          ? caught.message
-          : 'Không thể hủy đơn hàng. Vui lòng thử lại.';
+      error = errorMessageOf(
+        caught,
+        'Không thể hủy đơn hàng. Vui lòng thử lại.',
+      );
     }
 
     _isCancelling = false;

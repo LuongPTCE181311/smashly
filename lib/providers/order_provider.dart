@@ -75,9 +75,10 @@ class OrderProvider extends ChangeNotifier {
       if (generation != _generation) return;
       if (showLoading) {
         _status = ViewStatus.error;
-        _errorMessage = error is AppException && error.message.isNotEmpty
-            ? error.message
-            : 'Không thể tải danh sách đơn hàng. Vui lòng thử lại.';
+        _errorMessage = errorMessageOf(
+          error,
+          'Không thể tải danh sách đơn hàng. Vui lòng thử lại.',
+        );
       } else {
         debugPrint('OrderProvider.refresh: $error');
       }
