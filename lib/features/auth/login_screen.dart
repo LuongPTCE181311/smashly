@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +14,9 @@ import '../../shared/widgets/buttons/primary_button.dart';
 import '../../shared/widgets/inputs/app_text_field.dart';
 import 'widgets/auth_error_banner.dart';
 import 'widgets/auth_header.dart';
+import 'widgets/shake_card.dart';
 
-/// Màn đăng nhập. [initialEmail] điền sẵn ô email (vd. mở từ lối vào khác).
+/// Màn đăng nhập; [initialEmail] điền sẵn ô email khi mở từ lối vào khác.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.initialEmail});
 
@@ -33,9 +32,6 @@ class _LoginScreenState extends State<LoginScreen>
   late final _email = TextEditingController(text: widget.initialEmail);
   final _password = TextEditingController();
   final _passwordFocus = FocusNode();
-
-  /// Gõ chữ không làm cả màn build lại; chỉ nút Đăng nhập nghe 2 controller này.
-  late final Listenable _inputs = Listenable.merge([_email, _password]);
 
   late final _enter = AnimationController(
     vsync: this,
@@ -95,6 +91,12 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _clearServerErrors() => context.read<AuthProvider>().clearErrors();
 
+  void _onInputChanged(String _) {
+    _clearServerErrors();
+    // Build lại để nút Đăng nhập bật/tắt theo _canSubmit.
+    setState(() {});
+  }
+
   Future<void> _submit() async {
     final auth = context.read<AuthProvider>();
     if (auth.isLoading) return;
@@ -143,15 +145,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    final (isLoading, errorMessage, emailError, passwordError) = context
-        .select<AuthProvider, (bool, String?, String?, String?)>(
-          (auth) => (
-            auth.isLoading,
-            auth.errorMessage,
-            auth.fieldErrors['email'],
-            auth.fieldErrors['password'],
-          ),
-        );
+    final auth = context.watch<AuthProvider>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -176,14 +170,7 @@ class _LoginScreenState extends State<LoginScreen>
               offset: const Offset(0, -AppSpacing.xxl),
               child: Padding(
                 padding: AppSpacing.screenPadding,
-                child: _animatedCard(
-                  _buildForm(
-                    isLoading: isLoading,
-                    errorMessage: errorMessage,
-                    emailError: emailError,
-                    passwordError: passwordError,
-                  ),
-                ),
+                child: _animatedCard(_buildForm(auth)),
               ),
             ),
           ],
@@ -192,20 +179,14 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  /// Slide-up + fade khi vào màn, rung ngang khi lỗi. Key nằm trên chính card
-  /// (bên trong cả 2 transform) để test đo được vị trí thật.
+  /// Trượt lên + hiện dần khi vào màn, rung khi lỗi; key nằm trên chính card để test đo được vị trí thật.
   Widget _animatedCard(Widget child) {
     return SlideTransition(
       position: _slide,
       child: FadeTransition(
         opacity: _enterCurve,
-        child: AnimatedBuilder(
-          animation: _shakeController,
-          builder: (context, child) {
-            final t = _shakeController.value;
-            final dx = math.sin(t * 4 * math.pi) * AppSpacing.sm * (1 - t);
-            return Transform.translate(offset: Offset(dx, 0), child: child);
-          },
+        child: ShakeCard(
+          controller: _shakeController,
           child: Container(
             key: const Key('login_card'),
             padding: const EdgeInsets.all(AppSpacing.xl),
@@ -221,33 +202,28 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildForm({
-    required bool isLoading,
-    required String? errorMessage,
-    required String? emailError,
-    required String? passwordError,
-  }) {
+  Widget _buildForm(AuthProvider auth) {
     return AutofillGroup(
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (errorMessage != null) ...[
-              AuthErrorBanner(message: errorMessage),
+            if (auth.errorMessage != null) ...[
+              AuthErrorBanner(message: auth.errorMessage!),
               const SizedBox(height: AppSpacing.lg),
             ],
             AppTextField(
               label: 'Email',
               controller: _email,
               validator: validateEmail,
-              errorText: emailError,
-              enabled: !isLoading,
+              errorText: auth.fieldErrors['email'],
+              enabled: !auth.isLoading,
               prefixIcon: Icons.mail_outline,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.email],
-              onChanged: (_) => _clearServerErrors(),
+              onChanged: _onInputChanged,
               onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -257,22 +233,19 @@ class _LoginScreenState extends State<LoginScreen>
               focusNode: _passwordFocus,
               isPassword: true,
               validator: _validatePassword,
-              errorText: passwordError,
-              enabled: !isLoading,
+              errorText: auth.fieldErrors['password'],
+              enabled: !auth.isLoading,
               prefixIcon: Icons.lock_outline,
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.password],
-              onChanged: (_) => _clearServerErrors(),
+              onChanged: _onInputChanged,
               onFieldSubmitted: (_) => _submit(),
             ),
             const SizedBox(height: AppSpacing.xl),
-            ListenableBuilder(
-              listenable: _inputs,
-              builder: (context, _) => PrimaryButton(
-                label: 'Đăng nhập',
-                isLoading: isLoading,
-                onPressed: _canSubmit ? _submit : null,
-              ),
+            PrimaryButton(
+              label: 'Đăng nhập',
+              isLoading: auth.isLoading,
+              onPressed: _canSubmit ? _submit : null,
             ),
             const SizedBox(height: AppSpacing.md),
             Wrap(
@@ -285,7 +258,7 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
                 TextButton(
                   // Khóa khi loading: login thành công sẽ xóa cả Register đang mở.
-                  onPressed: isLoading ? null : _openRegister,
+                  onPressed: auth.isLoading ? null : _openRegister,
                   child: const Text('Đăng ký'),
                 ),
               ],
