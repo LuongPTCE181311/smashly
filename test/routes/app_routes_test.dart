@@ -15,6 +15,7 @@ import 'package:smashly/features/shell/app_shell.dart';
 import 'package:smashly/features/shell/app_tab.dart';
 import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/cart_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:smashly/routes/placeholder_screen.dart';
 
@@ -25,6 +26,7 @@ import '../features/auth/fake_auth_repository.dart';
 // AppShell đọc CartProvider cho badge; chưa có user nên repository không bị gọi.
 Widget _app(String initialRoute, {AuthProvider? auth}) => MultiProvider(
   providers: [
+    ChangeNotifierProvider(create: (_) => ShellTabProvider()),
     ChangeNotifierProvider<AuthProvider>(
       create: (_) => auth ?? AuthProvider(_newRepo()),
     ),

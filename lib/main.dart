@@ -12,6 +12,7 @@ import 'data/repositories/wishlist_repository.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
+import 'providers/shell_tab_provider.dart';
 import 'providers/wishlist_provider.dart';
 
 void main() {
@@ -30,6 +31,7 @@ void main() {
       providers: [
         Provider<AuthRepository>.value(value: authRepository),
         ChangeNotifierProvider(create: (_) => AuthProvider(authRepository)),
+        ChangeNotifierProvider(create: (_) => ShellTabProvider()),
         ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
           create: (_) => CartProvider(CartRepository()),
           update: (_, auth, cart) => cart!..updateUser(auth.currentUser?.id),

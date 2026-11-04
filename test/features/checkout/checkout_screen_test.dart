@@ -16,6 +16,7 @@ import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/cart_provider.dart';
 import 'package:smashly/providers/checkout_provider.dart';
 import 'package:smashly/providers/order_provider.dart';
+import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 
 import '../auth/fake_auth_repository.dart';
@@ -114,6 +115,7 @@ Future<_FakeOrderRepository> _pump(
   await tester.pumpWidget(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ShellTabProvider()),
         ChangeNotifierProvider<AuthProvider>(create: (_) => _SignedInAuth()),
         ChangeNotifierProvider<CartProvider>.value(value: cart),
         ChangeNotifierProvider(create: (_) => CheckoutProvider(orders)),
