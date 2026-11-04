@@ -138,8 +138,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         'Elevate Your Game.',
                         style: AppTextStyles.body.copyWith(
-                          // TODO(theme): xin Lượng token onDarkMuted thay cho alpha tự chọn.
-                          color: AppColors.onDark.withValues(alpha: 0.72),
+                          color: AppColors.onDarkMuted,
                         ),
                       ),
                     ],
@@ -160,8 +159,7 @@ class _SplashScreenState extends State<SplashScreen>
             minHeight: AppSpacing.xs,
             borderRadius: AppRadius.smAll,
             color: AppColors.primary,
-            // TODO(theme): xin Lượng token cho nền thanh tiến trình trên nền tối.
-            backgroundColor: AppColors.onDark.withValues(alpha: 0.12),
+            backgroundColor: AppColors.onDarkSubtle,
             semanticsLabel: 'Đang khởi động',
           ),
         ),
@@ -193,10 +191,7 @@ class _SplashScreenState extends State<SplashScreen>
             Text(
               'Kiểm tra bộ nhớ trống của máy rồi thử lại.',
               textAlign: TextAlign.center,
-              style: AppTextStyles.body.copyWith(
-                // TODO(theme): xin Lượng token onDarkMuted thay cho alpha tự chọn.
-                color: AppColors.onDark.withValues(alpha: 0.72),
-              ),
+              style: AppTextStyles.body.copyWith(color: AppColors.onDarkMuted),
             ),
             const SizedBox(height: AppSpacing.xl),
             PrimaryButton(label: 'Thử lại', onPressed: _start, expanded: false),
