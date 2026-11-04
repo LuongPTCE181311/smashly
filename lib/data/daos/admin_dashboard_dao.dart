@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../../core/constants/app_rules.dart';
 import '../../core/constants/enums.dart';
 import '../../core/database/db_schema.dart';
 import '../models/admin_dashboard.dart';
@@ -13,13 +14,10 @@ import '../models/product.dart';
 class AdminDashboardDao {
   const AdminDashboardDao();
 
-  /// Ngưỡng "sắp hết hàng", bằng `StockBadge.lowStockThreshold`.
-  static const lowStockThreshold = 5;
-
   /// Điều kiện dùng CHUNG cho thẻ "Sắp hết hàng" và danh sách bên dưới,
   /// để số trên thẻ luôn bằng số dòng trong danh sách.
   static const _lowStockWhere =
-      'is_active = 1 AND stock <= $lowStockThreshold';
+      'is_active = 1 AND stock <= ${AppRules.lowStockThreshold}';
 
   /// 4 số liệu trong một câu SELECT (mỗi thẻ là một subquery COUNT / SUM).
   Future<AdminDashboardStats> getStats(DatabaseExecutor db) async {
@@ -40,7 +38,7 @@ class AdminDashboardDao {
     return AdminDashboardStats.fromMap(rows.first);
   }
 
-  /// Sản phẩm đang bán có tồn kho ≤ [lowStockThreshold], ít hàng nhất lên đầu.
+  /// Sản phẩm đang bán có tồn kho ≤ [AppRules.lowStockThreshold], ít hàng nhất lên đầu.
   Future<List<Product>> getLowStockProducts(DatabaseExecutor db) async {
     final rows = await db.query(
       DbSchema.products,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_rules.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -23,7 +24,7 @@ class AdminStockLabel extends StatelessWidget {
         AppColors.error,
         AppColors.errorSoft,
       ),
-      <= StockBadge.lowStockThreshold => (
+      <= AppRules.lowStockThreshold => (
         '$stock · Sắp hết',
         Icons.warning_amber_rounded,
         AppColors.warning,

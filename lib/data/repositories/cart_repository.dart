@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../../core/constants/app_rules.dart';
 import '../../core/database/database_helper.dart';
 import '../../core/utils/app_exception.dart';
 import '../../core/utils/db_guard.dart';
@@ -7,8 +8,6 @@ import '../daos/cart_dao.dart';
 import '../models/cart_item.dart';
 
 class CartRepository {
-  static const maxQuantityPerLine = 99;
-
   /// Error for [size] against the sellable [sizes]; null = valid.
   /// Shared by add-to-cart and checkout (a size may be removed after the item
   /// is already in the cart).
@@ -168,8 +167,10 @@ class CartRepository {
     if (wanted > stock) {
       throw AppException('Chỉ còn $stock sản phẩm trong kho');
     }
-    if (wanted > maxQuantityPerLine) {
-      throw const AppException('Tối đa $maxQuantityPerLine sản phẩm mỗi dòng');
+    if (wanted > AppRules.maxQuantityPerLine) {
+      throw const AppException(
+        'Tối đa ${AppRules.maxQuantityPerLine} sản phẩm mỗi dòng',
+      );
     }
   }
 }

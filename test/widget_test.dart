@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:smashly/core/database/seed/seed_orders.dart';
+import 'package:smashly/core/utils/order_code.dart';
 import 'package:smashly/core/utils/password_hasher.dart';
 
 // Test thuần Dart (không cần SQLite). Chạy: flutter test
@@ -14,8 +14,14 @@ void main() {
 
     test('sai mật khẩu thì verify = false', () {
       final h = PasswordHasher.hash('customer@smashly.com', 'Customer@123');
-      expect(PasswordHasher.verify('customer@smashly.com', 'wrong', h), isFalse);
-      expect(PasswordHasher.verify('customer@smashly.com', 'Customer@123', h), isTrue);
+      expect(
+        PasswordHasher.verify('customer@smashly.com', 'wrong', h),
+        isFalse,
+      );
+      expect(
+        PasswordHasher.verify('customer@smashly.com', 'Customer@123', h),
+        isTrue,
+      );
     });
 
     test('không lưu mật khẩu dạng chữ thường', () {

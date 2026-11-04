@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../core/constants/app_rules.dart';
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/category.dart';
@@ -83,8 +84,7 @@ class ShopProvider extends BaseProvider {
 
     _loadId++;
 
-    // Bắt đầu chờ 300ms.
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+    _debounceTimer = Timer(AppRules.searchDebounce, () {
       loadProducts();
     });
   }

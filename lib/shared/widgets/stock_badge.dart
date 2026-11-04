@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_rules.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 
 class StockBadge extends StatelessWidget {
   const StockBadge({super.key, required this.stock});
-
-  static const lowStockThreshold = 5;
 
   final int stock;
 
@@ -20,7 +19,7 @@ class StockBadge extends StatelessWidget {
         AppColors.inkMuted,
         AppColors.productTile,
       ),
-      <= lowStockThreshold => (
+      <= AppRules.lowStockThreshold => (
         'Chỉ còn $stock',
         Icons.warning_amber_rounded,
         AppColors.warning,

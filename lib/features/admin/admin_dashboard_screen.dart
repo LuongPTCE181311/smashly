@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/app_rules.dart';
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/currency_formatter.dart';
-import '../../data/daos/admin_dashboard_dao.dart';
 import '../../data/models/admin_dashboard.dart';
 import '../../data/models/order.dart';
 import '../../providers/admin_dashboard_provider.dart';
@@ -102,7 +102,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   icon: Icons.inventory_2_outlined,
                   message:
                       'Kho đang ổn: không có sản phẩm nào còn '
-                      '≤ ${AdminDashboardDao.lowStockThreshold}.',
+                      '≤ ${AppRules.lowStockThreshold}.',
                 ),
           const SizedBox(height: AppSpacing.section),
           const _SectionTitle(
@@ -346,7 +346,7 @@ class _StatGrid extends StatelessWidget {
         icon: Icons.warning_amber_rounded,
         color: AppColors.warning,
         softColor: AppColors.warningSoft,
-        caption: 'Tồn kho ≤ ${AdminDashboardDao.lowStockThreshold}',
+        caption: 'Tồn kho ≤ ${AppRules.lowStockThreshold}',
       ),
       DashboardStatCard(
         label: 'Đơn chờ xác nhận',

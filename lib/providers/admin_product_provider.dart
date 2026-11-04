@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../core/constants/app_rules.dart';
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/admin_product_query.dart';
@@ -116,7 +117,7 @@ class AdminProductProvider extends BaseProvider {
     _query = _query.copyWith(keyword: value);
     _debounceTimer?.cancel();
     _loadId++;
-    _debounceTimer = Timer(const Duration(milliseconds: 300), loadProducts);
+    _debounceTimer = Timer(AppRules.searchDebounce, loadProducts);
   }
 
   Future<void> selectCategory(int? categoryId) {

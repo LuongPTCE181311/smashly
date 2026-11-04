@@ -1,11 +1,12 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../../core/constants/app_rules.dart';
 import '../../core/constants/enums.dart';
 import '../../core/database/database_helper.dart';
-import '../../core/database/seed/seed_orders.dart' as seed;
 import '../../core/utils/app_exception.dart';
 import '../../core/utils/db_guard.dart';
 import '../../core/utils/db_time.dart';
+import '../../core/utils/order_code.dart';
 import '../daos/cart_dao.dart';
 import 'cart_repository.dart';
 import '../daos/order_dao.dart';
@@ -24,10 +25,9 @@ class OrderRepository {
   final OrderDao _orderDao;
   final CartDao _cartDao;
 
-  /// Phí ship: miễn phí từ 1.000.000₫. Màn Checkout dùng chung hàm này để số
-  /// hiển thị luôn khớp số lưu vào đơn.
+  /// Phí ship của đơn có tạm tính [subtotal]; Checkout dùng chung để số hiển thị khớp số lưu.
   static int shippingFeeFor(int subtotal) =>
-      subtotal >= seed.freeShippingFrom ? 0 : seed.shippingFee;
+      subtotal >= AppRules.freeShippingFrom ? 0 : AppRules.shippingFee;
 
   /// Đặt hàng các món đang được chọn trong giỏ, trong MỘT transaction:
   /// kiểm tra + trừ kho -> tạo đơn -> chụp order_items -> xóa món đã mua khỏi
@@ -115,11 +115,7 @@ class OrderRepository {
             shippingFee: fee,
             createdAt: stamp,
           );
-          await _orderDao.setOrderCode(
-            txn,
-            orderId,
-            seed.orderCode(now, orderId),
-          );
+          await _orderDao.setOrderCode(txn, orderId, orderCode(now, orderId));
 
           for (final item in items) {
             await _orderDao.insertItem(
