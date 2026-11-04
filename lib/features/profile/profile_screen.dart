@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:smashly/providers/wishlist_provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_colors.dart';
@@ -12,10 +11,12 @@ import '../../data/models/user.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/change_password_provider.dart';
+import '../../providers/wishlist_provider.dart';
 import '../../routes/app_routes.dart';
 import '../../shared/widgets/app_dialog.dart';
 import '../../shared/widgets/buttons/primary_button.dart';
 import '../../shared/widgets/states/loading_state.dart';
+import '../auth/logout_action.dart';
 import 'widgets/change_password_sheet.dart';
 import 'widgets/edit_profile_sheet.dart';
 
@@ -31,6 +32,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _busy = false;
 
+  /// Chặn mở hai sheet hoặc dialog khi bấm nhanh.
   Future<void> _runAction(Future<void> Function() action) async {
     if (_busy) return;
     setState(() => _busy = true);
@@ -98,29 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     navigator.pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
   });
 
-  Future<void> _logout() => _runAction(() async {
-    final auth = context.read<AuthProvider>();
-    final confirmed = await AppDialog.confirm(
-      context,
-      title: 'Đăng xuất?',
-      message: 'Bạn có muốn đăng xuất khỏi tài khoản này?',
-      confirmLabel: 'Đăng xuất',
-      destructive: true,
-    );
-    if (!mounted || !confirmed) return;
-    await auth.logout();
-    if (!mounted) return;
-    if (auth.status == ViewStatus.empty) {
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.errorMessage ?? 'Không thể đăng xuất lúc này'),
-        ),
-      );
-    }
-  });
+  Future<void> _logout() => _runAction(() => confirmAndLogout(context));
 
   Future<void> _reset() => _runAction(() async {
     final auth = context.read<AuthProvider>();
@@ -180,10 +160,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _profile(User user, AuthProvider auth) {
-    final name = user.fullName.trim();
-    final initial = name.isEmpty
-        ? '?'
-        : name.split(RegExp(r'\s+')).last.characters.first.toUpperCase();
     final createdAt = user.createdAt;
     final disabled = _busy || auth.isSaving;
     return ListView(
@@ -193,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: CircleAvatar(
             radius: AppSpacing.xxl,
             backgroundColor: AppColors.primarySoft,
-            child: Text(initial, style: AppTextStyles.h1),
+            child: Text(user.initial, style: AppTextStyles.h1),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -208,7 +184,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: AppTextStyles.body,
         ),
         const SizedBox(height: AppSpacing.sm),
-        Center(child: Chip(label: Text(user.isAdmin ? 'Admin' : 'Khách hàng'))),
+        Center(child: Chip(label: Text(user.role.label))),
         if (createdAt != null)
           Text(
             'Thành viên từ ${DateFormat('dd/MM/yyyy').format(createdAt.toLocal())}',
@@ -250,41 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (!user.isAdmin) ...[
           const SizedBox(height: AppSpacing.lg),
 
-          // Nút mở màn hình danh sách yêu thích.
-          Consumer<WishlistProvider>(
-            builder: (context, wishlist, child) {
-              return Card(
-                color: AppColors.surface,
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.favorite_rounded,
-                    color: AppColors.error,
-                  ),
-
-                  title: const Text(
-                    'Xem danh sách yêu thích',
-                    style: AppTextStyles.subtitle,
-                  ),
-
-                  subtitle: Text(
-                    wishlist.status == ViewStatus.loading ||
-                            wishlist.status == ViewStatus.initial
-                        ? 'Đang tải...'
-                        : '${wishlist.products.length} sản phẩm đã lưu',
-                    style: AppTextStyles.caption,
-                  ),
-
-                  trailing: const Icon(Icons.chevron_right_rounded),
-
-                  enabled: !disabled,
-
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.wishlist);
-                  },
-                ),
-              );
-            },
-          ),
+          _WishlistTile(enabled: !disabled),
 
           const SizedBox(height: AppSpacing.section),
           const Divider(),
@@ -314,6 +256,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: _logout,
         ),
       ],
+    );
+  }
+}
+
+class _WishlistTile extends StatelessWidget {
+  const _WishlistTile({required this.enabled});
+
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final wishlist = context.watch<WishlistProvider>();
+    return Card(
+      color: AppColors.surface,
+      child: ListTile(
+        leading: const Icon(Icons.favorite_rounded, color: AppColors.error),
+        title: const Text(
+          'Xem danh sách yêu thích',
+          style: AppTextStyles.subtitle,
+        ),
+        subtitle: Text(
+          wishlist.status == ViewStatus.loading ||
+                  wishlist.status == ViewStatus.initial
+              ? 'Đang tải...'
+              : '${wishlist.products.length} sản phẩm đã lưu',
+          style: AppTextStyles.caption,
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        enabled: enabled,
+        onTap: () {
+          Navigator.pushNamed(context, AppRoutes.wishlist);
+        },
+      ),
     );
   }
 }
