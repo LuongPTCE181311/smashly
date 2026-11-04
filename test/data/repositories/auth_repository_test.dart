@@ -7,6 +7,7 @@ import 'package:smashly/core/services/session_service.dart';
 import 'package:smashly/core/utils/app_exception.dart';
 import 'package:smashly/data/daos/cart_dao.dart';
 import 'package:smashly/data/daos/user_dao.dart';
+import 'package:smashly/data/models/user.dart';
 import 'package:smashly/data/repositories/auth_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -65,6 +66,24 @@ void main() {
     final user = await repository.login('customer@smashly.com', 'Customer@123');
 
     expect(await sessionService.getLoggedInUserId(), user.id);
+  });
+
+  test('login: lỗi SQLite → câu chung, không lưu session', () async {
+    final failingRepository = AuthRepository(
+      database: () async => db,
+      userDao: const _BrokenLoginUserDao(),
+      cartDao: const CartDao(),
+      sessionService: sessionService,
+      resetDatabase: () async {},
+    );
+
+    final error = await _captureAppException(
+      () => failingRepository.login('customer@smashly.com', 'Customer@123'),
+    );
+
+    expect(error.message, 'Không thể đăng nhập lúc này');
+    expect(error.field, isNull);
+    expect(await sessionService.getLoggedInUserId(), isNull);
   });
 
   test('logout after login clears the session', () async {
@@ -580,4 +599,17 @@ class _UniqueEmailUserDao extends UserDao {
 
   @override
   Future<bool> existsByEmail(DatabaseExecutor db, String email) async => false;
+}
+
+class _BrokenLoginUserDao extends UserDao {
+  const _BrokenLoginUserDao();
+
+  @override
+  Future<({User user, String passwordHash})?> findAuthByEmail(
+    DatabaseExecutor db,
+    String email,
+  ) async {
+    await db.rawQuery('SELECT * FROM bang_khong_ton_tai');
+    return null;
+  }
 }

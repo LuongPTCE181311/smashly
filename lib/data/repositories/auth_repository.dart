@@ -31,6 +31,7 @@ class AuthRepository {
   final SessionService _sessionService;
   final Future<void> Function() _resetDatabase;
 
+  /// Kiểm tra email và mật khẩu, lưu phiên rồi trả về user; sai thì ném [AppException].
   Future<User> login(String email, String password) async {
     final normalizedEmail = email.trim().toLowerCase();
     final emailError = validateEmail(normalizedEmail);
@@ -45,28 +46,29 @@ class AuthRepository {
       throw AppException(passwordError, field: 'password');
     }
 
-    try {
-      final db = await _database();
-      final auth = await _userDao.findAuthByEmail(db, normalizedEmail);
-      if (auth == null ||
-          !PasswordHasher.verify(
-            normalizedEmail,
-            password,
-            auth.passwordHash,
-          )) {
-        throw const AppException('Email hoặc mật khẩu chưa đúng');
-      }
+    return runDb(
+      'AuthRepository.login',
+      'Không thể đăng nhập lúc này',
+      () async {
+        final db = await _database();
+        final auth = await _userDao.findAuthByEmail(db, normalizedEmail);
+        if (auth == null ||
+            !PasswordHasher.verify(
+              normalizedEmail,
+              password,
+              auth.passwordHash,
+            )) {
+          throw const AppException('Email hoặc mật khẩu chưa đúng');
+        }
 
-      final userId = auth.user.id;
-      if (userId == null) {
-        throw const AppException('Không thể tạo phiên đăng nhập');
-      }
-      await _sessionService.saveSession(userId);
-      return auth.user;
-    } on DatabaseException catch (error) {
-      debugPrint('AuthRepository.login: $error');
-      throw const AppException('Không thể đăng nhập lúc này');
-    }
+        final userId = auth.user.id;
+        if (userId == null) {
+          throw const AppException('Không thể tạo phiên đăng nhập');
+        }
+        await _sessionService.saveSession(userId);
+        return auth.user;
+      },
+    );
   }
 
   Future<String> register({
