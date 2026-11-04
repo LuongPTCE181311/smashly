@@ -1,11 +1,10 @@
-import 'package:flutter/foundation.dart';
-
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/order.dart';
 import '../data/repositories/order_repository.dart';
+import 'base_provider.dart';
 
-class OrderDetailProvider extends ChangeNotifier {
+class OrderDetailProvider extends BaseProvider {
   OrderDetailProvider(this._repository, {this.orderId, this.userId});
 
   final OrderRepository _repository;
@@ -16,7 +15,6 @@ class OrderDetailProvider extends ChangeNotifier {
   Order? _order;
   String? _errorMessage;
   bool _isCancelling = false;
-  bool _disposed = false;
 
   ViewStatus get status => _status;
   Order? get order => _order;
@@ -29,13 +27,13 @@ class OrderDetailProvider extends ChangeNotifier {
     final user = userId;
     if (id == null || user == null) {
       _status = ViewStatus.empty;
-      _notify();
+      notify();
       return;
     }
 
     _status = ViewStatus.loading;
     _errorMessage = null;
-    _notify();
+    notify();
 
     try {
       _order = await _repository.getOrderDetail(id, userId: user);
@@ -48,7 +46,7 @@ class OrderDetailProvider extends ChangeNotifier {
       );
     }
 
-    _notify();
+    notify();
   }
 
   Future<String?> cancelOrder() async {
@@ -59,7 +57,7 @@ class OrderDetailProvider extends ChangeNotifier {
     }
 
     _isCancelling = true;
-    _notify();
+    notify();
 
     String? error;
     try {
@@ -72,17 +70,7 @@ class OrderDetailProvider extends ChangeNotifier {
     }
 
     _isCancelling = false;
-    _notify();
+    notify();
     return error;
-  }
-
-  void _notify() {
-    if (!_disposed) notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
   }
 }

@@ -6,6 +6,7 @@ import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/cart_item.dart';
 import '../data/repositories/cart_repository.dart';
+import 'base_provider.dart';
 
 /// Cart of the signed-in user. It lives for the whole app, so it MUST be told
 /// when the user changes: main.dart wires it to AuthProvider with a
@@ -13,7 +14,7 @@ import '../data/repositories/cart_repository.dart';
 ///
 /// Action methods return `String?`: `null` means success, otherwise a
 /// Vietnamese message the screen shows in a SnackBar.
-class CartProvider extends ChangeNotifier {
+class CartProvider extends BaseProvider {
   CartProvider(this._repository);
 
   final CartRepository _repository;
@@ -24,9 +25,8 @@ class CartProvider extends ChangeNotifier {
   List<CartItem> _items = [];
   String? _errorMessage;
 
-  /// Bumped on every user change to discard a late result of an older load.
-  int _generation = 0;
-  bool _disposed = false;
+  // Tăng mỗi lần tải mới; kết quả mang số cũ thì bỏ qua.
+  int _loadId = 0;
 
   List<CartItem> _lastRemoved = const [];
 
@@ -54,14 +54,14 @@ class CartProvider extends ChangeNotifier {
   void updateUser(int? userId) {
     if (userId == _userId) return;
     _userId = userId;
-    _generation++;
+    _loadId++;
     _items = [];
     _lastRemoved = const [];
     _errorMessage = null;
     _status = userId == null ? ViewStatus.empty : ViewStatus.initial;
     Future.microtask(() {
       if (userId == null) {
-        _notify();
+        notify();
       } else if (userId == _userId) {
         load();
       }
@@ -71,21 +71,21 @@ class CartProvider extends ChangeNotifier {
   Future<void> load() async {
     final userId = _userId;
     if (userId == null) return;
-    final generation = _generation;
+    final loadId = _loadId;
     _status = ViewStatus.loading;
     _errorMessage = null;
-    _notify();
+    notify();
     try {
       final items = await _repository.loadItems(userId);
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       _items = items;
       _status = items.isEmpty ? ViewStatus.empty : ViewStatus.success;
     } catch (error) {
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       _status = ViewStatus.error;
       _errorMessage = errorMessageOf(error, 'Không thể tải giỏ hàng');
     }
-    _notify();
+    notify();
   }
 
   /// Called by Product Detail. `size = ''` when the product has no size.
@@ -149,7 +149,7 @@ class CartProvider extends ChangeNotifier {
       return errorMessageOf(error, 'Không thể cập nhật lựa chọn');
     }
     _items = [for (final i in _items) i.copyWith(isSelected: selected)];
-    _notify();
+    notify();
     return null;
   }
 
@@ -170,7 +170,7 @@ class CartProvider extends ChangeNotifier {
         if (!ids.contains(item.id)) item,
     ];
     _refreshStatus();
-    _notify();
+    notify();
     try {
       await _repository.removeMany([for (final (_, item) in removed) item]);
     } catch (error) {
@@ -181,7 +181,7 @@ class CartProvider extends ChangeNotifier {
       }
       _items = restored;
       _refreshStatus();
-      _notify();
+      notify();
       return errorMessageOf(error, 'Không thể xóa sản phẩm');
     }
     _lastRemoved = [for (final (_, item) in removed) item];
@@ -204,37 +204,27 @@ class CartProvider extends ChangeNotifier {
 
   /// Reloads without flashing the loading screen (after add / undo).
   Future<void> _reload(int userId) async {
-    final generation = _generation;
+    final loadId = _loadId;
     try {
       final items = await _repository.loadItems(userId);
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       _items = items;
       _refreshStatus();
     } catch (error) {
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       debugPrint('CartProvider._reload: $error');
     }
-    _notify();
+    notify();
   }
 
   void _replace(int id, CartItem Function(CartItem) change) {
     final index = _items.indexWhere((i) => i.id == id);
     if (index < 0) return;
     _items = [..._items]..[index] = change(_items[index]);
-    _notify();
+    notify();
   }
 
   void _refreshStatus() {
     _status = _items.isEmpty ? ViewStatus.empty : ViewStatus.success;
-  }
-
-  void _notify() {
-    if (!_disposed) notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
   }
 }

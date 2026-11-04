@@ -6,8 +6,9 @@ import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/order_summary.dart';
 import '../data/repositories/order_repository.dart';
+import 'base_provider.dart';
 
-class OrderProvider extends ChangeNotifier {
+class OrderProvider extends BaseProvider {
   OrderProvider(this._repository);
 
   final OrderRepository _repository;
@@ -17,8 +18,8 @@ class OrderProvider extends ChangeNotifier {
   bool _userKnown = false;
   List<OrderSummary> _orders = [];
   String? _errorMessage;
-  int _generation = 0;
-  bool _disposed = false;
+  // Tăng mỗi lần tải mới; kết quả mang số cũ thì bỏ qua.
+  int _loadId = 0;
 
   ViewStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -36,14 +37,14 @@ class OrderProvider extends ChangeNotifier {
     if (_userKnown && userId == _userId) return;
     _userKnown = true;
     _userId = userId;
-    _generation++;
+    _loadId++;
     _orders = [];
     _errorMessage = null;
     _status = userId == null ? ViewStatus.empty : ViewStatus.initial;
     Future.microtask(() {
       if (userId != _userId) return;
       if (userId == null) {
-        _notify();
+        notify();
       } else {
         load();
       }
@@ -57,22 +58,22 @@ class OrderProvider extends ChangeNotifier {
   Future<void> _fetch({required bool showLoading}) async {
     final userId = _userId;
     if (userId == null) return;
-    final generation = _generation;
+    final loadId = _loadId;
 
     if (showLoading) {
       _status = ViewStatus.loading;
       _errorMessage = null;
-      _notify();
+      notify();
     }
 
     try {
       final orders = await _repository.getOrderHistory(userId);
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       _orders = orders;
       _errorMessage = null;
       _status = orders.isEmpty ? ViewStatus.empty : ViewStatus.success;
     } catch (error) {
-      if (generation != _generation) return;
+      if (loadId != _loadId) return;
       if (showLoading) {
         _status = ViewStatus.error;
         _errorMessage = errorMessageOf(
@@ -84,16 +85,6 @@ class OrderProvider extends ChangeNotifier {
       }
     }
 
-    _notify();
-  }
-
-  void _notify() {
-    if (!_disposed) notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
+    notify();
   }
 }

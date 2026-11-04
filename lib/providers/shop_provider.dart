@@ -1,15 +1,14 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' hide Category;
-
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/category.dart';
 import '../data/models/product.dart';
 import '../data/models/product_query.dart';
 import '../data/repositories/product_repository.dart';
+import 'base_provider.dart';
 
-class ShopProvider extends ChangeNotifier {
+class ShopProvider extends BaseProvider {
   ShopProvider(this._repository);
 
   final ProductRepository _repository;
@@ -29,10 +28,8 @@ class ShopProvider extends ChangeNotifier {
   // Timer phục vụ debounce.
   Timer? _debounceTimer;
 
-  // Số thứ tự truy vấn, tránh kết quả cũ ghi đè.
-  int _requestId = 0;
-
-  bool _disposed = false;
+  // Tăng mỗi lần tải mới; kết quả mang số cũ thì bỏ qua.
+  int _loadId = 0;
 
   // ===== GETTERS =====
 
@@ -53,23 +50,23 @@ class ShopProvider extends ChangeNotifier {
   Future<void> loadInitial() async {
     // Tải danh mục và danh sách sản phẩm.
     _status = ViewStatus.loading;
-    notifyListeners();
+    notify();
 
     try {
       _categories = await _repository.getCategories();
     } on AppException catch (e) {
-      if (_disposed) return;
+      if (isDisposed) return;
 
       _status = ViewStatus.error;
       _errorMessage = e.message;
-      notifyListeners();
+      notify();
       return;
     } catch (_) {
-      if (_disposed) return;
+      if (isDisposed) return;
 
       _status = ViewStatus.error;
       _errorMessage = 'Không thể tải danh mục sản phẩm.';
-      notifyListeners();
+      notify();
       return;
     }
 
@@ -84,8 +81,7 @@ class ShopProvider extends ChangeNotifier {
     // Hủy timer chưa chạy.
     _debounceTimer?.cancel();
 
-    // Làm vô hiệu kết quả từ query trước.
-    _requestId++;
+    _loadId++;
 
     // Bắt đầu chờ 300ms.
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
@@ -129,24 +125,21 @@ class ShopProvider extends ChangeNotifier {
   // ===== LOAD DATA =====
 
   Future<void> loadProducts() async {
-    if (_disposed) return;
+    if (isDisposed) return;
 
-    // Mỗi lần query có một ID riêng.
-    final requestId = ++_requestId;
+    final loadId = ++_loadId;
 
     // Chụp lại query cho lần tìm kiếm này.
     final currentQuery = _query;
 
     _status = ViewStatus.loading;
     _errorMessage = null;
-    notifyListeners();
+    notify();
 
     try {
       final result = await _repository.searchProducts(currentQuery);
 
-      // Bỏ qua nếu provider đã dispose
-      // hoặc đã có request mới hơn.
-      if (_disposed || requestId != _requestId) {
+      if (isDisposed || loadId != _loadId) {
         return;
       }
 
@@ -154,14 +147,14 @@ class ShopProvider extends ChangeNotifier {
 
       _status = result.isEmpty ? ViewStatus.empty : ViewStatus.success;
     } on AppException catch (e) {
-      if (_disposed || requestId != _requestId) {
+      if (isDisposed || loadId != _loadId) {
         return;
       }
 
       _status = ViewStatus.error;
       _errorMessage = e.message;
     } catch (_) {
-      if (_disposed || requestId != _requestId) {
+      if (isDisposed || loadId != _loadId) {
         return;
       }
 
@@ -169,7 +162,7 @@ class ShopProvider extends ChangeNotifier {
       _errorMessage = 'Không thể tải sản phẩm.';
     }
 
-    notifyListeners();
+    notify();
   }
 
   Future<void> refresh() {
@@ -179,14 +172,7 @@ class ShopProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _disposed = true;
-
-    // Hủy timer để tránh gọi sau dispose.
     _debounceTimer?.cancel();
-
-    // Vô hiệu các request chưa kết thúc.
-    _requestId++;
-
     super.dispose();
   }
 }

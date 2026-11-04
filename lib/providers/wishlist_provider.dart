@@ -1,17 +1,17 @@
-import 'package:flutter/foundation.dart';
-
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/product.dart';
 import '../data/repositories/wishlist_repository.dart';
+import 'base_provider.dart';
 
-class WishlistProvider extends ChangeNotifier {
+class WishlistProvider extends BaseProvider {
   WishlistProvider(this._repository);
 
   final WishlistRepository _repository;
 
   int? _userId;
-  int _revision = 0;
+  // Tăng mỗi lần tải mới; kết quả mang số cũ thì bỏ qua.
+  int _loadId = 0;
 
   Set<int> _favoriteIds = {};
   List<Product> _products = [];
@@ -37,7 +37,7 @@ class WishlistProvider extends ChangeNotifier {
     if (_userId == userId) return;
 
     _userId = userId;
-    _revision++;
+    _loadId++;
 
     _favoriteIds = {};
     _products = [];
@@ -45,7 +45,7 @@ class WishlistProvider extends ChangeNotifier {
     _errorMessage = null;
     _status = ViewStatus.initial;
 
-    notifyListeners();
+    notify();
 
     if (userId != null) {
       load();
@@ -56,30 +56,30 @@ class WishlistProvider extends ChangeNotifier {
     final userId = _userId;
     if (userId == null) return;
 
-    final revision = _revision;
+    final loadId = _loadId;
 
     _status = ViewStatus.loading;
     _errorMessage = null;
-    notifyListeners();
+    notify();
 
     try {
       final ids = await _repository.getProductIds(userId);
       final products = await _repository.getProducts(userId);
 
-      if (_revision != revision) return;
+      if (_loadId != loadId) return;
 
       _favoriteIds = ids;
       _products = products;
 
       _status = ids.isEmpty ? ViewStatus.empty : ViewStatus.success;
     } catch (error) {
-      if (_revision != revision) return;
+      if (_loadId != loadId) return;
 
       _status = ViewStatus.error;
       _errorMessage = errorMessageOf(error, 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
 
-    notifyListeners();
+    notify();
   }
 
   Future<bool> toggleFavorite(int productId) async {
@@ -87,7 +87,7 @@ class WishlistProvider extends ChangeNotifier {
 
     if (userId == null) {
       _errorMessage = 'Vui lòng đăng nhập để yêu thích.';
-      notifyListeners();
+      notify();
       return false;
     }
 
@@ -101,12 +101,12 @@ class WishlistProvider extends ChangeNotifier {
       return false;
     }
 
-    final revision = _revision;
+    final loadId = _loadId;
     final shouldFavorite = !_favoriteIds.contains(productId);
 
     _pendingIds.add(productId);
     _errorMessage = null;
-    notifyListeners();
+    notify();
 
     try {
       await _repository.setFavorite(
@@ -115,21 +115,21 @@ class WishlistProvider extends ChangeNotifier {
         favorite: shouldFavorite,
       );
 
-      if (_revision != revision) return false;
+      if (_loadId != loadId) return false;
 
       // Đọc lại SQLite để dữ liệu luôn nhất quán.
       _favoriteIds = await _repository.getProductIds(userId);
 
       final products = await _repository.getProducts(userId);
 
-      if (_revision != revision) return false;
+      if (_loadId != loadId) return false;
 
       _products = products;
       _status = _favoriteIds.isEmpty ? ViewStatus.empty : ViewStatus.success;
 
       return true;
     } catch (error) {
-      if (_revision == revision) {
+      if (_loadId == loadId) {
         _errorMessage = errorMessageOf(
           error,
           'Có lỗi xảy ra. Vui lòng thử lại.',
@@ -138,9 +138,9 @@ class WishlistProvider extends ChangeNotifier {
       return false;
     } finally {
       // Không để tác vụ cũ làm thay đổi state của user mới.
-      if (_revision == revision) {
+      if (_loadId == loadId) {
         _pendingIds.remove(productId);
-        notifyListeners();
+        notify();
       }
     }
   }

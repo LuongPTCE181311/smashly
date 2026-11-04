@@ -1,14 +1,13 @@
-import 'package:flutter/foundation.dart';
-
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/product.dart';
 import '../data/models/product_detail.dart';
 import '../data/models/racket_spec.dart';
 import '../data/repositories/product_repository.dart';
+import 'base_provider.dart';
 import 'cart_provider.dart';
 
-class ProductDetailProvider extends ChangeNotifier {
+class ProductDetailProvider extends BaseProvider {
   ProductDetailProvider(this._repository, this.productId);
 
   final ProductRepository _repository;
@@ -20,7 +19,6 @@ class ProductDetailProvider extends ChangeNotifier {
   int _quantity = 1;
   String? _selectedSize;
   bool _isAdding = false;
-  bool _disposed = false;
 
   ViewStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -49,13 +47,13 @@ class ProductDetailProvider extends ChangeNotifier {
     final id = productId;
     if (id == null) {
       _status = ViewStatus.empty;
-      _notify();
+      notify();
       return;
     }
 
     _status = ViewStatus.loading;
     _errorMessage = null;
-    _notify();
+    notify();
 
     try {
       final detail = await _repository.getProductDetail(id);
@@ -73,25 +71,25 @@ class ProductDetailProvider extends ChangeNotifier {
       );
     }
 
-    _notify();
+    notify();
   }
 
   void increase() {
     if (!canIncrease) return;
     _quantity++;
-    _notify();
+    notify();
   }
 
   void decrease() {
     if (!canDecrease) return;
     _quantity--;
-    _notify();
+    notify();
   }
 
   void selectSize(String size) {
     if (_selectedSize == size || !sizes.contains(size)) return;
     _selectedSize = size;
-    _notify();
+    notify();
   }
 
   Future<String?> addToCart(CartProvider cart) async {
@@ -99,7 +97,7 @@ class ProductDetailProvider extends ChangeNotifier {
     if (current == null || !canAddToCart) return null;
 
     _isAdding = true;
-    _notify();
+    notify();
 
     final error = await cart.addToCart(
       productId: current.id,
@@ -109,17 +107,7 @@ class ProductDetailProvider extends ChangeNotifier {
 
     _isAdding = false;
     if (error == null) _quantity = 1;
-    _notify();
+    notify();
     return error;
-  }
-
-  void _notify() {
-    if (!_disposed) notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
   }
 }

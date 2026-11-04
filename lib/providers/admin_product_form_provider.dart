@@ -1,16 +1,15 @@
-import 'package:flutter/foundation.dart' hide Category;
-
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/category.dart';
 import '../data/models/product.dart';
 import '../data/models/racket_spec.dart';
 import '../data/repositories/product_repository.dart';
+import 'base_provider.dart';
 
 /// State của màn Admin Product Form (S15 · UC18), dùng chung cho thêm và sửa.
 ///
 /// [productId] null = thêm mới; có id = sửa sản phẩm đó.
-class AdminProductFormProvider extends ChangeNotifier {
+class AdminProductFormProvider extends BaseProvider {
   AdminProductFormProvider(this._repository, {this.productId});
 
   final ProductRepository _repository;
@@ -22,7 +21,6 @@ class AdminProductFormProvider extends ChangeNotifier {
   RacketSpec? _racketSpec;
   String? _errorMessage;
   bool _isSaving = false;
-  bool _disposed = false;
 
   // ===== GETTERS =====
 
@@ -53,7 +51,7 @@ class AdminProductFormProvider extends ChangeNotifier {
   Future<void> load() async {
     _status = ViewStatus.loading;
     _errorMessage = null;
-    notifyListeners();
+    notify();
 
     try {
       _categories = await _repository.getCategories();
@@ -69,17 +67,17 @@ class AdminProductFormProvider extends ChangeNotifier {
         _racketSpec = detail.racketSpec;
       }
 
-      if (_disposed) return;
+      if (isDisposed) return;
       _status = ViewStatus.success;
     } catch (error) {
-      if (_disposed) return;
+      if (isDisposed) return;
       _status = ViewStatus.error;
       _errorMessage = errorMessageOf(
         error,
         'Không thể tải dữ liệu sản phẩm. Vui lòng thử lại.',
       );
     }
-    notifyListeners();
+    notify();
   }
 
   // ===== LƯU =====
@@ -93,7 +91,7 @@ class AdminProductFormProvider extends ChangeNotifier {
     // Chặn bấm "Lưu" 2 lần khi lần trước chưa xong.
     if (_isSaving) return false;
     _isSaving = true;
-    notifyListeners();
+    notify();
 
     try {
       if (isEditing) {
@@ -104,13 +102,7 @@ class AdminProductFormProvider extends ChangeNotifier {
       return true;
     } finally {
       _isSaving = false;
-      if (!_disposed) notifyListeners();
+      notify();
     }
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
   }
 }

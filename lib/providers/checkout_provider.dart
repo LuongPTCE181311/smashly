@@ -1,19 +1,17 @@
-import 'package:flutter/foundation.dart';
-
 import '../core/constants/enums.dart';
 import '../core/utils/app_exception.dart';
 import '../data/models/order.dart';
 import '../data/repositories/order_repository.dart';
+import 'base_provider.dart';
 
 /// Trạng thái màn Checkout: đang đặt hàng + lỗi lần đặt gần nhất.
-class CheckoutProvider extends ChangeNotifier {
+class CheckoutProvider extends BaseProvider {
   CheckoutProvider(this._repository);
 
   final OrderRepository _repository;
 
   bool _isPlacing = false;
   String? _errorMessage;
-  bool _disposed = false;
 
   bool get isPlacing => _isPlacing;
   String? get errorMessage => _errorMessage;
@@ -32,7 +30,7 @@ class CheckoutProvider extends ChangeNotifier {
     if (_isPlacing) return null;
     _isPlacing = true;
     _errorMessage = null;
-    _notify();
+    notify();
     try {
       return await _repository.placeOrder(
         userId: userId,
@@ -48,18 +46,8 @@ class CheckoutProvider extends ChangeNotifier {
         'Không thể đặt hàng. Vui lòng thử lại.',
       );
       _isPlacing = false;
-      _notify();
+      notify();
       return null;
     }
-  }
-
-  void _notify() {
-    if (!_disposed) notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
   }
 }
