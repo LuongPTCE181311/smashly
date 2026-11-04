@@ -4,8 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/app_routes.dart';
 
-/// Chỉ ADMIN thấy child; người khác về Login khi route đang ở trên cùng.
-/// Không thay đổi session.
+/// Chỉ ADMIN thấy [child]; người khác được đưa về Login (không đổi session) khi route đang ở trên cùng.
 class AdminGuard extends StatefulWidget {
   const AdminGuard({super.key, required this.child});
 
@@ -16,20 +15,20 @@ class AdminGuard extends StatefulWidget {
 }
 
 class _AdminGuardState extends State<AdminGuard> {
-  bool _redirectScheduled = false;
+  // Bật ngay khi hẹn để nhiều lần build trong một frame chỉ push Login một lần.
   bool _redirected = false;
 
   void _scheduleRedirect() {
-    if (_redirectScheduled || _redirected) return;
-    _redirectScheduled = true;
+    if (_redirected) return;
+    _redirected = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _redirectScheduled = false;
-      if (!mounted || _redirected) return;
+      if (!mounted) return;
       if (context.read<AuthProvider>().isAdmin ||
           ModalRoute.isCurrentOf(context) != true) {
+        // Hủy lần này để guard hẹn lại khi route lộ ra hoặc quyền đổi.
+        _redirected = false;
         return;
       }
-      _redirected = true;
       Navigator.of(context)
           .pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
     });

@@ -288,4 +288,29 @@ void main() {
     expect(find.byType(_CountingChild, skipOffstage: false), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Lần chuyển bị hủy vì route bị che không chặn lần chuyển sau', (
+    tester,
+  ) async {
+    await loginAs(_admin);
+    final navigator = await pumpApp(tester, initialRoute: _guardRoute);
+    await tester.pumpAndSettle();
+    await auth.logout();
+    // Callback này đăng ký TRƯỚC callback của guard nên chạy trước trong cùng frame:
+    // guard đã hẹn chuyển lúc build, nhưng khi tới lượt thì route đã bị che.
+    tester.binding.addPostFrameCallback(
+      (_) => navigator.pushNamed<dynamic>(_coverRoute),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.text('Cover marker'), findsOneWidget);
+    expect(observer.loginPushes, 0);
+    navigator.pop();
+    await tester.pumpAndSettle();
+    await tester.pump();
+    expect(find.text(_loginMarker), findsOneWidget);
+    expect(observer.loginPushes, 1);
+    expect(navigator.canPop(), isFalse);
+    expect(tester.takeException(), isNull);
+  });
 }
