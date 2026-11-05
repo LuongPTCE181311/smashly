@@ -7,9 +7,11 @@ import 'package:smashly/core/constants/enums.dart';
 import 'package:smashly/core/theme/app_theme.dart';
 import 'package:smashly/core/utils/app_exception.dart';
 import 'package:smashly/data/models/user.dart';
+import 'package:smashly/features/auth/forgot_password_screen.dart';
 import 'package:smashly/features/auth/login_screen.dart';
 import 'package:smashly/features/auth/widgets/auth_error_banner.dart';
 import 'package:smashly/providers/auth_provider.dart';
+import 'package:smashly/providers/forgot_password_provider.dart';
 import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_page_route.dart';
 import 'package:smashly/routes/app_routes.dart';
@@ -70,6 +72,14 @@ Route<dynamic> _testRoute(RouteSettings settings) => AppPageRoute(
   builder: (_) => switch (settings.name) {
     AppRoutes.login => LoginScreen(initialEmail: settings.arguments as String?),
     AppRoutes.register => const _FakeRegisterScreen(),
+    AppRoutes.forgotPassword => ChangeNotifierProvider(
+      create: (_) => ForgotPasswordProvider(FakeAuthRepository()),
+      child: ForgotPasswordScreen(
+        initialEmail: settings.arguments is String
+            ? settings.arguments as String
+            : null,
+      ),
+    ),
     AppRoutes.home => const Scaffold(body: Text(_homeMarker)),
     AppRoutes.adminDashboard => const Scaffold(body: Text(_adminMarker)),
     _ => throw StateError('Route không có trong bảng test: ${settings.name}'),
@@ -159,6 +169,93 @@ Future<double> _maxShakeOffset(WidgetTester tester, double restX) async {
 }
 
 void main() {
+  final forgotLink = find.widgetWithText(TextButton, 'Quên mật khẩu?');
+
+  testWidgets('L1. link mở màn quên mật khẩu với email đang gõ', (
+    tester,
+  ) async {
+    await _pumpLogin(tester, _newRepo());
+    await tester.enterText(_emailField, ' hello@example.com ');
+    await tester.tap(forgotLink);
+    await tester.pumpAndSettle();
+    expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+    expect(
+      _textFieldOf(tester, _emailField).controller!.text,
+      'hello@example.com',
+    );
+  });
+
+  testWidgets('L2. trả email điền Login, xóa mật khẩu và banner cũ', (
+    tester,
+  ) async {
+    final repo = _newRepo()
+      ..willFailLogin(const AppException(_wrongCredentials));
+    await _pumpLogin(tester, repo);
+    await _fillForm(tester);
+    await tester.tap(_submitButton);
+    await tester.pumpAndSettle();
+    expect(
+      find.widgetWithText(AuthErrorBanner, _wrongCredentials),
+      findsOneWidget,
+    );
+    await tester.tap(forgotLink);
+    await tester.pumpAndSettle();
+    expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+    expect(find.text(_wrongCredentials, skipOffstage: false), findsNothing);
+    Navigator.of(tester.element(find.byType(ForgotPasswordScreen)))
+        .pop('reset@example.com');
+    await tester.pumpAndSettle();
+    expect(
+      _textFieldOf(tester, _emailField).controller!.text,
+      'reset@example.com',
+    );
+    expect(_textFieldOf(tester, _passwordField).controller!.text, isEmpty);
+    expect(_buttonEnabled(tester), isFalse);
+    expect(find.text(_wrongCredentials), findsNothing);
+    expect(
+      find.text('Đặt lại mật khẩu thành công, hãy đăng nhập'),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('L3. Back không kết quả giữ email và không SnackBar', (
+    tester,
+  ) async {
+    await _pumpLogin(tester, _newRepo());
+    await _fillForm(tester, email: 'old@example.com');
+    await tester.tap(forgotLink);
+    await tester.pumpAndSettle();
+    expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(
+      _textFieldOf(tester, _emailField).controller!.text,
+      'old@example.com',
+    );
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('L4. link khóa khi đang đăng nhập', (tester) async {
+    final repo = _newRepo();
+    final hold = repo.holdLogin();
+    await _pumpLogin(tester, repo);
+    await _fillForm(tester);
+    await tester.tap(_submitButton);
+    await tester.pump();
+    try {
+      expect(tester.widget<TextButton>(forgotLink).onPressed, isNull);
+      await tester.tap(forgotLink, warnIfMissed: false);
+      await tester.pump();
+      expect(find.byType(ForgotPasswordScreen), findsNothing);
+    } finally {
+      hold.complete(_customer);
+      await tester.pumpAndSettle();
+    }
+  });
+
   testWidgets('1. email sai định dạng → rời ô → hiện lỗi', (tester) async {
     await _pumpLogin(tester, _newRepo());
 

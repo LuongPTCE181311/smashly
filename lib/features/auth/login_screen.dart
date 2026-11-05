@@ -138,6 +138,28 @@ class _LoginScreenState extends State<LoginScreen>
     ).showSnackBar(const SnackBar(content: Text('Tạo tài khoản thành công')));
   }
 
+  Future<void> _openForgotPassword() async {
+    final auth = context.read<AuthProvider>();
+    // Banner đăng nhập cũ không còn phù hợp khi người dùng đặt lại mật khẩu.
+    auth.clearErrors();
+    final email = _email.text.trim();
+    final result = await Navigator.of(context).pushNamed(
+      AppRoutes.forgotPassword,
+      arguments: email.isEmpty ? null : email,
+    );
+    if (!mounted || result is! String) return;
+
+    setState(() {
+      _email.text = result;
+      _password.clear();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đặt lại mật khẩu thành công, hãy đăng nhập'),
+      ),
+    );
+  }
+
   void _shake() {
     if (_reduceMotion) return;
     _shakeController.forward(from: 0);
@@ -241,7 +263,15 @@ class _LoginScreenState extends State<LoginScreen>
               onChanged: _onInputChanged,
               onFieldSubmitted: (_) => _submit(),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                // Đăng nhập thành công sẽ xóa các màn đang mở nên khóa link lúc chờ.
+                onPressed: auth.isLoading ? null : _openForgotPassword,
+                child: const Text('Quên mật khẩu?'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
             PrimaryButton(
               label: 'Đăng nhập',
               isLoading: auth.isLoading,
