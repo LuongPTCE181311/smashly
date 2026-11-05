@@ -142,4 +142,12 @@ class _FakeAuthRepository implements AuthRepository {
     required String newPassword,
     required String confirmPassword,
   }) => throw UnimplementedError('Không dùng trong file test này');
+
+  @override
+  Future<String> resetPassword({
+    required String email,
+    required String phone,
+    required String newPassword,
+    required String confirmPassword,
+  }) => throw UnimplementedError('Không dùng trong file test này');
 }

@@ -186,6 +186,33 @@ class FakeAuthRepository implements AuthRepository {
 
   int logoutCalls = 0;
 
+  int resetPasswordCalls = 0;
+  Object? resetPasswordError;
+  Completer<String>? resetPasswordHold;
+  ({String email, String phone, String newPassword, String confirmPassword})?
+  lastResetPassword;
+
+  @override
+  Future<String> resetPassword({
+    required String email,
+    required String phone,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    resetPasswordCalls++;
+    lastResetPassword = (
+      email: email,
+      phone: phone,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    );
+    final hold = resetPasswordHold;
+    if (hold != null) return hold.future;
+    final error = resetPasswordError;
+    if (error != null) throw error;
+    return email.trim().toLowerCase();
+  }
+
   /// Lỗi `logout` sẽ ném (vd. PlatformException của SharedPreferences).
   Object? logoutError;
 
