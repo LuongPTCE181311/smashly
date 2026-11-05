@@ -71,6 +71,7 @@ class AuthRepository {
     );
   }
 
+  /// Kiểm tra dữ liệu, tạo user và giỏ hàng trong một transaction, trả về email đã chuẩn hóa.
   Future<String> register({
     required String fullName,
     required String email,
@@ -94,6 +95,7 @@ class AuthRepository {
       if (message != null) throw AppException(message, field: entry.key);
     }
 
+    // Không dùng runDb: cần bắt riêng lỗi UNIQUE để báo đúng ô email.
     try {
       final db = await _database();
       return await db.transaction((txn) async {
