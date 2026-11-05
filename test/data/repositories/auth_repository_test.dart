@@ -267,6 +267,104 @@ void main() {
     },
   );
 
+  group('resetPassword', () {
+    Future<String> reset({
+      String email = 'customer@smashly.com',
+      String phone = '0901234567',
+      String password = 'NewPass123',
+      String confirm = 'NewPass123',
+    }) => repository.resetPassword(
+      email: email,
+      phone: phone,
+      newPassword: password,
+      confirmPassword: confirm,
+    );
+
+    Future<Object?> hash(String email) async => (await db.query(
+      DbSchema.users,
+      columns: ['password_hash'],
+      where: 'email = ?',
+      whereArgs: [email],
+    )).single['password_hash'];
+
+    test('R1. mật khẩu mới đăng nhập được, mật khẩu cũ bị từ chối', () async {
+      expect(await reset(), 'customer@smashly.com');
+      final user = await repository.login('customer@smashly.com', 'NewPass123');
+      expect(user.email, 'customer@smashly.com');
+      final error = await _captureAppException(
+        () => repository.login('customer@smashly.com', 'Customer@123'),
+      );
+      expect(error.message, 'Email hoặc mật khẩu chưa đúng');
+    });
+
+    test('R2. chuẩn hóa email và trim số điện thoại', () async {
+      expect(
+        await reset(email: '  Customer@Smashly.COM ', phone: ' 0901234567 '),
+        'customer@smashly.com',
+      );
+      expect(
+        (await repository.login('customer@smashly.com', 'NewPass123')).email,
+        'customer@smashly.com',
+      );
+    });
+
+    test('R3. email vắng dùng lỗi chung không field', () async {
+      final error = await _captureAppException(
+        () => reset(email: 'nobody@smashly.com'),
+      );
+      expect(error.message, AuthRepository.resetMismatchMessage);
+      expect(error.field, isNull);
+    });
+
+    test('R4. SĐT admin không khớp customer, không đổi hash', () async {
+      final before = await hash('customer@smashly.com');
+      final error = await _captureAppException(
+        () => reset(phone: '0900000000'),
+      );
+      expect(error.message, AuthRepository.resetMismatchMessage);
+      expect(error.field, isNull);
+      expect(await hash('customer@smashly.com'), before);
+    });
+
+    for (final (field, email, phone, password, confirm) in [
+      ('email', 'abc', '0901234567', 'NewPass123', 'NewPass123'),
+      ('phone', 'customer@smashly.com', '12345', 'NewPass123', 'NewPass123'),
+      ('newPassword', 'customer@smashly.com', '0901234567', 'short', 'short'),
+      (
+        'confirmPassword',
+        'customer@smashly.com',
+        '0901234567',
+        'NewPass123',
+        'Other123',
+      ),
+    ]) {
+      test('R5. $field sai không đổi hash', () async {
+        final before = await hash('customer@smashly.com');
+        final error = await _captureAppException(
+          () => reset(
+            email: email,
+            phone: phone,
+            password: password,
+            confirm: confirm,
+          ),
+        );
+        expect(error.field, field);
+        expect(await hash('customer@smashly.com'), before);
+      });
+    }
+
+    test('R6. đặt lại customer không đổi hash admin', () async {
+      final before = await hash('admin@smashly.com');
+      expect(await reset(), 'customer@smashly.com');
+      expect(await hash('admin@smashly.com'), before);
+    });
+
+    test('R7. đặt lại thành công không ghi session', () async {
+      expect(await reset(), 'customer@smashly.com');
+      expect(await sessionService.getLoggedInUserId(), isNull);
+    });
+  });
+
   group('updateProfile', () {
     late int customerId;
 

@@ -24,6 +24,8 @@ class AuthRepository {
 
   static const String accountGoneField = 'account';
   static const String accountGoneMessage = 'Tài khoản không còn tồn tại';
+  static const String resetMismatchMessage =
+      'Email hoặc số điện thoại chưa đúng';
 
   final DatabaseOpener _database;
   final UserDao _userDao;
@@ -248,6 +250,49 @@ class AuthRepository {
       debugPrint('AuthRepository.changePassword: $error');
       throw const AppException('Không thể đổi mật khẩu lúc này');
     }
+  }
+
+  /// Đặt lại mật khẩu và trả email khi email cùng số điện thoại khớp tài khoản.
+  Future<String> resetPassword({
+    required String email,
+    required String phone,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    final normalizedPhone = phone.trim();
+    final validations = <String, String?>{
+      'email': validateEmail(normalizedEmail),
+      'phone': validatePhone(normalizedPhone),
+      'newPassword': validatePassword(newPassword),
+      'confirmPassword': validateConfirmPassword(newPassword, confirmPassword),
+    };
+    for (final entry in validations.entries) {
+      final message = entry.value;
+      if (message != null) throw AppException(message, field: entry.key);
+    }
+
+    return runDb(
+      'AuthRepository.resetPassword',
+      'Không thể đặt lại mật khẩu lúc này',
+      () async {
+        final db = await _database();
+        return db.transaction((txn) async {
+          final user = await _userDao.findByEmail(txn, normalizedEmail);
+          final userId = user?.id;
+          // Dùng cùng câu lỗi để không lộ email nào đã đăng ký.
+          if (user == null || userId == null || user.phone != normalizedPhone) {
+            throw const AppException(resetMismatchMessage);
+          }
+          await _userDao.updatePasswordHash(
+            txn,
+            userId,
+            PasswordHasher.hash(user.email, newPassword),
+          );
+          return user.email;
+        });
+      },
+    );
   }
 
   Future<void> resetDemoData() async {

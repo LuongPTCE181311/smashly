@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/repositories/admin_dashboard_repository.dart';
+import '../data/repositories/auth_repository.dart';
 import '../data/repositories/order_repository.dart';
 import '../data/repositories/product_repository.dart';
 import '../dev/db_check_screen.dart';
@@ -11,6 +12,7 @@ import '../features/admin/admin_dashboard_screen.dart';
 import '../features/admin/admin_product_form_screen.dart';
 import '../features/admin/admin_products_screen.dart';
 import '../features/auth/admin_guard.dart';
+import '../features/auth/forgot_password_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/auth/splash_screen.dart';
@@ -31,6 +33,7 @@ import '../providers/admin_product_form_provider.dart';
 import '../providers/admin_product_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/checkout_provider.dart';
+import '../providers/forgot_password_provider.dart';
 import '../providers/home_provider.dart';
 import '../providers/order_detail_provider.dart';
 import '../providers/product_detail_provider.dart';
@@ -49,6 +52,8 @@ abstract final class AppRoutes {
   static const splash = '/';
   static const login = '/login';
   static const register = '/register';
+  static const forgotPassword =
+      '/forgot-password'; // arguments: String? email điền sẵn
 
   // 5 tab trong AppShell — mở route này = mở AppShell ở đúng tab đó.
   // Đang ở trong app thì đổi tab bằng AppShell.goToTab(context, AppTab.cart).
@@ -106,6 +111,12 @@ abstract final class AppRoutes {
         initialEmail: arguments is String ? arguments : null,
       ),
       register => const RegisterScreen(),
+      forgotPassword => ChangeNotifierProvider<ForgotPasswordProvider>(
+        create: (_) => ForgotPasswordProvider(const AuthRepository()),
+        child: ForgotPasswordScreen(
+          initialEmail: arguments is String ? arguments : null,
+        ),
+      ),
 
       home => ChangeNotifierProvider<HomeProvider>(
         create: (_) => HomeProvider(ProductRepository())..loadHome(),
