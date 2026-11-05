@@ -35,14 +35,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordFocus = FocusNode();
   final _confirmFocus = FocusNode();
 
-  Map<String, FocusNode> get _fieldFocusNodes => {
-    'fullName': _fullNameFocus,
-    'email': _emailFocus,
-    'phone': _phoneFocus,
-    'password': _passwordFocus,
-    'confirmPassword': _confirmFocus,
-  };
-
   @override
   void dispose() {
     _fullName.dispose();
@@ -62,6 +54,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _onPasswordChanged(String value) {
     _clearServerErrors();
+    // Build lại để thanh độ mạnh theo kịp mật khẩu vừa gõ.
+    setState(() {});
     if (_confirmPassword.text.isNotEmpty) {
       _confirmKey.currentState!.validate();
     }
@@ -85,16 +79,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  FocusNode? _focusNodeOf(String field) => switch (field) {
+    'fullName' => _fullNameFocus,
+    'email' => _emailFocus,
+    'phone' => _phoneFocus,
+    'password' => _passwordFocus,
+    'confirmPassword' => _confirmFocus,
+    _ => null,
+  };
+
   void _focusServerError(AuthProvider auth) {
-    for (final entry in _fieldFocusNodes.entries) {
-      if (!auth.fieldErrors.containsKey(entry.key)) continue;
-      // Chờ các ô rebuild sang enabled trước khi yêu cầu focus.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || auth.isLoading) return;
-        if (auth.fieldErrors.containsKey(entry.key)) entry.value.requestFocus();
-      });
-      return;
-    }
+    final field = auth.fieldErrors.keys.firstOrNull;
+    final focus = field == null ? null : _focusNodeOf(field);
+    if (focus == null) return;
+    // Ô còn khóa (enabled: false) tới frame sau nên chờ frame rồi mới focus.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || auth.isLoading) return;
+      if (auth.fieldErrors.containsKey(field)) focus.requestFocus();
+    });
   }
 
   Future<void> _submit() async {
@@ -128,32 +130,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final (
-      isLoading,
-      errorMessage,
-      fullNameError,
-      emailError,
-      phoneError,
-      passwordError,
-      confirmPasswordError,
-    ) = context
-        .select<
-          AuthProvider,
-          (bool, String?, String?, String?, String?, String?, String?)
-        >(
-          (auth) => (
-            auth.isLoading,
-            auth.errorMessage,
-            auth.fieldErrors['fullName'],
-            auth.fieldErrors['email'],
-            auth.fieldErrors['phone'],
-            auth.fieldErrors['password'],
-            auth.fieldErrors['confirmPassword'],
-          ),
-        );
+    final auth = context.watch<AuthProvider>();
 
     return PopScope(
-      canPop: !isLoading,
+      canPop: !auth.isLoading,
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SingleChildScrollView(
@@ -176,7 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: IconButton(
                           tooltip: 'Quay lại',
                           color: AppColors.onDark,
-                          onPressed: isLoading ? null : _goBack,
+                          onPressed: auth.isLoading ? null : _goBack,
                           icon: const Icon(Icons.arrow_back),
                         ),
                       ),
@@ -195,15 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: AppRadius.xlAll,
                       boxShadow: AppShadows.card,
                     ),
-                    child: _buildForm(
-                      isLoading: isLoading,
-                      errorMessage: errorMessage,
-                      fullNameError: fullNameError,
-                      emailError: emailError,
-                      phoneError: phoneError,
-                      passwordError: passwordError,
-                      confirmPasswordError: confirmPasswordError,
-                    ),
+                    child: _buildForm(auth),
                   ),
                 ),
               ),
@@ -214,23 +186,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildForm({
-    required bool isLoading,
-    required String? errorMessage,
-    required String? fullNameError,
-    required String? emailError,
-    required String? phoneError,
-    required String? passwordError,
-    required String? confirmPasswordError,
-  }) {
+  Widget _buildForm(AuthProvider auth) {
     return AutofillGroup(
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (errorMessage != null) ...[
-              AuthErrorBanner(message: errorMessage),
+            if (auth.errorMessage != null) ...[
+              AuthErrorBanner(message: auth.errorMessage!),
               const SizedBox(height: AppSpacing.lg),
             ],
             AppTextField(
@@ -238,8 +202,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _fullName,
               focusNode: _fullNameFocus,
               validator: validateFullName,
-              errorText: fullNameError,
-              enabled: !isLoading,
+              errorText: auth.fieldErrors['fullName'],
+              enabled: !auth.isLoading,
               showValidCheck: true,
               prefixIcon: Icons.person_outline,
               keyboardType: TextInputType.name,
@@ -255,8 +219,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _email,
               focusNode: _emailFocus,
               validator: validateEmail,
-              errorText: emailError,
-              enabled: !isLoading,
+              errorText: auth.fieldErrors['email'],
+              enabled: !auth.isLoading,
               showValidCheck: true,
               prefixIcon: Icons.mail_outline,
               keyboardType: TextInputType.emailAddress,
@@ -271,8 +235,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _phone,
               focusNode: _phoneFocus,
               validator: validatePhone,
-              errorText: phoneError,
-              enabled: !isLoading,
+              errorText: auth.fieldErrors['phone'],
+              enabled: !auth.isLoading,
               showValidCheck: true,
               prefixIcon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
@@ -292,8 +256,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               focusNode: _passwordFocus,
               isPassword: true,
               validator: validatePassword,
-              errorText: passwordError,
-              enabled: !isLoading,
+              errorText: auth.fieldErrors['password'],
+              enabled: !auth.isLoading,
               showValidCheck: true,
               prefixIcon: Icons.lock_outline,
               textInputAction: TextInputAction.next,
@@ -301,15 +265,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onChanged: _onPasswordChanged,
               onFieldSubmitted: (_) => _confirmFocus.requestFocus(),
             ),
-            ListenableBuilder(
-              listenable: _password,
-              builder: (context, _) => _password.text.isEmpty
-                  ? const SizedBox.shrink()
-                  : Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.sm),
-                      child: PasswordStrengthBar(password: _password.text),
-                    ),
-            ),
+            if (_password.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: PasswordStrengthBar(password: _password.text),
+              ),
             const SizedBox(height: AppSpacing.lg),
             AppTextField(
               label: 'Nhập lại mật khẩu',
@@ -319,8 +279,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               isPassword: true,
               validator: (value) =>
                   validateConfirmPassword(_password.text, value),
-              errorText: confirmPasswordError,
-              enabled: !isLoading,
+              errorText: auth.fieldErrors['confirmPassword'],
+              enabled: !auth.isLoading,
               showValidCheck: true,
               prefixIcon: Icons.lock_outline,
               textInputAction: TextInputAction.done,
@@ -331,7 +291,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: AppSpacing.xl),
             PrimaryButton(
               label: 'Tạo tài khoản',
-              isLoading: isLoading,
+              isLoading: auth.isLoading,
               onPressed: _submit,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -344,7 +304,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: AppTextStyles.body.copyWith(color: AppColors.inkMuted),
                 ),
                 TextButton(
-                  onPressed: isLoading ? null : _goBack,
+                  onPressed: auth.isLoading ? null : _goBack,
                   child: const Text('Đăng nhập'),
                 ),
               ],

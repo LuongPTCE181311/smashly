@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../core/database/db_schema.dart';
 import '../models/user.dart';
 
+/// Đọc và ghi bảng `users`, trả về [User].
 class UserDao {
   const UserDao();
 
