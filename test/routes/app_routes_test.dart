@@ -7,6 +7,7 @@ import 'package:smashly/data/daos/cart_dao.dart';
 import 'package:smashly/data/models/user.dart';
 import 'package:smashly/data/repositories/cart_repository.dart';
 import 'package:smashly/features/admin/admin_products_screen.dart';
+import 'package:smashly/features/auth/forgot_password_screen.dart';
 import 'package:smashly/features/auth/login_screen.dart';
 import 'package:smashly/features/auth/register_screen.dart';
 import 'package:smashly/features/cart/cart_screen.dart';
@@ -15,9 +16,11 @@ import 'package:smashly/features/shell/app_shell.dart';
 import 'package:smashly/features/shell/app_tab.dart';
 import 'package:smashly/providers/auth_provider.dart';
 import 'package:smashly/providers/cart_provider.dart';
+import 'package:smashly/providers/forgot_password_provider.dart';
 import 'package:smashly/providers/shell_tab_provider.dart';
 import 'package:smashly/routes/app_routes.dart';
 import 'package:smashly/routes/not_found_screen.dart';
+import 'package:smashly/shared/widgets/inputs/app_text_field.dart';
 
 import '../features/auth/fake_auth_repository.dart';
 
@@ -70,6 +73,37 @@ FakeAuthRepository _newRepo() {
 }
 
 void main() {
+  testWidgets('RT1. route quên mật khẩu có provider, chỉ nhận email String', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(AppRoutes.devMenu));
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    for (final argument in <Object?>['hello@example.com', 42]) {
+      navigator.pushNamed<dynamic>(
+        AppRoutes.forgotPassword,
+        arguments: argument,
+      );
+      await tester.pumpAndSettle();
+      final screen = find.byType(ForgotPasswordScreen);
+      expect(screen, findsOneWidget);
+      expect(
+        Provider.of<ForgotPasswordProvider>(
+          tester.element(screen),
+          listen: false,
+        ),
+        isA<ForgotPasswordProvider>(),
+      );
+      final email = find.widgetWithText(AppTextField, 'Email');
+      final input = tester.widget<TextField>(
+        find.descendant(of: email, matching: find.byType(TextField)),
+      );
+      expect(input.controller!.text, argument is String ? argument : '');
+      expect(tester.takeException(), isNull);
+      navigator.pop();
+      await tester.pumpAndSettle();
+    }
+  });
+
   // Argument đúng kiểu đã ghi ở hằng số trong AppRoutes.
   const pushedRoutes = <String, Object?>{};
 
